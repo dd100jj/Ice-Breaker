@@ -3,41 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Ice Breaker</title>
+    <title>Ice Breaker Gold</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        :root { --main-blue: #0088cc; --ice-bg: #e1f5fe; }
         body { 
             background-color: var(--tg-theme-bg-color, #ffffff); 
             color: var(--tg-theme-text-color, #222222);
-            font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh;
         }
-        #score { font-size: 40px; font-weight: bold; color: #0088cc; margin-bottom: 20px; }
-        #ice-button { font-size: 100px; cursor: pointer; user-select: none; transition: transform 0.1s; }
-        #ice-button:active { transform: scale(0.9); }
-        .shop-btn { background-color: var(--tg-theme-button-color, #0088cc); color: var(--tg-theme-button-text-color, #ffffff); border: none; padding: 15px 30px; border-radius: 12px; font-size: 18px; margin-top: 30px; cursor: pointer; font-weight: bold; }
+        /* 상단 지갑/정보 바 */
+        .top-bar {
+            padding: 15px; display: flex; justify-content: space-between; align-items: center;
+            background: var(--tg-theme-secondary-bg-color, #f4f4f4); border-bottom: 1px solid #ddd;
+        }
+        .wallet-info { font-size: 14px; font-weight: bold; color: var(--main-blue); }
+        
+        /* 메인 채굴 영역 */
+        .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #score { font-size: 48px; font-weight: 800; margin-bottom: 10px; }
+        .unit { font-size: 18px; color: #888; margin-bottom: 30px; }
+        
+        #ice-button { 
+            font-size: 140px; cursor: pointer; user-select: none; transition: transform 0.1s;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
+        }
+        #ice-button:active { transform: scale(0.92); }
+
+        /* 하단 메뉴 바 */
+        .bottom-nav {
+            display: flex; gap: 10px; padding: 20px; background: var(--tg-theme-bg-color);
+        }
+        .nav-btn {
+            flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: bold; font-size: 15px; cursor: pointer;
+        }
+        .btn-shop { background: var(--main-blue); color: white; }
+        .btn-claim { background: #ff9800; color: white; }
     </style>
 </head>
 <body>
-    <div id="score">0</div>
-    <div id="ice-button" onclick="tapIce()">🧊</div>
-    <button class="shop-btn" onclick="openShop()">CLAIM AIRDROP</button>
+    <div class="top-bar">
+        <div class="wallet-info">👛 Wallet: Connected</div>
+        <div id="exchange-rate" style="font-size: 12px;">Rate: 5 Shards = 1 TON</div>
+    </div>
+
+    <div class="main-content">
+        <div id="score">0</div>
+        <div class="unit">ICE SHARDS</div>
+        
+        <div id="ice-button" onclick="tapIce()">🧊</div>
+    </div>
+
+    <div class="bottom-nav">
+        <button class="nav-btn btn-shop" onclick="openShop()">🛒 ITEM SHOP</button>
+        <button class="nav-btn btn-claim" onclick="claimAirdrop()">🎁 CLAIM</button>
+    </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand(); // 앱 전체화면 확장
+        tg.expand();
+        
+        let shards = 0;
 
-        let count = 0;
         function tapIce() {
-            count++;
-            document.getElementById('score').innerText = count;
-            // 탭할 때 진동 효과
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('medium');
-            }
+            shards++;
+            document.getElementById('score').innerText = shards;
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
 
         function openShop() {
-            tg.showAlert("Collect more shards to Claim Airdrop!");
+            tg.showPopup({
+                title: 'Item Shop',
+                message: 'Upgrade your hammer with Stars! \n(Current: Basic Hammer)',
+                buttons: [{id: 'buy', type: 'default', text: 'Buy Golden Hammer'}]
+            });
+        }
+
+        function claimAirdrop() {
+            const tonExpected = (shards / 5).toFixed(2);
+            tg.showConfirm(`Do you want to claim ${tonExpected} TON? \n(Min. 50,000 Shards required)`, (ok) => {
+                if(ok) tg.showAlert("Need more shards for Airdrop!");
+            });
         }
     </script>
 </body>

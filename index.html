@@ -13,14 +13,14 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh;
         }
-        /* 상단 지갑/정보 바 */
+        /* 상단 바 */
         .top-bar {
             padding: 15px; display: flex; justify-content: space-between; align-items: center;
             background: var(--tg-theme-secondary-bg-color, #f4f4f4); border-bottom: 1px solid #ddd;
         }
         .wallet-info { font-size: 14px; font-weight: bold; color: var(--main-blue); }
         
-        /* 메인 채굴 영역 */
+        /* 메인 영역 */
         .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         #score { font-size: 48px; font-weight: 800; margin-bottom: 10px; }
         .unit { font-size: 18px; color: #888; margin-bottom: 30px; }
@@ -31,13 +31,9 @@
         }
         #ice-button:active { transform: scale(0.92); }
 
-        /* 하단 메뉴 바 */
-        .bottom-nav {
-            display: flex; gap: 10px; padding: 20px; background: var(--tg-theme-bg-color);
-        }
-        .nav-btn {
-            flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: bold; font-size: 15px; cursor: pointer;
-        }
+        /* 하단 버튼 */
+        .bottom-nav { display: flex; gap: 10px; padding: 20px; background: var(--tg-theme-bg-color); }
+        .nav-btn { flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: bold; font-size: 15px; cursor: pointer; }
         .btn-shop { background: var(--main-blue); color: white; }
         .btn-claim { background: #ff9800; color: white; }
     </style>
@@ -45,13 +41,12 @@
 <body>
     <div class="top-bar">
         <div class="wallet-info">👛 Wallet: Connected</div>
-        <div id="exchange-rate" style="font-size: 12px;">Rate: 5 Shards = 1 TON</div>
+        <div style="font-size: 12px; color: #d32f2f; font-weight: bold;">[BETA TEST]</div>
     </div>
 
     <div class="main-content">
         <div id="score">0</div>
         <div class="unit">ICE SHARDS</div>
-        
         <div id="ice-button" onclick="tapIce()">🧊</div>
     </div>
 
@@ -64,6 +59,11 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
         
+        // 1. 앱 시작 시 공지 팝업 띄우기
+        window.onload = function() {
+            tg.showAlert("🚧 정식 오픈 준비 중입니다!\n\n현재는 기능 테스트 단계이며, 테스트 기간 동안의 포인트는 정식 출시 시 초기화될 수 있습니다. 곧 만나요!");
+        };
+
         let shards = 0;
 
         function tapIce() {
@@ -73,19 +73,3 @@
         }
 
         function openShop() {
-            tg.showPopup({
-                title: 'Item Shop',
-                message: 'Upgrade your hammer with Stars! \n(Current: Basic Hammer)',
-                buttons: [{id: 'buy', type: 'default', text: 'Buy Golden Hammer'}]
-            });
-        }
-
-        function claimAirdrop() {
-            const tonExpected = (shards / 5).toFixed(2);
-            tg.showConfirm(`Do you want to claim ${tonExpected} TON? \n(Min. 50,000 Shards required)`, (ok) => {
-                if(ok) tg.showAlert("Need more shards for Airdrop!");
-            });
-        }
-    </script>
-</body>
-</html>

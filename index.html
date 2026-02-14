@@ -19,7 +19,7 @@
             background-color: var(--tg-bg); 
             color: var(--text-main);
             font-family: 'Pretendard', -apple-system, sans-serif;
-            margin: 0; padding: 15px; display: flex; flex-direction: column; gap: 15px;
+            margin: 0; padding: 15px; display: flex; flex-direction: column; gap: 12px;
             overflow-x: hidden;
         }
 
@@ -32,39 +32,54 @@
         .sparkle { animation: sparkle-anim 0.6s ease-in-out; }
         .particle { position: absolute; pointer-events: none; width: 8px; height: 8px; background: #b3e5fc; border-radius: 2px; z-index: 100; }
 
-        /* Header */
+        /* User Header */
         .user-header { display: flex; justify-content: space-between; align-items: center; padding: 5px; }
         .user-info { display: flex; align-items: center; gap: 10px; }
         .level-tag { background: #ffcc80; color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; }
         .user-name { font-size: 20px; font-weight: 800; color: var(--accent-orange); }
 
-        /* Cards */
+        /* Card Layout */
         .card { background: var(--card-bg); border-radius: 15px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
         .asset-card { position: relative; border: 1px solid transparent; }
         .asset-title { font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px; }
         .asset-amount { font-size: 26px; font-weight: 800; margin-top: 5px; color: #546e7a; }
 
-        /* Mining Area */
+        /* Mining Main Area */
         .mine-card { align-items: center; text-align: center; gap: 8px; position: relative; }
-        .ice-cube { font-size: 90px; margin: 10px 0; cursor: pointer; transition: transform 0.1s; user-select: none; z-index: 10; }
+        .ice-cube { font-size: 85px; margin: 10px 0; cursor: pointer; transition: transform 0.1s; user-select: none; z-index: 10; }
         .ice-cube:active { transform: scale(0.9); }
         .mining-power { font-size: 28px; font-weight: 800; }
         .mining-speed { color: var(--accent-orange); font-weight: bold; font-size: 14px; }
         .next-goal { font-size: 11px; color: var(--gray-text); margin-top: 4px; }
 
-        /* Modern 30-Day Attendance */
-        .attendance-title { font-size: 14px; font-weight: 800; margin-bottom: 12px; display: flex; justify-content: space-between; }
+        /* --- Attendance Toggle UI --- */
+        .attendance-card { gap: 0; padding: 0; overflow: hidden; }
+        .attendance-header { 
+            padding: 15px; display: flex; justify-content: space-between; align-items: center; 
+            cursor: pointer; background: #fff; border-radius: 15px; z-index: 2;
+        }
+        .attendance-header:active { background: #f9f9f9; }
+        .attendance-header h3 { margin: 0; font-size: 14px; font-weight: 800; }
+        .arrow-icon { transition: transform 0.3s; font-size: 12px; color: var(--gray-text); }
+        .arrow-icon.open { transform: rotate(180deg); }
+
+        .attendance-body { 
+            max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; 
+            padding: 0 15px; background: #fff;
+        }
+        .attendance-body.open { max-height: 500px; padding-bottom: 20px; }
+
         .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
         .day-box { 
             aspect-ratio: 1; background: #fdfdfd; border-radius: 12px; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            font-size: 10px; font-weight: bold; color: #bbb; border: 1px solid #eee;
-            cursor: pointer; position: relative; transition: all 0.2s;
+            font-size: 9px; font-weight: bold; color: #bbb; border: 1px solid #eee;
+            cursor: pointer; transition: all 0.2s;
         }
         .day-box.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
         .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); background: #fff5f2; }
         .day-box.special { background: #fffde7; border-color: var(--accent-gold); color: #d4af37; }
-        .reward-icon { font-size: 14px; margin-bottom: 2px; }
+        .reward-icon { font-size: 13px; margin-bottom: 2px; }
 
         /* Shop Area */
         .shop-area { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -93,12 +108,14 @@
         <div class="next-goal" id="next-level-text">Goal for LV.2: 10 ICE</div>
     </div>
 
-    <div class="card">
-        <div class="attendance-title">
-            <span>📅 30-Day Rewards</span>
-            <span style="color: var(--accent-blue); font-size: 11px;">Collect Daily</span>
+    <div class="card attendance-card">
+        <div class="attendance-header" onclick="toggleAttendance()">
+            <h3>📅 30-Day Rewards</h3>
+            <span id="arrow" class="arrow-icon">▼</span>
         </div>
-        <div class="grid-30" id="attendance-grid"></div>
+        <div id="attendance-body" class="attendance-body">
+            <div class="grid-30" id="attendance-grid"></div>
+        </div>
     </div>
 
     <div class="shop-area">
@@ -119,32 +136,39 @@
         let autoSpeed = 0.00005;
         let speedMultiplier = 1;
         
-        // 추천 레벨 밸런스
         const levelMilestones = [0, 10, 30, 70, 150, 300, 600, 1000];
 
-        // 자동 채굴
+        // [PASSIVE MINING]
         setInterval(() => {
             power += (autoSpeed * speedMultiplier);
             document.getElementById('mining-power').innerText = "+ " + power.toFixed(5);
         }, 1000);
 
-        // 출석 그리드 생성
+        // [TOGGLE FUNCTION]
+        function toggleAttendance() {
+            const body = document.getElementById('attendance-body');
+            const arrow = document.getElementById('arrow');
+            body.classList.toggle('open');
+            arrow.classList.toggle('open');
+        }
+
+        // [GENERATE GRID]
         const grid = document.getElementById('attendance-grid');
         for(let i=1; i<=30; i++) {
             const box = document.createElement('div');
             box.className = 'day-box';
             if (i % 7 === 0) box.classList.add('special');
             
-            let icon = "🍬";
+            let icon = "🧊";
             if (i === 7) icon = "🎁";
             if (i === 14) icon = "⚡";
             if (i === 21) icon = "🚀";
-            if (i === 28) icon = "🏆";
+            if (i === 28) icon = "💎"; // Updated Icon
             
             box.innerHTML = `<span class="reward-icon">${icon}</span>Day ${i}`;
             if (i === 1) {
                 box.classList.add('today');
-                box.onclick = () => dailyCheckIn(box, i);
+                box.onclick = (e) => { e.stopPropagation(); dailyCheckIn(box, i); };
             }
             grid.appendChild(box);
         }
@@ -152,21 +176,23 @@
         function dailyCheckIn(element, day) {
             if (element.classList.contains('active')) return;
             
-            let rewardMsg = "Received 1 ICE Candy!";
+            let rewardMsg = "Received 1 ICE!";
             let bonus = 1;
 
-            // 7일 단위 특별 보상 로직
             if (day === 7) { bonus = 10; rewardMsg = "Weekly Bonus: +10 ICE!"; }
             else if (day === 14) { 
                 speedMultiplier = 2; 
-                rewardMsg = "14-Day Reward: 2X Mining Speed for 2 hours!"; 
+                rewardMsg = "14-Day Flash: 2X Mining Speed (2h)!"; 
                 setTimeout(() => { speedMultiplier = 1; updateUI(); }, 7200000);
             }
             else if (day === 21) { 
                 autoSpeed += 0.0001; 
-                rewardMsg = "21-Day Reward: Permanent Speed Boost!"; 
+                rewardMsg = "21-Day Boost: Permanent Speed Up!"; 
             }
-            else if (day === 28) { bonus = 50; rewardMsg = "Monthly Special: +50 ICE!"; }
+            else if (day === 28) { 
+                bonus = 100; 
+                rewardMsg = "💎 DIAMOND REWARD: +100 ICE!"; 
+            }
 
             shards += bonus;
             element.classList.remove('today');
@@ -235,7 +261,7 @@
             }
         }
 
-        function tgAlert() { tg.showAlert("🚧 Coming Soon!"); }
+        function tgAlert() { tg.showAlert("🚧 Features coming soon!"); }
     </script>
 </body>
 </html>

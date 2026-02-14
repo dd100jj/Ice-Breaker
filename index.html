@@ -20,7 +20,7 @@
             font-family: 'Pretendard', -apple-system, sans-serif;
             margin: 0; padding: 15px; display: flex; flex-direction: column; gap: 15px;
         }
-        /* 상단 유저 정보 */
+        /* User Profile Header */
         .user-header { display: flex; align-items: center; gap: 10px; padding: 10px 5px; }
         .level-tag { 
             background: #ffcc80; color: white; padding: 4px 12px; 
@@ -28,31 +28,35 @@
         }
         .user-name { font-size: 24px; font-weight: 800; color: var(--accent-orange); }
 
-        /* 카드 공통 스타일 */
+        /* Card Layout */
         .card { 
             background: var(--card-bg); border-radius: 15px; padding: 20px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column;
         }
 
-        /* 보유 자산 카드 */
+        /* Asset/Wallet Card */
         .asset-card { position: relative; }
         .asset-title { font-size: 14px; font-weight: bold; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
         .asset-amount { font-size: 28px; font-weight: 800; margin-top: 5px; color: #546e7a; }
         .history-btn { 
             position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
             border: 1px solid #ddd; border-radius: 8px; padding: 5px 10px; font-size: 12px; color: var(--gray-text);
+            cursor: pointer; background: none;
         }
 
-        /* 메인 채굴 카드 */
+        /* Mining Main Card */
         .mine-card { align-items: center; text-align: center; gap: 10px; }
         .mine-title { font-size: 14px; font-weight: bold; color: var(--gray-text); letter-spacing: 1px; }
-        .ice-cube { font-size: 80px; margin: 10px 0; cursor: pointer; transition: transform 0.1s; }
+        .ice-cube { font-size: 100px; margin: 15px 0; cursor: pointer; transition: transform 0.1s; user-select: none; }
         .ice-cube:active { transform: scale(0.9); }
         .mining-power { font-size: 32px; font-weight: 800; }
-        .mining-speed { color: var(--accent-orange); font-weight: bold; font-size: 16px; }
-        .limit-text { font-size: 12px; color: var(--gray-text); margin-top: 5px; }
+        .mining-speed { color: var(--accent-orange); font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+        
+        /* Global Guide Text */
+        .guide-text { font-size: 13px; color: var(--accent-orange); font-weight: 600; margin-top: 5px; }
+        .limit-text { font-size: 12px; color: var(--gray-text); }
 
-        /* 하단 상점 버튼 영역 */
+        /* Bottom Shop Area */
         .shop-area { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .shop-btn { 
             border: none; border-radius: 12px; padding: 15px; font-weight: bold; 
@@ -66,7 +70,7 @@
 <body>
     <div class="user-header">
         <div class="level-tag">⭐ LEVEL LV.1</div>
-        <div class="user-name" id="user-name">Gifty</div>
+        <div class="user-name" id="user-name">User_name</div>
     </div>
 
     <div class="card asset-card">
@@ -76,12 +80,14 @@
     </div>
 
     <div class="card mine-card">
-        <div class="mine-title">ICE MINNER</div>
-        <div class="ice-cube" onclick="mineClick()">🧊</div>
-        <div class="mining-power" id="mining-power">+ 0.0000</div>
-        <div class="mining-speed">+ 0.00005 / 초</div>
-        <div class="limit-text">Maximum 1000 (ICE)</div>
-        <div class="limit-text" style="font-size: 10px; opacity: 0.7;">Click the button</div>
+        <div class="mine-title">ICE MINER</div>
+        <div class="ice-cube" id="ice-button" onclick="mineClick()">🧊</div>
+        <div class="mining-power" id="mining-power">+ 0.00000</div>
+        <div class="mining-speed">+ 0.00005 / sec</div>
+        
+        <div class="guide-text">Minimum 1 ICE required to collect</div>
+        <div class="limit-text">Maximum storage: 1,000 ICE</div>
+        <div class="limit-text" style="font-size: 10px; opacity: 0.7; margin-top: 5px;">Click the ICE to collect to container</div>
     </div>
 
     <div class="shop-area">
@@ -99,24 +105,46 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // 유저 이름 가져오기
+        // Fetch Username from Telegram
         const userName = tg.initDataUnsafe?.user?.first_name || "User_name";
         document.getElementById('user-name').innerText = userName;
 
-        let shards = 0;
-        let power = 0.0000;
+        let shards = 0; // Container Balance (Integer)
+        let power = 0.00000; // Mining Accumulation (Decimal)
+        const autoSpeed = 0.00005; // 0.00005 per second
 
+        // [PASSIVE MINING] Adds speed value every 1 second
+        setInterval(() => {
+            power += autoSpeed;
+            document.getElementById('mining-power').innerText = "+ " + power.toFixed(5);
+        }, 1000);
+
+        // [CLICK COLLECTION] Moves integer units to container only if >= 1
         function mineClick() {
-            shards += 1;
-            power += 0.0001;
-            document.getElementById('balance').innerText = shards.toLocaleString();
-            document.getElementById('mining-power').innerText = "+ " + power.toFixed(4);
-            
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+            if (power >= 1) {
+                let harvest = Math.floor(power); // Take only integers
+                
+                shards += harvest;
+                power -= harvest; // Keep the decimal remainder in miner
+                
+                document.getElementById('balance').innerText = shards.toLocaleString();
+                document.getElementById('mining-power').innerText = "+ " + power.toFixed(5);
+                
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.impactOccurred('heavy');
+                }
+            } else {
+                // Global Message for minimum condition
+                tg.showAlert("You need at least 1 ICE to collect it into the container!");
+                
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('error');
+                }
+            }
         }
 
         function tgAlert() {
-            tg.showAlert("🚧 정식 오픈 준비 중입니다!\n곧 아이템 상점과 히스토리 기능을 만나보세요.");
+            tg.showAlert("🚧 Under Construction!\nItem Shop and Wallet features will be available soon.");
         }
     </script>
 </body>

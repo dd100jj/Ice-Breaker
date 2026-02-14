@@ -19,49 +19,47 @@
             color: var(--text-main);
             font-family: 'Pretendard', -apple-system, sans-serif;
             margin: 0; padding: 15px; display: flex; flex-direction: column; gap: 15px;
+            overflow: hidden; /* 파편이 화면 밖으로 나가지 않게 */
         }
-        /* User Profile Header */
+
+        /* 1. 반짝임 효과 애니메이션 */
+        @keyframes sparkle-anim {
+            0% { box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid transparent; }
+            50% { box-shadow: 0 0 20px var(--accent-blue); border: 1px solid var(--accent-blue); }
+            100% { box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid transparent; }
+        }
+        .sparkle { animation: sparkle-anim 0.6s ease-in-out; }
+
+        /* 파편(Particle) 스타일 */
+        .particle {
+            position: absolute; pointer-events: none;
+            width: 8px; height: 8px; background: #b3e5fc;
+            border-radius: 2px; z-index: 100;
+        }
+
         .user-header { display: flex; align-items: center; gap: 10px; padding: 10px 5px; }
-        .level-tag { 
-            background: #ffcc80; color: white; padding: 4px 12px; 
-            border-radius: 20px; font-weight: bold; font-size: 14px; 
-        }
+        .level-tag { background: #ffcc80; color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; }
         .user-name { font-size: 24px; font-weight: 800; color: var(--accent-orange); }
 
-        /* Card Layout */
-        .card { 
-            background: var(--card-bg); border-radius: 15px; padding: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column;
-        }
+        .card { background: var(--card-bg); border-radius: 15px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; transition: all 0.3s; }
 
-        /* Asset/Wallet Card */
-        .asset-card { position: relative; }
-        .asset-title { font-size: 14px; font-weight: bold; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        .asset-card { position: relative; border: 1px solid transparent; }
+        .asset-title { font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
         .asset-amount { font-size: 28px; font-weight: 800; margin-top: 5px; color: #546e7a; }
-        .history-btn { 
-            position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
-            border: 1px solid #ddd; border-radius: 8px; padding: 5px 10px; font-size: 12px; color: var(--gray-text);
-            cursor: pointer; background: none;
-        }
+        .history-btn { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); border: 1px solid #ddd; border-radius: 8px; padding: 5px 10px; font-size: 12px; color: var(--gray-text); cursor: pointer; background: none; }
 
-        /* Mining Main Card */
-        .mine-card { align-items: center; text-align: center; gap: 10px; }
+        .mine-card { align-items: center; text-align: center; gap: 10px; position: relative; }
         .mine-title { font-size: 14px; font-weight: bold; color: var(--gray-text); letter-spacing: 1px; }
-        .ice-cube { font-size: 100px; margin: 15px 0; cursor: pointer; transition: transform 0.1s; user-select: none; }
+        .ice-cube { font-size: 100px; margin: 15px 0; cursor: pointer; transition: transform 0.1s; user-select: none; z-index: 10; }
         .ice-cube:active { transform: scale(0.9); }
         .mining-power { font-size: 32px; font-weight: 800; }
         .mining-speed { color: var(--accent-orange); font-weight: bold; font-size: 16px; margin-bottom: 5px; }
         
-        /* Global Guide Text */
         .guide-text { font-size: 13px; color: var(--accent-orange); font-weight: 600; margin-top: 5px; }
         .limit-text { font-size: 12px; color: var(--gray-text); }
 
-        /* Bottom Shop Area */
         .shop-area { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .shop-btn { 
-            border: none; border-radius: 12px; padding: 15px; font-weight: bold; 
-            color: white; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer;
-        }
+        .shop-btn { border: none; border-radius: 12px; padding: 15px; font-weight: bold; color: white; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
         .btn-blue { background: #42a5f5; }
         .btn-orange { background: #ff7043; }
         .btn-label { font-size: 11px; opacity: 0.9; }
@@ -73,21 +71,19 @@
         <div class="user-name" id="user-name">User_name</div>
     </div>
 
-    <div class="card asset-card">
+    <div id="asset-card" class="card asset-card">
         <div class="asset-title">🧊 Ice container</div>
         <div class="asset-amount" id="balance">0</div>
         <button class="history-btn" onclick="tgAlert()">💸 Wallet</button>
     </div>
 
-    <div class="card mine-card">
+    <div class="card mine-card" id="mine-container">
         <div class="mine-title">ICE MINER</div>
-        <div class="ice-cube" id="ice-button" onclick="mineClick()">🧊</div>
+        <div class="ice-cube" id="ice-button" onclick="mineClick(event)">🧊</div>
         <div class="mining-power" id="mining-power">+ 0.00000</div>
         <div class="mining-speed">+ 0.00005 / sec</div>
-        
         <div class="guide-text">Minimum 1 ICE required to collect</div>
         <div class="limit-text">Maximum storage: 1,000 ICE</div>
-        <div class="limit-text" style="font-size: 10px; opacity: 0.7; margin-top: 5px;">Click the ICE to collect to container</div>
     </div>
 
     <div class="shop-area">
@@ -105,47 +101,5 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Fetch Username from Telegram
         const userName = tg.initDataUnsafe?.user?.first_name || "User_name";
-        document.getElementById('user-name').innerText = userName;
-
-        let shards = 0; // Container Balance (Integer)
-        let power = 0.00000; // Mining Accumulation (Decimal)
-        const autoSpeed = 0.00005; // 0.00005 per second
-
-        // [PASSIVE MINING] Adds speed value every 1 second
-        setInterval(() => {
-            power += autoSpeed;
-            document.getElementById('mining-power').innerText = "+ " + power.toFixed(5);
-        }, 1000);
-
-        // [CLICK COLLECTION] Moves integer units to container only if >= 1
-        function mineClick() {
-            if (power >= 1) {
-                let harvest = Math.floor(power); // Take only integers
-                
-                shards += harvest;
-                power -= harvest; // Keep the decimal remainder in miner
-                
-                document.getElementById('balance').innerText = shards.toLocaleString();
-                document.getElementById('mining-power').innerText = "+ " + power.toFixed(5);
-                
-                if (tg.HapticFeedback) {
-                    tg.HapticFeedback.impactOccurred('heavy');
-                }
-            } else {
-                // Global Message for minimum condition
-                tg.showAlert("You need at least 1 ICE to collect it into the container!");
-                
-                if (tg.HapticFeedback) {
-                    tg.HapticFeedback.notificationOccurred('error');
-                }
-            }
-        }
-
-        function tgAlert() {
-            tg.showAlert("🚧 Under Construction!\nItem Shop and Wallet features will be available soon.");
-        }
-    </script>
-</body>
-</html>
+        document.

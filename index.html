@@ -6,70 +6,118 @@
     <title>Ice Breaker Gold</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --main-blue: #0088cc; --ice-bg: #e1f5fe; }
+        :root {
+            --tg-bg: var(--tg-theme-bg-color, #f0f2f5);
+            --card-bg: #ffffff;
+            --text-main: #222222;
+            --accent-orange: #ff8a65;
+            --accent-blue: #4fc3f7;
+            --gray-text: #888888;
+        }
         body { 
-            background-color: var(--tg-theme-bg-color, #ffffff); 
-            color: var(--tg-theme-text-color, #222222);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh;
+            background-color: var(--tg-bg); 
+            color: var(--text-main);
+            font-family: 'Pretendard', -apple-system, sans-serif;
+            margin: 0; padding: 15px; display: flex; flex-direction: column; gap: 15px;
         }
-        /* 상단 바 */
-        .top-bar {
-            padding: 15px; display: flex; justify-content: space-between; align-items: center;
-            background: var(--tg-theme-secondary-bg-color, #f4f4f4); border-bottom: 1px solid #ddd;
+        /* 상단 유저 정보 */
+        .user-header { display: flex; align-items: center; gap: 10px; padding: 10px 5px; }
+        .level-tag { 
+            background: #ffcc80; color: white; padding: 4px 12px; 
+            border-radius: 20px; font-weight: bold; font-size: 14px; 
         }
-        .wallet-info { font-size: 14px; font-weight: bold; color: var(--main-blue); }
-        
-        /* 메인 영역 */
-        .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #score { font-size: 48px; font-weight: 800; margin-bottom: 10px; }
-        .unit { font-size: 18px; color: #888; margin-bottom: 30px; }
-        
-        #ice-button { 
-            font-size: 140px; cursor: pointer; user-select: none; transition: transform 0.1s;
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
-        }
-        #ice-button:active { transform: scale(0.92); }
+        .user-name { font-size: 24px; font-weight: 800; color: var(--accent-orange); }
 
-        /* 하단 버튼 */
-        .bottom-nav { display: flex; gap: 10px; padding: 20px; background: var(--tg-theme-bg-color); }
-        .nav-btn { flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: bold; font-size: 15px; cursor: pointer; }
-        .btn-shop { background: var(--main-blue); color: white; }
-        .btn-claim { background: #ff9800; color: white; }
+        /* 카드 공통 스타일 */
+        .card { 
+            background: var(--card-bg); border-radius: 15px; padding: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column;
+        }
+
+        /* 보유 자산 카드 */
+        .asset-card { position: relative; }
+        .asset-title { font-size: 14px; font-weight: bold; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        .asset-amount { font-size: 28px; font-weight: 800; margin-top: 5px; color: #546e7a; }
+        .history-btn { 
+            position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+            border: 1px solid #ddd; border-radius: 8px; padding: 5px 10px; font-size: 12px; color: var(--gray-text);
+        }
+
+        /* 메인 채굴 카드 */
+        .mine-card { align-items: center; text-align: center; gap: 10px; }
+        .mine-title { font-size: 14px; font-weight: bold; color: var(--gray-text); letter-spacing: 1px; }
+        .ice-cube { font-size: 80px; margin: 10px 0; cursor: pointer; transition: transform 0.1s; }
+        .ice-cube:active { transform: scale(0.9); }
+        .mining-power { font-size: 32px; font-weight: 800; }
+        .mining-speed { color: var(--accent-orange); font-weight: bold; font-size: 16px; }
+        .limit-text { font-size: 12px; color: var(--gray-text); margin-top: 5px; }
+
+        /* 하단 상점 버튼 영역 */
+        .shop-area { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .shop-btn { 
+            border: none; border-radius: 12px; padding: 15px; font-weight: bold; 
+            color: white; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer;
+        }
+        .btn-blue { background: #42a5f5; }
+        .btn-orange { background: #ff7043; }
+        .btn-label { font-size: 11px; opacity: 0.9; }
     </style>
 </head>
 <body>
-    <div class="top-bar">
-        <div class="wallet-info">👛 Wallet: Connected</div>
-        <div style="font-size: 12px; color: #d32f2f; font-weight: bold;">[BETA TEST]</div>
+    <div class="user-header">
+        <div class="level-tag">⭐ LEVEL LV.1</div>
+        <div class="user-name" id="user-name">Gifty</div>
     </div>
 
-    <div class="main-content">
-        <div id="score">0</div>
-        <div class="unit">ICE SHARDS</div>
-        <div id="ice-button" onclick="tapIce()">🧊</div>
+    <div class="card asset-card">
+        <div class="asset-title">🧊 Ice container</div>
+        <div class="asset-amount" id="balance">0</div>
+        <button class="history-btn" onclick="tgAlert()">📈 HISTORY</button>
     </div>
 
-    <div class="bottom-nav">
-        <button class="nav-btn btn-shop" onclick="openShop()">🛒 ITEM SHOP</button>
-        <button class="nav-btn btn-claim" onclick="claimAirdrop()">🎁 CLAIM</button>
+    <div class="card mine-card">
+        <div class="mine-title">ICE MINE</div>
+        <div class="ice-cube" onclick="mineClick()">🧊</div>
+        <div class="mining-power" id="mining-power">+ 0.0000</div>
+        <div class="mining-speed">+ 0.00005 / 초</div>
+        <div class="limit-text">Maximum 1000 (Candy)</div>
+        <div class="limit-text" style="font-size: 10px; opacity: 0.7;">Click the button</div>
+    </div>
+
+    <div class="shop-area">
+        <button class="shop-btn btn-blue" onclick="tgAlert()">
+            <span class="btn-label">ITEM SHOP</span>
+            🛒 UPGRADE HAMMER
+        </button>
+        <button class="shop-btn btn-orange" onclick="tgAlert()">
+            <span class="btn-label">ITEM SHOP</span>
+            🎁 UPGRADE HAMMER
+        </button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        
-        // 1. 앱 시작 시 공지 팝업 띄우기
-        window.onload = function() {
-            tg.showAlert("🚧 정식 오픈 준비 중입니다!\n\n현재는 기능 테스트 단계이며, 테스트 기간 동안의 포인트는 정식 출시 시 초기화될 수 있습니다. 곧 만나요!");
-        };
+
+        // 유저 이름 가져오기
+        const userName = tg.initDataUnsafe?.user?.first_name || "User_name";
+        document.getElementById('user-name').innerText = userName;
 
         let shards = 0;
+        let power = 0.0000;
 
-        function tapIce() {
-            shards++;
-            document.getElementById('score').innerText = shards;
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        function mineClick() {
+            shards += 1;
+            power += 0.0001;
+            document.getElementById('balance').innerText = shards.toLocaleString();
+            document.getElementById('mining-power').innerText = "+ " + power.toFixed(4);
+            
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
         }
 
-        function openShop() {
+        function tgAlert() {
+            tg.showAlert("🚧 정식 오픈 준비 중입니다!\n곧 아이템 상점과 히스토리 기능을 만나보세요.");
+        }
+    </script>
+</body>
+</html>

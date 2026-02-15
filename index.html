@@ -14,14 +14,22 @@
             --accent-blue: #4fc3f7;
             --gray-text: #888888;
             --danger: #ff5252;
+            --vip-gold: #fbc02d;
         }
         body { background-color: var(--tg-bg); color: var(--text-main); font-family: 'Pretendard', sans-serif; margin: 0; padding: 15px; display: flex; flex-direction: column; gap: 12px; overflow-x: hidden; }
         .card { background: var(--card-bg); border-radius: 15px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
         
-        /* Top Bar */
+        /* Top Bar & Status */
         .top-bar { display: flex; justify-content: space-between; align-items: center; }
         .level-tag { background: #ffcc80; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; }
         .wallet-btn { background: #fff; border: 1.5px solid var(--accent-blue); color: var(--accent-blue); padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+
+        /* My Status Card (새로 추가된 인벤토리) */
+        .status-card { display: flex; flex-direction: row; justify-content: space-around; padding: 10px; background: #fff; border: 1px dashed var(--accent-blue); }
+        .status-item { text-align: center; }
+        .status-label { font-size: 9px; color: var(--gray-text); font-weight: bold; }
+        .status-value { font-size: 12px; font-weight: 800; color: var(--text-main); }
+        .status-value.active { color: var(--vip-gold); }
 
         /* Mining Main */
         .mine-card { align-items: center; text-align: center; gap: 6px; }
@@ -30,7 +38,7 @@
         .mining-power { font-size: 28px; font-weight: 800; }
         .mining-speed { color: var(--accent-orange); font-weight: bold; font-size: 14px; }
         
-        /* 4줄 핵심 안내 문구 고정 */
+        /* 4줄 핵심 안내 문구 유지 */
         .guide-text { font-size: 12px; color: var(--accent-orange); font-weight: 600; }
         .limit-text { font-size: 11px; color: var(--gray-text); }
         .click-info { font-size: 10px; opacity: 0.7; color: var(--gray-text); }
@@ -60,7 +68,6 @@
         .item-info p { margin: 0; font-size: 11px; color: var(--gray-text); }
         .buy-small-btn { background: var(--accent-blue); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 11px; font-weight: bold; }
 
-        /* TXID Helper Box */
         .helper-box { background: #f0f4f8; border-left: 4px solid var(--accent-blue); padding: 10px; border-radius: 8px; font-size: 10px; color: #555; line-height: 1.4; }
     </style>
 </head>
@@ -71,6 +78,18 @@
         <div class="wallet-btn" onclick="openWallet()">
             <span>👛 Wallet</span>
             <span id="usdt-preview">0.00 USDT</span>
+        </div>
+    </div>
+
+    <div class="card status-card">
+        <div class="status-item">
+            <div class="status-label">GOLD PASS</div>
+            <div class="status-value" id="status-vip">INACTIVE</div>
+        </div>
+        <div style="width:1px; background:#eee;"></div>
+        <div class="status-item">
+            <div class="status-label">LUCKY SHIELD</div>
+            <div class="status-value" id="status-shield">0 Left</div>
         </div>
     </div>
 
@@ -131,7 +150,6 @@
             <div class="helper-box">
                 <strong>💡 What is TXID?</strong><br>
                 TXID is a unique transaction hash (64 characters) found in your wallet's history after sending funds. 
-                It acts as your digital receipt for verification.
             </div>
 
             <div style="font-size:10px; color:var(--danger); background:#fff5f5; padding:10px; border-radius:10px;">⚠️ Admin will verify your payment within 24 hours.</div>

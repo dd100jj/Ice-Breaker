@@ -12,76 +12,56 @@
             --text-main: #222222;
             --accent-orange: #ff8a65;
             --accent-blue: #4fc3f7;
-            --accent-gold: #ffd700;
             --gray-text: #888888;
             --danger: #ff5252;
-            --success: #4caf50;
         }
-        body { 
-            background-color: var(--tg-bg); color: var(--text-main);
-            font-family: 'Pretendard', -apple-system, sans-serif;
-            margin: 0; padding: 15px; display: flex; flex-direction: column; gap: 12px;
-            overflow-x: hidden;
-        }
-
+        body { background-color: var(--tg-bg); color: var(--text-main); font-family: 'Pretendard', sans-serif; margin: 0; padding: 15px; display: flex; flex-direction: column; gap: 12px; overflow-x: hidden; }
         .card { background: var(--card-bg); border-radius: 15px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
         
         /* Top Bar */
         .top-bar { display: flex; justify-content: space-between; align-items: center; }
         .level-tag { background: #ffcc80; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; }
-        .wallet-btn { 
-            background: #fff; border: 1.5px solid var(--accent-blue); color: var(--accent-blue);
-            padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 13px;
-            display: flex; align-items: center; gap: 8px; cursor: pointer;
-        }
+        .wallet-btn { background: #fff; border: 1.5px solid var(--accent-blue); color: var(--accent-blue); padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
 
-        /* Asset Card */
-        .asset-card { position: relative; border: 1px solid transparent; }
-        .asset-title { font-size: 13px; font-weight: bold; color: var(--gray-text); }
-        .asset-amount { font-size: 32px; font-weight: 800; margin-top: 5px; color: #455a64; }
-
-        /* Mining Area (기본 문구 복구) */
-        .mine-card { align-items: center; text-align: center; gap: 6px; position: relative; }
-        .ice-cube { font-size: 85px; margin: 10px 0; cursor: pointer; transition: transform 0.1s; user-select: none; z-index: 10; }
+        /* Mining Main */
+        .mine-card { align-items: center; text-align: center; gap: 6px; }
+        .ice-cube { font-size: 85px; margin: 10px 0; cursor: pointer; transition: transform 0.1s; user-select: none; }
         .ice-cube:active { transform: scale(0.9); }
         .mining-power { font-size: 28px; font-weight: 800; }
         .mining-speed { color: var(--accent-orange); font-weight: bold; font-size: 14px; }
         
-        /* 기존 안내 문구 스타일 */
-        .guide-text { font-size: 12px; color: var(--accent-orange); font-weight: 600; margin-top: 2px; }
+        /* 4줄 핵심 안내 문구 고정 */
+        .guide-text { font-size: 12px; color: var(--accent-orange); font-weight: 600; }
         .limit-text { font-size: 11px; color: var(--gray-text); }
-        .click-info { font-size: 10px; opacity: 0.7; color: var(--gray-text); margin-top: 2px; }
+        .click-info { font-size: 10px; opacity: 0.7; color: var(--gray-text); }
 
         /* Attendance Accordion */
-        .attendance-card { gap: 0; padding: 0; overflow: hidden; margin-top: 5px; }
+        .attendance-card { gap: 0; padding: 0; overflow: hidden; }
         .attendance-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #fff; }
-        .attendance-header h3 { margin: 0; font-size: 13px; font-weight: 800; }
-        .arrow-icon { transition: transform 0.3s; font-size: 10px; color: var(--gray-text); }
-        .arrow-icon.open { transform: rotate(180deg); }
         .attendance-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: #fff; }
         .attendance-body.open { max-height: 1200px; padding: 0 15px 20px 15px; }
-
         .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-        .day-box { 
-            aspect-ratio: 1; background: #fdfdfd; border-radius: 10px; border: 1px solid #eee;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #bbb; cursor: pointer;
-        }
-        .day-box.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
-        .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); background: #fffaf0; }
+        .day-box { aspect-ratio: 1; background: #fdfdfd; border-radius: 10px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #bbb; }
+        .day-box.active { background: var(--accent-blue); color: white; }
+        .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); }
 
         /* Shop Area */
         .shop-area { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .shop-btn { border: none; border-radius: 12px; padding: 12px; font-weight: bold; color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 14px; }
-        
+
         /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; }
-        .modal-content { width: 90%; background: white; border-radius: 25px; padding: 20px; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
+        .modal-content { width: 92%; background: white; border-radius: 25px; padding: 20px; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
         .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; }
-        .copy-area { background: #f4f4f4; padding: 10px; border-radius: 8px; font-size: 11px; word-break: break-all; color: #555; position: relative; border: 1px solid #ddd; cursor: pointer; }
-        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f0f0f0; }
+        .copy-area { background: #f4f4f4; padding: 10px; border-radius: 8px; font-size: 11px; word-break: break-all; color: #555; border: 1px solid #ddd; cursor: pointer; }
+        
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f0f0f0; }
         .item-info h4 { margin: 0; font-size: 14px; }
         .item-info p { margin: 0; font-size: 11px; color: var(--gray-text); }
-        .buy-small-btn { background: var(--accent-blue); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+        .buy-small-btn { background: var(--accent-blue); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 11px; font-weight: bold; }
+
+        /* TXID Helper Box */
+        .helper-box { background: #f0f4f8; border-left: 4px solid var(--accent-blue); padding: 10px; border-radius: 8px; font-size: 10px; color: #555; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -94,16 +74,15 @@
         </div>
     </div>
 
-    <div class="card asset-card">
-        <div class="asset-title">🧊 Ice container</div>
+    <div class="card">
+        <div style="font-size:13px; font-weight:bold; color:var(--gray-text);">🧊 Ice container</div>
         <div class="asset-amount" id="balance">0</div>
     </div>
 
-    <div class="card mine-card" id="mine-container">
+    <div class="card mine-card">
         <div class="ice-cube" onclick="mineClick(event)">🧊</div>
         <div class="mining-power" id="mining-power">+ 0.00000</div>
         <div class="mining-speed">+ 0.00005 / sec</div>
-        
         <div class="guide-text">Minimum 1 ICE required to collect</div>
         <div class="limit-text" id="next-level-text">Goal for LV.2: 10 ICE</div>
         <div class="limit-text">Maximum storage: 1,000 ICE</div>
@@ -143,11 +122,18 @@
                 <strong>Network:</strong> <span style="color:var(--danger); font-weight:bold;">TRC20 (Tron) Only</span>
             </div>
             <div style="font-size:11px; font-weight:bold; margin-top:5px;">Admin USDT Address:</div>
-            <div class="copy-area" id="admin-addr" onclick="copyAddr()">
-                TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx </div>
+            <div class="copy-area" id="admin-addr" onclick="copyAddr()">TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</div>
             <p style="font-size:10px; color:var(--gray-text); margin:0;">* Click the address to copy.</p>
+            
             <div style="font-size:11px; font-weight:bold; margin-top:10px;">Paste Your Transaction ID (TXID):</div>
-            <input type="text" id="txid-input" placeholder="Enter your payment ID" class="input-box">
+            <input type="text" id="txid-input" placeholder="Paste your TXID here" class="input-box">
+            
+            <div class="helper-box">
+                <strong>💡 What is TXID?</strong><br>
+                TXID is a unique transaction hash (64 characters) found in your wallet's history after sending funds. 
+                It acts as your digital receipt for verification.
+            </div>
+
             <div style="font-size:10px; color:var(--danger); background:#fff5f5; padding:10px; border-radius:10px;">⚠️ Admin will verify your payment within 24 hours.</div>
             <button class="shop-btn" style="background:var(--accent-blue); width:100%; border:none; color:white; padding:12px; border-radius:12px; font-weight:bold;" onclick="submitPayment()">Submit Verification</button>
         </div>
@@ -242,22 +228,34 @@
             const container = document.getElementById('shop-items-container');
             container.innerHTML = "";
             document.getElementById('shop-title').innerText = type.toUpperCase();
+            
             if(type === 'upgrade') {
-                const items = [{ name: "Wooden Pickaxe", desc: "+0.0001/sec (Permanent)", price: "500 ICE" },{ name: "Iron Drill", desc: "+0.0005/sec (Permanent)", price: "3,000 ICE" }];
+                const items = [
+                    { name: "Steel Pickaxe", desc: "+0.0001/sec Auto-mining", price: "500 ICE" },
+                    { name: "Heated Gloves", desc: "+1 ICE per Manual Click", price: "1,200 ICE" },
+                    { name: "Mini Excavator", desc: "+0.0005/sec Auto-mining", price: "3,500 ICE" },
+                    { name: "Giant Storage", desc: "Max Storage up to 10k", price: "7,000 ICE" },
+                    { name: "Plasma Extractor", desc: "+0.0020/sec Auto-mining", price: "15,000 ICE" }
+                ];
                 items.forEach(item => { container.innerHTML += `<div class="item-row"><div class="item-info"><h4>${item.name}</h4><p>${item.desc}</p></div><button class="buy-small-btn" onclick="tgAlert()">${item.price}</button></div>`; });
             } else {
-                const items = [{ name: "VIP Pass (30 Days)", desc: "3X Mining Speed", price: "5 USDT" },{ name: "Warp Drive", desc: "Instant 7-Day Harvest", price: "10 USDT" }];
+                const items = [
+                    { name: "Warp Drive", desc: "Instant 7-Day Harvest", price: "5 USDT" },
+                    { name: "Gold Pass (30D)", desc: "3X Speed + Double Daily Reward", price: "10 USDT" },
+                    { name: "Lucky Shield (5x)", desc: "Protects Daily Streak (5 times)", price: "5 USDT" }
+                ];
                 items.forEach(item => { container.innerHTML += `<div class="item-row"><div class="item-info"><h4>${item.name}</h4><p>${item.desc}</p></div><button class="buy-small-btn" onclick="openPayment('${item.price}')">${item.price}</button></div>`; });
             }
             document.getElementById('shop-modal').style.display = 'flex';
         }
+
         function openPayment(price) { document.getElementById('pay-price').innerText = price; document.getElementById('payment-modal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; }
         function copyAddr() { const addr = document.getElementById('admin-addr').innerText; navigator.clipboard.writeText(addr); tg.showAlert("Address Copied!"); }
-        function submitPayment() { const txid = document.getElementById('txid-input').value; if(txid.length < 10) { tg.showAlert("Invalid TXID."); return; } tg.showAlert("Submitted!"); closeModal('payment-modal'); }
+        function submitPayment() { const txid = document.getElementById('txid-input').value; if(txid.length < 10) { tg.showAlert("Please enter a valid TXID."); return; } tg.showAlert("Verification submitted!"); closeModal('payment-modal'); }
         function requestWithdraw() { const addr = document.getElementById('wallet-addr').value; if (shards < 14000) { tg.showAlert("Need 14,000 ICE"); return; } if (addr.length < 10) { tg.showAlert("Invalid address."); return; } tg.showConfirm(`Withdraw?`, (ok) => { if(ok) closeModal('wallet-modal'); }); }
-        function tgAlert() { tg.showAlert("🚧 Features coming soon!"); }
+        function tgAlert() { tg.showAlert("🚧 Coming soon!"); }
     </script>
 </body>
 </html>

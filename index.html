@@ -12,7 +12,6 @@
             --text-main: #222222;
             --accent-orange: #ff8a65;
             --accent-blue: #4fc3f7;
-            --accent-gold: #ffd700;
             --gray-text: #888888;
             --danger: #ff5252;
         }
@@ -35,7 +34,6 @@
         }
 
         /* Asset Card */
-        .asset-title { font-size: 13px; font-weight: bold; color: var(--gray-text); }
         .asset-amount { font-size: 32px; font-weight: 800; margin-top: 5px; color: #455a64; }
 
         /* Mining Area */
@@ -45,7 +43,6 @@
         .mining-power { font-size: 28px; font-weight: 800; }
         .mining-speed { color: var(--accent-orange); font-weight: bold; font-size: 14px; }
         
-        /* Fixed Guide Texts */
         .guide-text { font-size: 12px; color: var(--accent-orange); font-weight: 600; margin-top: 2px; }
         .limit-text { font-size: 11px; color: var(--gray-text); }
         .click-info { font-size: 10px; opacity: 0.7; color: var(--gray-text); margin-top: 2px; }
@@ -57,7 +54,7 @@
         .arrow-icon { transition: transform 0.3s; font-size: 10px; color: var(--gray-text); }
         .arrow-icon.open { transform: rotate(180deg); }
         .attendance-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: #fff; }
-        .attendance-body.open { max-height: 1000px; padding: 0 15px 20px 15px; }
+        .attendance-body.open { max-height: 1200px; padding: 0 15px 20px 15px; } /* 높이 충분히 확보 */
 
         .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         .day-box { 
@@ -67,7 +64,7 @@
         .day-box.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
         .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); background: #fffaf0; }
 
-        /* Shop Area (Buttons Added Back) */
+        /* Shop Area */
         .shop-area { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .shop-btn { border: none; border-radius: 12px; padding: 12px; font-weight: bold; color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 14px; }
         
@@ -89,15 +86,14 @@
     </div>
 
     <div class="card">
-        <div class="asset-title">🧊 Ice container</div>
+        <div style="font-size:13px; font-weight:bold; color:var(--gray-text);">🧊 Ice container</div>
         <div class="asset-amount" id="balance">0</div>
     </div>
 
-    <div class="card mine-card" id="mine-container">
+    <div class="card mine-card">
         <div class="ice-cube" onclick="mineClick(event)">🧊</div>
         <div class="mining-power" id="mining-power">+ 0.00000</div>
         <div class="mining-speed">+ 0.00005 / sec</div>
-        
         <div class="guide-text">Minimum 1 ICE required to collect</div>
         <div class="limit-text" id="next-level-text">Goal for LV.2: 10 ICE</div>
         <div class="limit-text">Maximum storage: 1,000 ICE</div>
@@ -115,12 +111,8 @@
     </div>
 
     <div class="shop-area">
-        <button class="shop-btn" style="background:#42a5f5;" onclick="tgAlert()">
-            🛒 UPGRADE
-        </button>
-        <button class="shop-btn" style="background:#ff7043;" onclick="tgAlert()">
-            🎁 SPECIAL
-        </button>
+        <button class="shop-btn" style="background:#42a5f5;" onclick="tgAlert()">🛒 UPGRADE</button>
+        <button class="shop-btn" style="background:#ff7043;" onclick="tgAlert()">🎁 SPECIAL</button>
     </div>
 
     <div id="wallet-modal" class="modal">
@@ -138,7 +130,7 @@
                 <option>Binance</option><option>Bybit</option><option>OKX</option><option>Telegram Wallet</option>
             </select>
             <input type="text" id="wallet-addr" placeholder="Your USDT-TON address" class="input-box">
-            <div class="warning-box">⚠️ Network: TON Mainnet only.</div>
+            <div class="warning-box">⚠️ Network: TON Mainnet Only.</div>
             <button class="shop-btn" style="background:var(--accent-blue); width:100%; border:none; color:white; padding:12px; border-radius:12px; font-weight:bold;" onclick="requestWithdraw()">Submit Request</button>
         </div>
     </div>
@@ -153,7 +145,6 @@
         const autoSpeed = 0.00005;
         const milestones = [0, 10, 30, 70, 150, 300, 600, 1000, 2500, 5000];
 
-        // Passive Mining
         setInterval(() => {
             power += autoSpeed;
             document.getElementById('mining-power').innerText = "+ " + power.toFixed(5);
@@ -185,23 +176,27 @@
             document.getElementById('usdt-preview').innerText = (shards / 1400).toFixed(2) + " USDT";
         }
 
-        // Accordion Toggle
         function toggleAttendance() {
-            const body = document.getElementById('attendance-body');
-            const arrow = document.getElementById('arrow');
-            body.classList.toggle('open');
-            arrow.classList.toggle('open');
+            document.getElementById('attendance-body').classList.toggle('open');
+            document.getElementById('arrow').classList.toggle('open');
         }
 
-        // Attendance Grid Init
+        // --- 30일 출석판 생성 로직 (수정 완료) ---
         const grid = document.getElementById('attendance-grid');
-        for(let i=1; i<=30; i++) {
+        for(let i=1; i<=30; i++) { // i <= 30 까지 확실히 반복
             const box = document.createElement('div');
             box.className = 'day-box';
-            let icon = i % 7 === 0 ? "🎁" : "🧊";
-            if(i===14) icon="⚡"; if(i===21) icon="🚀"; if(i===28) icon="💎";
+            
+            // 아이콘 설정
+            let icon = "🧊";
+            if(i % 7 === 0) icon = "🎁";
+            if(i === 14) icon = "⚡";
+            if(i === 21) icon = "🚀";
+            if(i === 28) icon = "💎";
+            
             box.innerHTML = `<span style="font-size:12px; margin-bottom:2px;">${icon}</span>D-${i}`;
-            if(i===1) { 
+            
+            if(i === 1) { 
                 box.classList.add('today'); 
                 box.onclick = (e) => { 
                     e.stopPropagation();
@@ -217,7 +212,6 @@
             grid.appendChild(box);
         }
 
-        // Wallet Functions
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; }
         function closeWallet() { document.getElementById('wallet-modal').style.display = 'none'; }
         function requestWithdraw() {
@@ -226,11 +220,7 @@
             if (addr.length < 10) { tg.showAlert("Invalid address."); return; }
             tg.showConfirm(`Withdraw?`, (ok) => { if(ok) closeWallet(); });
         }
-
-        // --- Re-added tgAlert Function ---
-        function tgAlert() {
-            tg.showAlert("🚧 Features coming soon!");
-        }
+        function tgAlert() { tg.showAlert("🚧 Features coming soon!"); }
     </script>
 </body>
 </html>

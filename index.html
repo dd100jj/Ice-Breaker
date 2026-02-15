@@ -160,4 +160,79 @@
                 updateUI();
                 if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
                 checkLevelUp();
+            } else { tg.showAlert("Collect at least 1 ICE!"); }
+        }
+
+        function checkLevelUp() {
+            if (level < 10 && shards >= milestones[level]) {
+                level++;
+                updateUI();
+                tg.showAlert(`🎉 LEVEL UP! LV.${level}`);
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('balance').innerText = shards.toLocaleString();
+            document.getElementById('level-display').innerText = `⭐ LV.${level}`;
+            document.getElementById('next-level-text').innerText = `Goal for LV.${level+1}: ${level < 10 ? milestones[level] : "MAX"} ICE`;
+            
+            // 실시간 가치 환산 (1400 ICE = 1 USDT)
+            const currentUSDT = (shards / 1400).toFixed(5);
+            document.getElementById('ice-to-usdt').innerText = currentUSDT + " USDT";
+            
+            // 지갑 미리보기 업데이트 (소수점 2자리)
+            document.getElementById('usdt-preview').innerText = (shards / 1400).toFixed(2) + " USDT";
+
+            // 게이지 바 업데이트 (1 USDT 달성률 시각화)
+            let percent = Math.min((shards / 1400) * 100, 100);
+            document.getElementById('ice-gauge-bar').style.width = percent + "%";
+        }
+
+        function toggleAttendance() {
+            document.getElementById('attendance-body').classList.toggle('open');
+            document.getElementById('arrow').classList.toggle('open');
+        }
+
+        const grid = document.getElementById('attendance-grid');
+        for(let i=1; i<=30; i++) {
+            const box = document.createElement('div');
+            box.className = 'day-box';
+            let icon = "🧊";
+            if(i % 7 === 0) icon = "🎁"; 
+            if(i === 14) icon = "⚡";
+            if(i === 21) icon = "🚀";
+            if(i === 30) icon = "💎"; 
+            box.innerHTML = `<span style="font-size:12px; margin-bottom:2px;">${icon}</span>D-${i}`;
+            if(i === 1) { 
+                box.classList.add('today'); 
+                box.onclick = (e) => { 
+                    e.stopPropagation();
+                    if(!box.classList.contains('active')){ shards += 1; box.classList.add('active'); updateUI(); tg.showAlert("Checked!"); checkLevelUp(); }
+                }; 
+            }
+            grid.appendChild(box);
+        }
+
+        function openShop(type) {
+            const container = document.getElementById('shop-items-container');
+            container.innerHTML = "";
+            document.getElementById('shop-title').innerText = type.toUpperCase();
+            if(type === 'upgrade') {
+                const items = [{ name: "Steel Pickaxe", desc: "+0.0001/sec Auto-mining", price: "500 ICE" },{ name: "Heated Gloves", desc: "+1 ICE per Manual Click", price: "1,200 ICE" },{ name: "Mini Excavator", desc: "+0.0005/sec Auto-mining", price: "3,500 ICE" },{ name: "Giant Storage", desc: "Max Storage up to 10k", price: "7,000 ICE" },{ name: "Plasma Extractor", desc: "+0.0020/sec Auto-mining", price: "15,000 ICE" }];
+                items.forEach(item => { container.innerHTML += `<div class="item-row"><div class="item-info"><h4>${item.name}</h4><p>${item.desc}</p></div><button class="buy-small-btn" onclick="tgAlert()">${item.price}</button></div>`; });
             } else {
+                const items = [{ name: "Warp Drive", desc: "Instant 7-Day Harvest", price: "5 USDT" },{ name: "Gold Pass (30D)", desc: "3X Speed + Double Daily Reward", price: "10 USDT" },{ name: "Lucky Shield (5x)", desc: "Protects Daily Streak (5 times)", price: "5 USDT" }];
+                items.forEach(item => { container.innerHTML += `<div class="item-row"><div class="item-info"><h4>${item.name}</h4><p>${item.desc}</p></div><button class="buy-small-btn" onclick="openPayment('${item.price}')">${item.price}</button></div>`; });
+            }
+            document.getElementById('shop-modal').style.display = 'flex';
+        }
+        function openPayment(price) { document.getElementById('pay-price').innerText = price; document.getElementById('payment-modal').style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; }
+        function copyAddr() { const addr = document.getElementById('admin-addr').innerText; navigator.clipboard.writeText(addr); tg.showAlert("Address Copied!"); }
+        function submitPayment() { const txid = document.getElementById('txid-input').value; if(txid.length < 10) { tg.showAlert("Please enter a valid TXID."); return; } tg.showAlert("Verification submitted!"); closeModal('payment-modal'); }
+        function requestWithdraw() { const addr = document.getElementById('wallet-addr').value; if (shards < 14000) { tg.showAlert("Need 14,000 ICE"); return; } if (addr.length < 10) { tg.showAlert("Invalid address."); return; } tg.showConfirm(`Withdraw?`, (ok) => { if(ok) closeModal('wallet-modal'); }); }
+        function tgAlert() { tg.showAlert("🚧 Coming soon!"); }
+    </script>
+</body>
+</html>

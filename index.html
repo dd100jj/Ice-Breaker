@@ -29,7 +29,6 @@
         .status-value { font-size: 12px; font-weight: 800; color: var(--text-main); }
         .status-value.active { color: var(--vip-gold); }
 
-        /* 아이스 컨테이너 스타일 */
         .ice-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .gauge-track { width: 100%; height: 20px; background: #f0f2f5; border-radius: 10px; overflow: hidden; border: 1px solid #eee; position: relative; margin: 5px 0; }
         .gauge-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #4fc3f7, #81d4fa); transition: width 0.3s ease; position: relative; }
@@ -60,13 +59,14 @@
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { width: 92%; background: white; border-radius: 25px; padding: 20px; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
-        .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; margin-top: 5px; }
+        .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; }
         .copy-area { background: #f4f4f4; padding: 10px; border-radius: 8px; font-size: 11px; word-break: break-all; color: #555; border: 1px solid #ddd; cursor: pointer; }
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f0f0f0; }
         .item-info h4 { margin: 0; font-size: 14px; }
         .item-info p { margin: 0; font-size: 11px; color: var(--gray-text); }
         .buy-small-btn { background: var(--accent-blue); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 11px; font-weight: bold; }
-        .helper-box { background: #f0f4f8; border-left: 4px solid var(--accent-blue); padding: 10px; border-radius: 8px; font-size: 10px; color: #555; line-height: 1.4; }
+        .close-icon { cursor:pointer; font-size:24px; color:#ccc; transition: color 0.2s; }
+        .close-icon:hover { color: #888; }
     </style>
 </head>
 <body>
@@ -127,44 +127,44 @@
         <button class="shop-btn" style="background:#ff7043;" onclick="openShop('special')">🎁 SPECIAL</button>
     </div>
 
-    <div id="shop-modal" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center;"><h2 id="shop-title" style="margin:0; font-size:18px;">Shop</h2><span onclick="closeModal('shop-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div><div id="shop-items-container"></div></div></div>
+    <div id="shop-modal" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center;"><h2 id="shop-title" style="margin:0; font-size:18px;">Shop</h2><span onclick="closeModal('shop-modal')" class="close-icon">&times;</span></div><div id="shop-items-container"></div></div></div>
     
-    <div id="payment-modal" class="modal"><div class="modal-content"><h2 style="margin:0; font-size:16px;">👑 Purchase Special Item</h2><div style="background:#fff9c4; padding:12px; border-radius:12px; font-size:12px;"><strong>Price:</strong> <span id="pay-price">5 USDT</span><br><strong>Network:</strong> <span style="color:var(--danger); font-weight:bold;">TRC20 (Tron) Only</span></div><div style="font-size:11px; font-weight:bold; margin-top:5px;">Admin USDT Address:</div><div class="copy-area" id="admin-addr" onclick="copyAddr()">TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</div><div style="font-size:11px; font-weight:bold; margin-top:10px;">Paste Your Transaction ID (TXID):</div><input type="text" id="txid-input" placeholder="Paste your TXID here" class="input-box"><button class="shop-btn" style="background:var(--accent-blue); width:100%; border:none; color:white; padding:12px; border-radius:12px; font-weight:bold; margin-top:10px;" onclick="submitPayment()">Submit Verification</button></div></div>
+    <div id="payment-modal" class="modal">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h2 style="margin:0; font-size:16px;">👑 Purchase Special Item</h2>
+                <span onclick="closeModal('payment-modal')" class="close-icon">&times;</span>
+            </div>
+            <div style="background:#fff9c4; padding:12px; border-radius:12px; font-size:12px;">
+                <strong>Price:</strong> <span id="pay-price">5 USDT</span><br>
+                <strong>Network:</strong> <span style="color:var(--danger); font-weight:bold;">TRC20 (Tron) Only</span>
+            </div>
+            <div style="font-size:11px; font-weight:bold; margin-top:5px;">Admin USDT Address:</div>
+            <div class="copy-area" id="admin-addr" onclick="copyAddr()">TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</div>
+            <p style="font-size:10px; color:var(--gray-text); margin:0;">* Click the address to copy.</p>
+            
+            <div style="font-size:11px; font-weight:bold; margin-top:10px;">Paste Your Transaction ID (TXID):</div>
+            <input type="text" id="txid-input" placeholder="Paste your TXID here" class="input-box">
+            
+            <button class="shop-btn" style="background:var(--accent-blue); width:100%; border:none; color:white; padding:12px; border-radius:12px; font-weight:bold; margin-top:10px;" onclick="submitPayment()">Submit Verification</button>
+        </div>
+    </div>
 
     <div id="wallet-modal" class="modal">
         <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <h2 style="margin:0; font-size:18px;">Withdraw USDT</h2>
-                <span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span>
+                <span onclick="closeModal('wallet-modal')" class="close-icon">&times;</span>
             </div>
             <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;">
                 <strong>Rate:</strong> 1,400 ICE = 1 USDT<br>
                 <strong>Min. Withdrawal:</strong> 14,000 ICE (10 USDT)
             </div>
-
-            <div style="margin-top: 10px;">
+            <div style="margin-top:10px;">
                 <div style="font-size:11px; font-weight:bold;">Network:</div>
-                <select class="input-box" style="color:var(--danger); font-weight:bold;">
-                    <option>TRC20 (Tron Network)</option>
-                </select>
+                <select class="input-box" style="color:var(--danger); font-weight:bold;"><option>TRC20 (Tron Network)</option></select>
             </div>
-
-            <div style="margin-top: 10px;">
-                <div style="font-size:11px; font-weight:bold;">Exchange:</div>
-                <select id="exchange-type" class="input-box">
-                    <option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option>
-                </select>
-            </div>
-
-            <div style="margin-top: 10px;">
-                <div style="font-size:11px; font-weight:bold;">Your USDT Address (TRC20):</div>
-                <input type="text" id="wallet-addr" placeholder="Enter TRC20 address" class="input-box">
-            </div>
-
-            <div style="font-size:10px; color:var(--danger); background:#fff5f5; padding:8px; border-radius:8px; margin-top:5px;">
-                ⚠️ Warning: Only TRC20 is supported. Incorrect network will result in loss.
-            </div>
-            
+            <input type="text" id="wallet-addr" placeholder="Enter TRC20 address" class="input-box" style="margin-top:10px;">
             <button class="shop-btn" style="background:var(--accent-blue); width:100%; border:none; color:white; padding:12px; border-radius:12px; font-weight:bold; margin-top:10px;" onclick="requestWithdraw()">Submit Request</button>
         </div>
     </div>
@@ -207,11 +207,9 @@
             document.getElementById('balance').innerText = shards.toLocaleString();
             document.getElementById('level-display').innerText = `⭐ LV.${level}`;
             document.getElementById('next-level-text').innerText = `Goal for LV.${level+1}: ${level < 10 ? milestones[level] : "MAX"} ICE`;
-            
             const currentUSDT = (shards / 1400).toFixed(5);
             document.getElementById('ice-to-usdt').innerText = currentUSDT + " USDT";
             document.getElementById('usdt-preview').innerText = (shards / 1400).toFixed(2) + " USDT";
-
             let percent = Math.min((shards / 1400) * 100, 100);
             document.getElementById('ice-gauge-bar').style.width = percent + "%";
         }

@@ -12,6 +12,7 @@
             --text-main: #222222;
             --accent-orange: #ff8a65;
             --accent-blue: #4fc3f7;
+            --accent-gold: #ffd700;
             --gray-text: #888888;
             --danger: #ff5252;
         }
@@ -54,7 +55,7 @@
         .arrow-icon { transition: transform 0.3s; font-size: 10px; color: var(--gray-text); }
         .arrow-icon.open { transform: rotate(180deg); }
         .attendance-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: #fff; }
-        .attendance-body.open { max-height: 1200px; padding: 0 15px 20px 15px; } /* 높이 충분히 확보 */
+        .attendance-body.open { max-height: 1200px; padding: 0 15px 20px 15px; }
 
         .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         .day-box { 
@@ -72,7 +73,6 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { width: 88%; background: white; border-radius: 25px; padding: 25px; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; }
         .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 14px; width: 100%; box-sizing: border-box; }
-        .warning-box { background: #fff5f5; color: var(--danger); border-radius: 10px; padding: 10px; font-size: 11px; font-weight: 600; border-left: 4px solid var(--danger); }
     </style>
 </head>
 <body>
@@ -123,14 +123,12 @@
             </div>
             <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px; line-height:1.6;">
                 <strong>Rate:</strong> 1,400 ICE = 1 USDT<br>
-                <strong>Min. Withdrawal:</strong> 14,000 ICE (10 USDT)<br>
-                <strong>Fee:</strong> 140 ICE (0.1 USDT)
+                <strong>Min. Withdrawal:</strong> 14,000 ICE (10 USDT)
             </div>
             <select id="exchange-type" class="input-box">
                 <option>Binance</option><option>Bybit</option><option>OKX</option><option>Telegram Wallet</option>
             </select>
             <input type="text" id="wallet-addr" placeholder="Your USDT-TON address" class="input-box">
-            <div class="warning-box">⚠️ Network: TON Mainnet Only.</div>
             <button class="shop-btn" style="background:var(--accent-blue); width:100%; border:none; color:white; padding:12px; border-radius:12px; font-weight:bold;" onclick="requestWithdraw()">Submit Request</button>
         </div>
     </div>
@@ -181,18 +179,17 @@
             document.getElementById('arrow').classList.toggle('open');
         }
 
-        // --- 30일 출석판 생성 로직 (수정 완료) ---
         const grid = document.getElementById('attendance-grid');
-        for(let i=1; i<=30; i++) { // i <= 30 까지 확실히 반복
+        for(let i=1; i<=30; i++) {
             const box = document.createElement('div');
             box.className = 'day-box';
             
-            // 아이콘 설정
+            // --- 아이콘 로직 최종 수정 ---
             let icon = "🧊";
-            if(i % 7 === 0) icon = "🎁";
+            if(i % 7 === 0) icon = "🎁"; 
             if(i === 14) icon = "⚡";
             if(i === 21) icon = "🚀";
-            if(i === 28) icon = "💎";
+            if(i === 30) icon = "💎"; 
             
             box.innerHTML = `<span style="font-size:12px; margin-bottom:2px;">${icon}</span>D-${i}`;
             
@@ -204,7 +201,7 @@
                         shards += 1; 
                         box.classList.add('active'); 
                         updateUI(); 
-                        tg.showAlert("Attendance Checked!"); 
+                        tg.showAlert("Checked!"); 
                         checkLevelUp(); 
                     }
                 }; 
@@ -216,7 +213,7 @@
         function closeWallet() { document.getElementById('wallet-modal').style.display = 'none'; }
         function requestWithdraw() {
             const addr = document.getElementById('wallet-addr').value;
-            if (shards < 14000) { tg.showAlert("Need 14,000 ICE (10 USDT)"); return; }
+            if (shards < 14000) { tg.showAlert("Need 14,000 ICE"); return; }
             if (addr.length < 10) { tg.showAlert("Invalid address."); return; }
             tg.showConfirm(`Withdraw?`, (ok) => { if(ok) closeWallet(); });
         }

@@ -23,10 +23,9 @@
             overflow-x: hidden;
         }
 
-        /* Common Styles */
         .card { background: var(--card-bg); border-radius: 15px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
         
-        /* Top Bar & Wallet */
+        /* Top Bar */
         .top-bar { display: flex; justify-content: space-between; align-items: center; }
         .level-tag { background: #ffcc80; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; }
         .wallet-btn { 
@@ -35,39 +34,44 @@
             display: flex; align-items: center; gap: 8px; cursor: pointer;
         }
 
-        /* Mining Main Area */
+        /* Asset Card */
+        .asset-title { font-size: 13px; font-weight: bold; color: var(--gray-text); }
+        .asset-amount { font-size: 32px; font-weight: 800; margin-top: 5px; color: #455a64; }
+
+        /* Mining Area */
         .mine-card { align-items: center; text-align: center; gap: 6px; position: relative; }
-        .ice-cube { font-size: 85px; margin: 10px 0; cursor: pointer; transition: transform 0.1s; user-select: none; z-index: 10; }
+        .ice-cube { font-size: 85px; margin: 10px 0; cursor: pointer; transition: transform 0.1s; user-select: none; }
         .ice-cube:active { transform: scale(0.9); }
         .mining-power { font-size: 28px; font-weight: 800; }
         .mining-speed { color: var(--accent-orange); font-weight: bold; font-size: 14px; }
         
-        /* Important Guides */
+        /* Fixed Guide Texts */
         .guide-text { font-size: 12px; color: var(--accent-orange); font-weight: 600; margin-top: 2px; }
         .limit-text { font-size: 11px; color: var(--gray-text); }
         .click-info { font-size: 10px; opacity: 0.7; color: var(--gray-text); margin-top: 2px; }
 
-        /* Attendance Toggle UI */
+        /* Attendance Accordion */
         .attendance-card { gap: 0; padding: 0; overflow: hidden; margin-top: 5px; }
-        .attendance-header { padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #fff; }
+        .attendance-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #fff; }
         .attendance-header h3 { margin: 0; font-size: 13px; font-weight: 800; }
         .arrow-icon { transition: transform 0.3s; font-size: 10px; color: var(--gray-text); }
         .arrow-icon.open { transform: rotate(180deg); }
-        .attendance-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; padding: 0 15px; }
-        .attendance-body.open { max-height: 500px; padding-bottom: 15px; }
+        .attendance-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: #fff; }
+        .attendance-body.open { max-height: 1000px; padding: 0 15px 20px 15px; }
+
         .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         .day-box { 
             aspect-ratio: 1; background: #fdfdfd; border-radius: 10px; border: 1px solid #eee;
             display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #bbb; cursor: pointer;
         }
         .day-box.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
-        .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); }
+        .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); background: #fffaf0; }
 
-        /* Shop Area */
+        /* Shop Area (Buttons Added Back) */
         .shop-area { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .shop-btn { border: none; border-radius: 12px; padding: 12px; font-weight: bold; color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .shop-btn { border: none; border-radius: 12px; padding: 12px; font-weight: bold; color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 14px; }
         
-        /* Modal Style */
+        /* Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { width: 88%; background: white; border-radius: 25px; padding: 25px; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; }
         .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 14px; width: 100%; box-sizing: border-box; }
@@ -84,9 +88,9 @@
         </div>
     </div>
 
-    <div id="asset-card" class="card">
-        <div style="font-size:13px; font-weight:bold; color:var(--gray-text);">🧊 Ice container</div>
-        <div class="asset-amount" id="balance" style="font-size:32px; font-weight:800;">0</div>
+    <div class="card">
+        <div class="asset-title">🧊 Ice container</div>
+        <div class="asset-amount" id="balance">0</div>
     </div>
 
     <div class="card mine-card" id="mine-container">
@@ -111,8 +115,12 @@
     </div>
 
     <div class="shop-area">
-        <button class="shop-btn" style="background:#42a5f5;" onclick="tgAlert()">🛒 UPGRADE</button>
-        <button class="shop-btn" style="background:#ff7043;" onclick="tgAlert()">🎁 SPECIAL</button>
+        <button class="shop-btn" style="background:#42a5f5;" onclick="tgAlert()">
+            🛒 UPGRADE
+        </button>
+        <button class="shop-btn" style="background:#ff7043;" onclick="tgAlert()">
+            🎁 SPECIAL
+        </button>
     </div>
 
     <div id="wallet-modal" class="modal">
@@ -129,20 +137,15 @@
             <select id="exchange-type" class="input-box">
                 <option>Binance</option><option>Bybit</option><option>OKX</option><option>Telegram Wallet</option>
             </select>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                <input type="text" value="USDT" disabled class="input-box" style="background:#f9f9f9;">
-                <input type="text" value="TON (Jetton)" disabled class="input-box" style="background:#f9f9f9;">
-            </div>
             <input type="text" id="wallet-addr" placeholder="Your USDT-TON address" class="input-box">
-            <div class="warning-box">⚠️ Network must be TON Mainnet. Wrong info will lead to permanent loss.</div>
-            <button class="shop-btn" style="background:var(--accent-blue); width:100%;" onclick="requestWithdraw()">Submit Request</button>
+            <div class="warning-box">⚠️ Network: TON Mainnet only.</div>
+            <button class="shop-btn" style="background:var(--accent-blue); width:100%; border:none; color:white; padding:12px; border-radius:12px; font-weight:bold;" onclick="requestWithdraw()">Submit Request</button>
         </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        document.getElementById('user-name')?.innerText = tg.initDataUnsafe?.user?.first_name || "Gifty";
 
         let shards = 0;
         let power = 0.00000;
@@ -150,6 +153,7 @@
         const autoSpeed = 0.00005;
         const milestones = [0, 10, 30, 70, 150, 300, 600, 1000, 2500, 5000];
 
+        // Passive Mining
         setInterval(() => {
             power += autoSpeed;
             document.getElementById('mining-power').innerText = "+ " + power.toFixed(5);
@@ -170,7 +174,7 @@
             if (level < 10 && shards >= milestones[level]) {
                 level++;
                 updateUI();
-                tg.showAlert(`🎉 LEVEL UP! You reached LV.${level}`);
+                tg.showAlert(`🎉 LEVEL UP! LV.${level}`);
             }
         }
 
@@ -181,11 +185,15 @@
             document.getElementById('usdt-preview').innerText = (shards / 1400).toFixed(2) + " USDT";
         }
 
+        // Accordion Toggle
         function toggleAttendance() {
-            document.getElementById('attendance-body').classList.toggle('open');
-            document.getElementById('arrow').classList.toggle('open');
+            const body = document.getElementById('attendance-body');
+            const arrow = document.getElementById('arrow');
+            body.classList.toggle('open');
+            arrow.classList.toggle('open');
         }
 
+        // Attendance Grid Init
         const grid = document.getElementById('attendance-grid');
         for(let i=1; i<=30; i++) {
             const box = document.createElement('div');
@@ -193,19 +201,36 @@
             let icon = i % 7 === 0 ? "🎁" : "🧊";
             if(i===14) icon="⚡"; if(i===21) icon="🚀"; if(i===28) icon="💎";
             box.innerHTML = `<span style="font-size:12px; margin-bottom:2px;">${icon}</span>D-${i}`;
-            if(i===1) { box.classList.add('today'); box.onclick = () => { if(!box.classList.contains('active')){ shards+=1; box.classList.add('active'); updateUI(); tg.showAlert("Checked!"); checkLevelUp(); }}; }
+            if(i===1) { 
+                box.classList.add('today'); 
+                box.onclick = (e) => { 
+                    e.stopPropagation();
+                    if(!box.classList.contains('active')){ 
+                        shards += 1; 
+                        box.classList.add('active'); 
+                        updateUI(); 
+                        tg.showAlert("Attendance Checked!"); 
+                        checkLevelUp(); 
+                    }
+                }; 
+            }
             grid.appendChild(box);
         }
 
+        // Wallet Functions
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; }
         function closeWallet() { document.getElementById('wallet-modal').style.display = 'none'; }
         function requestWithdraw() {
             const addr = document.getElementById('wallet-addr').value;
-            if (shards < 14000) { tg.showAlert("Min. withdrawal is 10 USDT (14,000 ICE)."); return; }
-            if (addr.length < 10) { tg.showAlert("Enter valid address."); return; }
-            tg.showConfirm(`Withdraw ${(shards/1400 - 0.1).toFixed(2)} USDT?`, (ok) => { if(ok){ tg.showAlert("Submitted!"); closeWallet(); }});
+            if (shards < 14000) { tg.showAlert("Need 14,000 ICE (10 USDT)"); return; }
+            if (addr.length < 10) { tg.showAlert("Invalid address."); return; }
+            tg.showConfirm(`Withdraw?`, (ok) => { if(ok) closeWallet(); });
         }
-        function tgAlert() { tg.showAlert("Coming Soon!"); }
+
+        // --- Re-added tgAlert Function ---
+        function tgAlert() {
+            tg.showAlert("🚧 Features coming soon!");
+        }
     </script>
 </body>
 </html>

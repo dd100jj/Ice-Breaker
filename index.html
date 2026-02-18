@@ -120,17 +120,38 @@
                 <h2 style="margin:0; font-size:18px;">Recharge Water 💧</h2>
                 <span onclick="closeModal('deposit-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span>
             </div>
+            
             <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-top:5px;">
                 <div class="package-item" onclick="selectPack(10, 1000)" id="pack-10"><div style="font-weight:bold;">1,000 WATER</div><div style="font-size:11px; color:var(--accent-blue);">Price: 10 USDT</div></div>
                 <div class="package-item" onclick="selectPack(20, 2200)" id="pack-20"><div style="font-weight:bold;">2,000 + <span style="color:var(--danger);">200 Bonus</span></div><div style="font-size:11px; color:var(--accent-blue);">Price: 20 USDT</div></div>
                 <div class="package-item" onclick="selectPack(30, 3500)" id="pack-30"><div style="font-weight:bold;">3,000 + <span style="color:var(--danger);">500 Bonus</span></div><div style="font-size:11px; color:var(--accent-blue);">Price: 30 USDT</div></div>
             </div>
+
             <div id="payment-details" style="display:none; margin-top:5px; padding-top:10px; border-top:1px dashed #eee;">
-                <div style="background:#f0f7ff; padding:10px; border-radius:12px; font-size:11px;"><strong>Selected:</strong> <span id="selected-pack-name"></span><br><strong>Network:</strong> TRC20 (Tron) Only</div>
+                <div style="background:#f0f7ff; padding:10px; border-radius:12px; font-size:11px; line-height:1.4;">
+                    <strong>Selected:</strong> <span id="selected-pack-name"></span><br>
+                    <strong>Network:</strong> TRC20 (Tron) Only
+                </div>
+                
                 <div style="font-size:11px; margin-top:8px; color:#444;">1. Send USDT to Admin Address:</div>
-                <div style="background:#eee; padding:10px; border-radius:10px; font-size:10px; word-break:break-all; border:1px solid #ddd;"><span>TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span></div>
-                <div style="font-size:11px; margin-top:10px; color:#444;">2. Paste your TXID:</div>
-                <input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box">
+                <div style="background:#eee; padding:10px; border-radius:10px; font-size:10px; word-break:break-all; border:1px solid #ddd; margin-bottom:10px;">
+                    <span>TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
+                </div>
+
+                <div style="background:#fff9c4; padding:10px; border-radius:10px; font-size:10px; border:1px solid #fbc02d; margin-bottom:10px; line-height:1.4;">
+                    <strong>💡 Notice:</strong><br>
+                    - After deposit, send your <b>TXID and Amount</b> via Telegram message.<br>
+                    - Verification takes approximately <b>5 minutes</b>.
+                </div>
+
+                <div style="font-size:11px; color:#444;"><strong>2. How to find TXID?</strong></div>
+                <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:10px; color:#666; margin: 5px 0 10px 0; line-height:1.5; border:1px solid #eee;">
+                    In your wallet app (<b>Binance, Trust Wallet, etc.</b>), go to <b>"History"</b> or <b>"Activity"</b>. Click your recent transaction to find the <b>"Transaction ID"</b> or <b>"TXID"</b> string. Copy and paste it below.
+                </div>
+
+                <div style="font-size:11px; color:#444;">3. Paste your TXID:</div>
+                <input type="text" id="txid-input" placeholder="Paste Transaction ID (Hash) here" class="input-box">
+                
                 <button class="buy-small-btn" style="background:var(--accent-blue); width:100%; padding:15px; margin-top:10px;" onclick="submitDeposit()">Verify Payment</button>
             </div>
         </div>
@@ -139,7 +160,7 @@
     <div id="wallet-modal" class="modal">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center;"><h2 style="margin:0; font-size:18px;">Withdraw USDT</h2><span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
-            <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;">
+            <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px; line-height:1.5;">
                 <strong>Rate:</strong> 1,400 ICE = 1 USDT<br>
                 <strong>Network Fee:</strong> <span style="color:var(--danger); font-weight:bold;">140 ICE</span><br>
                 <strong>Min. Withdrawal:</strong> 10 USDT (14,000 ICE)
@@ -159,10 +180,6 @@
             <div class="item-row"><div><b>⚙️ Silver Gear</b><br><small>+0.0005/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('gear', 1500, 0.0005, 24)">💧 1,500</button></div>
             <div class="item-row"><div><b>💎 Diamond Drill</b><br><small>+0.0020/s (48h)</small></div><button class="buy-small-btn" onclick="buyItem('drill', 5000, 0.0020, 48)">💧 5,000</button></div>
         </div>
-    </div>
-
-    <div id="help-modal" class="modal">
-        <div class="modal-content"><h2 style="margin:0; font-size:18px;">How to Play 🧊</h2><div style="font-size:13px; line-height:1.6; color:#444;">1. <b>Water Recharge Station:</b> Watch ads for Water.<br>2. <b>Shop:</b> Buy mining tools with Water.<br>3. <b>Collect:</b> Harvest ICE when it reaches 1.<br>4. <b>Storage:</b> Max 1,000 ICE stored before harvest.<br>5. <b>Exchange:</b> Cash out ICE for USDT.</div><button class="buy-small-btn" style="margin-top:10px; width:100%;" onclick="closeModal('help-modal')">Got it!</button></div>
     </div>
 
     <script>
@@ -211,30 +228,25 @@
             document.getElementById('selected-pack-name').innerText = `${price} USDT (${waterAmt.toLocaleString()} Water)`;
         }
 
-        function submitDeposit() { tg.showAlert(`Deposit request submitted! Admin will verify your TXID.`); closeModal('deposit-modal'); }
+        function submitDeposit() { tg.showAlert(`Verification takes approx. 5 mins. Please send TXID and Amount via Telegram.`); closeModal('deposit-modal'); }
 
         function updateItemTimers() {
-            const container = document.getElementById('active-items');
-            container.innerHTML = "";
+            const container = document.getElementById('active-items'); container.innerHTML = "";
             let now = Date.now();
             for(let id in activeItems) {
                 let remain = activeItems[id] - now;
                 if(remain > 0) {
-                    let h = Math.floor(remain / 3600000);
-                    let m = Math.floor((remain % 3600000) / 60000);
-                    let badge = document.createElement('div');
-                    badge.className = 'item-timer';
-                    badge.innerText = `${id}: ${h}h ${m}m`;
-                    container.appendChild(badge);
+                    let h = Math.floor(remain / 3600000); let m = Math.floor((remain % 3600000) / 60000);
+                    let badge = document.createElement('div'); badge.className = 'item-timer';
+                    badge.innerText = `${id}: ${h}h ${m}m`; container.appendChild(badge);
                 }
             }
         }
 
         function mineClick(event) {
             if (power >= 1) {
-                let harvest = Math.floor(power);
-                shards += harvest; power -= harvest;
-                updateUI(); saveData();
+                let harvest = Math.floor(power); shards += harvest; power -= harvest;
+                updateUI(); saveData(); if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             } else { tg.showAlert("Collect at least 1 ICE!"); }
         }
 
@@ -253,16 +265,13 @@
         }
 
         function saveData() {
-            localStorage.setItem('shards', shards);
-            localStorage.setItem('water', water);
-            localStorage.setItem('power', power);
-            localStorage.setItem('activeItems', JSON.stringify(activeItems));
+            localStorage.setItem('shards', shards); localStorage.setItem('water', water);
+            localStorage.setItem('power', power); localStorage.setItem('activeItems', JSON.stringify(activeItems));
         }
 
         const grid = document.getElementById('attendance-grid');
         for(let i=1; i<=30; i++) {
-            const box = document.createElement('div');
-            box.className = 'day-box';
+            const box = document.createElement('div'); box.className = 'day-box';
             let rLabel = (i % 2 === 0) ? "1 ICE" : "5 WATER";
             box.innerHTML = `<span>${(i%2===0)?'🧊':'💧'}</span><span style="font-size:6px;">${rLabel}</span>D-${i}`;
             if(i === 1) { box.classList.add('today'); box.onclick = () => { if(!box.classList.contains('active')){ (i%2===0)?shards+=1:water+=5; box.classList.add('active'); updateUI(); saveData(); } }; }

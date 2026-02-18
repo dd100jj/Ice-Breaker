@@ -73,7 +73,7 @@
         <div class="level-tag" id="lv-badge">⭐ LV.1</div>
     </div>
     
-    <div class="notice-bar">🚧 Under Construction (Beta Mode)<br>🕒 Support: 05:00-18:00 UTC </div>
+    <div class="notice-bar">🚧 Under Construction (Beta Mode)</div>
 
     <div id="active-items"></div>
 
@@ -177,6 +177,7 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+        // [TO-DO] 아래 설정값 중 토큰 주소 등 필요한 부분은 직접 채워주세요.
         const firebaseConfig = {
             apiKey: "AIzaSyAAUthhNp0EBbtZ75RDePw0Nxo9uYmwLTw",
             authDomain: "gifty-icebreaker.firebaseapp.com",
@@ -189,7 +190,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        const BOT_TOKEN = "8471844828:AAH5dQdEmodHlCohcjMnZy-E88IhNTWMePQ"; 
+        const BOT_TOKEN = "8471844828:AAH5dQdEmodHlCohcjMnZy-E88IhNTWMePQ";
         const MY_CHAT_ID = "-1003454423385"; 
         const USER_ID = tg.initDataUnsafe?.user?.id?.toString() || "guest_user";
 
@@ -215,18 +216,9 @@
             return speed;
         }
 
-        // [추가] 실시간 환산 힌트 표시
         function calculateWithdrawHint() {
             const amt = parseFloat(document.getElementById('withdraw-amount').value) || 0;
             document.getElementById('withdraw-usdt-hint').innerText = `≈ ${(amt / 1400).toFixed(2)} USDT`;
-        }
-
-        function isBusinessHours() {
-            const now = new Date();
-            const kstOffset = 9 * 60 * 60 * 1000;
-            const kstDate = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + kstOffset);
-            const hours = kstDate.getHours();
-            return (hours >= 14 || hours < 3);
         }
 
         setInterval(() => {
@@ -309,9 +301,8 @@
         function submitDeposit() {
             const txid = document.getElementById('txid-input').value;
             if(!txid) return tg.showAlert("Please enter TXID!");
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(`💰 [DEPOSIT]\nUser: @${tg.initDataUnsafe?.user?.username}\nTXID: ${txid}`)}`);
-            const msg = isBusinessHours() ? "Request sent! Check via Telegram soon." : "Offline now. Verify starts at 14:00 KST.";
-            tg.showPopup({ title: 'Submitted', message: msg, buttons: [{type: 'ok'}] });
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(`💰 [DEPOSIT]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nTXID: ${txid}`)}`);
+            tg.showPopup({ title: 'Submitted', message: 'Deposit request sent! Admin will verify soon.', buttons: [{type: 'ok'}] });
             closeModal('deposit-modal');
         }
 
@@ -323,9 +314,8 @@
             if(amt > userData.shards) return tg.showAlert("Insufficient balance!");
             if(!addr) return tg.showAlert("Enter address!");
             
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(`📤 [WITHDRAW]\nUser: @${tg.initDataUnsafe?.user?.username}\nAmt: ${amt} ICE (${(amt/1400).toFixed(2)} USDT)\nEx: ${ex}\nAddr: ${addr}`)}`);
-            const msg = isBusinessHours() ? "Processing today." : "Processing starts at 14:00 KST.";
-            tg.showPopup({ title: 'Pending', message: msg, buttons: [{type: 'ok'}] });
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(`📤 [WITHDRAW]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nAmt: ${amt} ICE (${(amt/1400).toFixed(2)} USDT)\nEx: ${ex}\nAddr: ${addr}`)}`);
+            tg.showPopup({ title: 'Pending', message: 'Withdrawal request sent! Admin will process it soon.', buttons: [{type: 'ok'}] });
             closeModal('wallet-modal');
         }
 

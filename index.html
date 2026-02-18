@@ -25,7 +25,6 @@
         .plus-btn { background: var(--water-color); color: white; border: none; width: 18px; height: 18px; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: -5px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .level-tag { background: #ffffff; color: #000000; border: 1px solid #eee; padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; }
 
-        /* 아이템 타이머 스타일 */
         #active-items { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
         .item-timer { font-size: 10px; background: #e3f2fd; color: #1565c0; padding: 2px 8px; border-radius: 10px; border: 1px solid #bbdefb; }
 
@@ -45,14 +44,7 @@
         .guide-text { font-size: 12px; color: var(--accent-orange); font-weight: 600; }
         .limit-text { font-size: 11px; color: var(--gray-text); }
 
-        .attendance-card { gap: 0; padding: 0; overflow: hidden; }
-        .attendance-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #fff; }
-        .attendance-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: #fff; }
-        .attendance-body.open { max-height: 1200px; padding: 0 15px 20px 15px; }
-        .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-        .day-box { aspect-ratio: 1; background: #fdfdfd; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #bbb; }
-        .day-box.active { background: var(--accent-blue) !important; color: white !important; }
-        .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); }
+        .help-btn { border: none; background: #eee; color: #666; padding: 8px 15px; border-radius: 10px; font-size: 11px; font-weight: bold; cursor: pointer; margin: 5px auto; display: flex; align-items: center; gap: 5px; width: fit-content; }
 
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: #fff; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); z-index: 900; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--gray-text); flex: 1; cursor: pointer; }
@@ -101,15 +93,7 @@
         <div class="limit-text">Max storage up to 1,000 ICE</div>
     </div>
 
-    <div class="card attendance-card">
-        <div class="attendance-header" onclick="toggleAttendance()">
-            <h3 style="margin:0; font-size:16px;">📅 30-Day Rewards</h3>
-            <span id="arrow">▼</span>
-        </div>
-        <div id="attendance-body" class="attendance-body">
-            <div class="grid-30" id="attendance-grid"></div>
-        </div>
-    </div>
+    <button class="help-btn" onclick="openHelp()">❓ How to Play?</button>
 
     <nav class="bottom-nav">
         <div class="nav-item active" onclick="location.reload()"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></div>
@@ -121,11 +105,25 @@
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center;"><h2 style="margin:0; font-size:18px;">Water Shop 💧</h2><span onclick="closeModal('shop-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
             <div id="shop-items-container">
-                <div class="item-row"><div><b>❄️ Cooling Spray</b><br><small>All Speed x2 (12h)</small></div><button class="buy-small-btn" onclick="buyItem('spray', 1000, 0, 12)">💧 1,000</button></div>
                 <div class="item-row"><div><b>⛏️ Iron Pickaxe</b><br><small>+0.0001/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('pickaxe', 500, 0.0001, 24)">💧 500</button></div>
+                <div class="item-row"><div><b>❄️ Cooling Spray</b><br><small>All Speed x2 (12h)</small></div><button class="buy-small-btn" onclick="buyItem('spray', 1000, 0, 12)">💧 1,000</button></div>
                 <div class="item-row"><div><b>⚙️ Silver Gear</b><br><small>+0.0005/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('gear', 1500, 0.0005, 24)">💧 1,500</button></div>
                 <div class="item-row"><div><b>💎 Diamond Drill</b><br><small>+0.0020/s (48h)</small></div><button class="buy-small-btn" onclick="buyItem('drill', 5000, 0.0020, 48)">💧 5,000</button></div>
             </div>
+        </div>
+    </div>
+
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin:0; font-size:18px;">How to Play 🧊</h2>
+            <div style="font-size:13px; line-height:1.6; color:#444;">
+                1. <b>Water Recharge Station:</b> Watch ads to get <b>Water(💧)</b>.<br>
+                2. <b>Water Shop:</b> Buy mining tools and <b>Cooling Spray</b> with Water.<br>
+                3. <b>Mining:</b> Collect <b>ICE(🧊)</b> when the container has at least 1 unit.<br>
+                4. <b>Duration:</b> Items have a limited lifetime. Keep them active!<br>
+                5. <b>Withdraw:</b> Exchange ICE for <b>USDT</b> when you reach the goal.
+            </div>
+            <button class="buy-small-btn" style="margin-top:10px; width: 100%; padding: 12px;" onclick="closeModal('help-modal')">Got it!</button>
         </div>
     </div>
 
@@ -133,12 +131,11 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
         
-        let shards = 0; let water = 10000; // 테스트용 워터
+        let shards = 0; let water = 0;
         let baseSpeed = 0.0005;
         let power = 0.00000;
-        let activeItems = {}; // { 'pickaxe': expiryTime, ... }
+        let activeItems = {};
 
-        // 채굴 루프
         setInterval(() => {
             let currentTotalSpeed = calculateSpeed();
             power += currentTotalSpeed;
@@ -150,12 +147,10 @@
         function calculateSpeed() {
             let speed = baseSpeed;
             let now = Date.now();
-            
             if(activeItems['pickaxe'] > now) speed += 0.0001;
             if(activeItems['gear'] > now) speed += 0.0005;
             if(activeItems['drill'] > now) speed += 0.0020;
-            if(activeItems['spray'] > now) speed *= 2; // 스프레이는 최종 속도 배수
-            
+            if(activeItems['spray'] > now) speed *= 2;
             return speed;
         }
 
@@ -164,7 +159,7 @@
                 water -= cost;
                 activeItems[id] = Date.now() + (hours * 3600 * 1000);
                 updateUI();
-                tg.showAlert(`${id.toUpperCase()} purchased for ${hours} hours!`);
+                tg.showAlert(`${id.toUpperCase()} activated!`);
             } else { tg.showAlert("Need more Water! 💧"); }
         }
 
@@ -196,10 +191,10 @@
         }
 
         function watchAd() {
-            tg.showConfirm("Watch an ad to get 💧 1 Water?", (ok) => {
+            tg.showConfirm("Watch an ad for 💧 1 Water?", (ok) => {
                 if(ok) {
                     setTimeout(() => {
-                        water += 1; // 1워터 고정 지급
+                        water += 1;
                         updateUI();
                         tg.showAlert(`Reward: 💧 1 Water!`);
                     }, 1000);
@@ -216,9 +211,8 @@
         }
 
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
+        function openHelp() { document.getElementById('help-modal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
-        // 기타 지갑/입금 함수는 기존과 동일하게 유지...
         updateUI();
     </script>
 </body>

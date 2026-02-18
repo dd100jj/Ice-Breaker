@@ -71,9 +71,16 @@
         <div class="level-tag" id="lv-badge">⭐ LV.1</div>
     </div>
     
-    <div class="notice-bar">🚧 Under Construction (Beta Mode)<br>🕒 Support: 05:00-18:00 UTC </div>
+    <div class="notice-bar">🚧 Under Construction (Beta Mode)<br>🕒 Support: 05:00-18:00 UTC</div>
 
     <div id="active-items"></div>
+
+    <div class="card">
+        <div style="font-size:13px; font-weight:bold; color:var(--gray-text); margin-bottom:5px;">🧊 Ice container (Max: 1,000 ICE)</div>
+        <div style="width:100%; height:20px; background:#f0f2f5; border-radius:10px; overflow:hidden;"><div id="ice-gauge-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #4fc3f7, #81d4fa); transition:width 0.3s;"></div></div>
+        <div class="asset-amount" id="balance">0</div>
+        <div id="ice-to-usdt" style="font-size:12px; font-weight:bold; color:var(--accent-orange); margin-top:5px;">0.00 USDT</div>
+    </div>
 
     <div class="card mine-card">
         <div style="position: absolute; top: 10px; right: 15px; font-size: 9px; color: var(--danger); font-weight: bold;">BETA MODE</div>
@@ -90,13 +97,6 @@
             <input type="text" id="promo-code" placeholder="Enter code" class="input-box" style="margin:0; flex:1;">
             <button class="buy-small-btn" onclick="redeemCode()" style="width: 80px;">Apply</button>
         </div>
-    </div>
-
-    <div class="card">
-        <div style="font-size:13px; font-weight:bold; color:var(--gray-text); margin-bottom:5px;">🧊 Ice container</div>
-        <div style="width:100%; height:20px; background:#f0f2f5; border-radius:10px; overflow:hidden;"><div id="ice-gauge-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #4fc3f7, #81d4fa); transition:width 0.3s;"></div></div>
-        <div class="asset-amount" id="balance">0</div>
-        <div id="ice-to-usdt" style="font-size:12px; font-weight:bold; color:var(--accent-orange); margin-top:5px;">0.00 USDT</div>
     </div>
 
     <div class="card attendance-card">
@@ -122,7 +122,11 @@
             <div class="package-item" onclick="selectPack(20, 2200)" id="pack-20"><b>2,200 WATER</b> (20 USDT)</div>
             <div class="package-item" onclick="selectPack(30, 3500)" id="pack-30"><b>3,500 WATER</b> (30 USDT)</div>
             <div id="payment-details" style="display:none; border-top:1px dashed #eee; padding-top:10px;">
-                <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:10px;"><b>Admin Wallet (Net Work : TRC20):</b><br><span id="admin-wallet-addr">TDDaEzGdXGuuH3RxhHa5LZCSeeTpZuuTd1</span></div>
+                <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:10px; word-break:break-all;">
+                    <b>Admin Wallet (Network : TRC20):</b><br>
+                    <span id="admin-wallet-addr">TDDaEzGdXGuuH3RxhHa5LZCSeeTpZuuTd1</span><br>
+                    <button onclick="copyAddr()" style="margin-top:5px; padding:5px 10px; border:none; border-radius:5px; font-size:10px; background:var(--accent-blue); color:white; cursor:pointer;">Copy Address</button>
+                </div>
                 <input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box" style="margin-top:10px;">
                 <button class="buy-small-btn" style="background:var(--accent-orange); width:100%; margin-top:10px;" onclick="submitDeposit()">Submit Request</button>
             </div>
@@ -134,13 +138,13 @@
             <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Withdraw USDT</h2><span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
             <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;">
                 <strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br>
-               
+                
                 <strong>Rate:</strong> 1,400 ICE = 1 USDT<br>
                 <strong>Min. Withdrawal:</strong> 14,000 ICE
             </div>
             <div style="margin-top:5px;"><div style="font-size:11px; font-weight:bold;">Network:</div><select class="input-box" style="color:var(--danger); font-weight:bold;"><option>TRC20 (Tron Network)</option></select></div>
             <div style="margin-top:5px;"><div style="font-size:11px; font-weight:bold;">Select Exchange:</div><select id="exchange-type" class="input-box"><option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option></select></div>
-            <input type="text" id="wallet-addr" placeholder="Paste USDT address" class="input-box">
+            <input type="text" id="wallet-addr" placeholder="Paste TRC20 address" class="input-box">
             <button class="buy-small-btn" style="background:var(--accent-blue); width:100%;" onclick="requestWithdraw()">Request Withdrawal</button>
         </div>
     </div>
@@ -274,7 +278,7 @@
             document.getElementById('wallet-ice-bal').innerText = Math.floor(userData.shards).toLocaleString();
             const nextLv = levelData[userData.level];
             document.getElementById('level-guide').innerText = nextLv ? `Goal for LV.${userData.level+1}: ${nextLv.target} ICE` : "MAX LEVEL";
-            document.getElementById('ice-gauge-bar').style.width = Math.min((userData.shards / (nextLv ? nextLv.target : 14000)) * 100, 100) + "%";
+            document.getElementById('ice-gauge-bar').style.width = Math.min((userData.shards / (nextLv ? nextLv.target : 1000)) * 100, 100) + "%";
         }
 
         function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; document.getElementById('payment-details').style.display = 'none'; }
@@ -282,7 +286,36 @@
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; updateUI(); }
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function copyAddr() { navigator.clipboard.writeText(document.getElementById('admin-wallet-addr').innerText); tg.showAlert("Address Copied!"); }
         function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
+
+        function submitDeposit() {
+            const txid = document.getElementById('txid-input').value;
+            if(!txid) return tg.showAlert("Please enter TXID!");
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(`💰 [DEPOSIT]\nUser: @${tg.initDataUnsafe?.user?.username}\nTXID: ${txid}`)}`);
+            const msg = isBusinessHours() ? "Request sent! Check via Telegram soon." : "Offline now. Verify starts at 14:00 KST.";
+            tg.showPopup({ title: 'Submitted', message: msg, buttons: [{type: 'ok'}] });
+            closeModal('deposit-modal');
+        }
+
+        function requestWithdraw() {
+            const addr = document.getElementById('wallet-addr').value;
+            if(!addr) return tg.showAlert("Enter address!");
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(`📤 [WITHDRAW]\nUser: @${tg.initDataUnsafe?.user?.username}\nAmt: ${(userData.shards/1400).toFixed(2)} USDT\nAddr: ${addr}`)}`);
+            const msg = isBusinessHours() ? "Processing today." : "Processing starts at 14:00 KST.";
+            tg.showPopup({ title: 'Pending', message: msg, buttons: [{type: 'ok'}] });
+            closeModal('wallet-modal');
+        }
+
+        function redeemCode() {
+            const code = document.getElementById('promo-code').value.trim().toUpperCase();
+            if(userData.usedCodes.includes(code)) return tg.showAlert("Already used!");
+            const VALID_CODES = { "GIFT-X72A-99B": 1000, "ICE-WTR-5521": 2200, "GOLD-REFILL-08": 3500 };
+            if(VALID_CODES[code]) {
+                userData.water += VALID_CODES[code]; userData.usedCodes.push(code); updateUI(); saveData();
+                tg.showAlert(`Success! ${VALID_CODES[code]} Water added.`);
+            } else { tg.showAlert("Invalid or Pending Code."); }
+        }
 
         loadData();
     </script>

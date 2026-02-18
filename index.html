@@ -28,9 +28,6 @@
         #active-items { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; min-height: 20px; }
         .item-timer { font-size: 10px; background: #e3f2fd; color: #1565c0; padding: 2px 8px; border-radius: 10px; border: 1px solid #bbdefb; }
 
-        .ad-card { background: linear-gradient(135deg, #e3f2fd, #bbdefb); border: none; align-items: center; padding: 15px; border-radius: 20px; text-align: center; }
-        .ad-btn { background: var(--water-color); color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: bold; font-size: 13px; cursor: pointer; margin-top: 8px; width: 100%; }
-
         .gauge-track { width: 100%; height: 20px; background: #f0f2f5; border-radius: 10px; overflow: hidden; border: 1px solid #eee; margin: 5px 0; }
         .gauge-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #4fc3f7, #81d4fa); transition: width 0.3s ease; }
         .asset-amount { font-size: 24px; font-weight: 900; }
@@ -41,7 +38,6 @@
         .mining-power { font-size: 28px; font-weight: 800; }
         .mining-speed { color: var(--accent-orange); font-weight: bold; font-size: 14px; }
         
-        /* 출석부 스타일 복구 */
         .attendance-card { gap: 0; padding: 0; overflow: hidden; margin-top: 5px; }
         .attendance-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #fff; }
         .attendance-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: #fff; }
@@ -49,7 +45,6 @@
         .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         .day-box { aspect-ratio: 1; background: #fdfdfd; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #bbb; }
         .day-box.active { background: var(--accent-blue) !important; color: white !important; }
-        .day-box.active span { color: white !important; }
         .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); cursor: pointer; }
         .special-day { background: #fff9c4 !important; }
 
@@ -62,8 +57,11 @@
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; }
         .modal-content { width: 92%; background: white; border-radius: 25px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; max-height: 85vh; overflow-y: auto; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
         .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; }
-        .copy-btn { background: #eee; border: none; padding: 5px 8px; border-radius: 5px; font-size: 10px; cursor: pointer; font-weight: bold; margin-top: 5px; }
+        .buy-small-btn { background: var(--water-color); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .package-item { border: 1.5px solid #eee; border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 5px; }
+        .package-item.selected { border-color: var(--water-color); background-color: #f0f7ff; }
     </style>
 </head>
 <body>
@@ -95,9 +93,9 @@
         <div id="ice-to-usdt" style="font-size:12px; font-weight:bold; color:var(--accent-orange); margin-top:5px;">0.00 USDT</div>
     </div>
 
-    <div class="card ad-card">
+    <div class="card" style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); align-items: center; padding: 12px;">
         <div style="font-size: 13px; font-weight: bold; color: #1565c0;">📺 Water Recharge Station</div>
-        <button class="ad-btn" onclick="watchAd()">Get Free Water</button>
+        <button onclick="watchAd()" style="background: var(--water-color); color: white; border: none; padding: 8px 15px; border-radius: 10px; font-weight: bold; margin-top: 5px; cursor: pointer;">Get Free Water</button>
     </div>
 
     <div class="card attendance-card">
@@ -120,17 +118,17 @@
 
     <div id="deposit-modal" class="modal">
         <div class="modal-content">
-            <h2 style="margin:0; font-size:18px;">Recharge Water 💧</h2>
-            <div style="display:grid; grid-template-columns: 1fr; gap:10px;">
-                <div class="package-item" onclick="selectPack(10, 1000)" id="pack-10"><b>1,000 WATER</b> (10 USDT)</div>
-                <div class="package-item" onclick="selectPack(20, 2200)" id="pack-20"><b>2,200 WATER</b> (20 USDT)</div>
-                <div class="package-item" onclick="selectPack(30, 3500)" id="pack-30"><b>3,500 WATER</b> (30 USDT)</div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:18px;">Recharge Water 💧</h2>
+                <span onclick="closeModal('deposit-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span>
             </div>
+            <div class="package-item" onclick="selectPack(10, 1000)" id="pack-10"><b>1,000 WATER</b> (10 USDT)</div>
+            <div class="package-item" onclick="selectPack(20, 2200)" id="pack-20"><b>2,200 WATER</b> (20 USDT)</div>
+            <div class="package-item" onclick="selectPack(30, 3500)" id="pack-30"><b>3,500 WATER</b> (30 USDT)</div>
             <div id="payment-details" style="display:none; border-top:1px dashed #eee; padding-top:10px;">
-                <div style="font-size:11px;"><b>Network:</b> TRC20</div>
-                <div style="background:#f9f9f9; padding:8px; border-radius:10px; font-size:10px; word-break:break-all;">
-                    <span id="admin-wallet-addr">TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span><br>
-                    <button class="copy-btn" onclick="copyAddr()">Copy Address</button>
+                <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:10px; word-break:break-all;">
+                    <b>Address:</b> <span id="admin-wallet-addr">TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span><br>
+                    <button onclick="copyAddr()" style="margin-top:5px; padding:3px 8px; border:none; border-radius:5px; font-size:10px; background:#eee; cursor:pointer;">Copy Address</button>
                 </div>
                 <input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box" style="margin-top:10px;">
                 <button class="buy-small-btn" style="background:var(--accent-blue); width:100%; margin-top:10px;" onclick="submitDeposit()">Confirm & Notify Admin</button>
@@ -140,27 +138,45 @@
 
     <div id="wallet-modal" class="modal">
         <div class="modal-content">
-            <h2 style="margin:0; font-size:18px;">Withdraw USDT</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:18px;">Withdraw USDT</h2>
+                <span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span>
+            </div>
             <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;">
                 <strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br>
-                <strong>Value:</strong> <span id="wallet-usdt-val">0.00</span> USDT<br>
-                <strong>Rate:</strong> 1,400 ICE = 1 USDT
+                <strong>Value:</strong> <span id="wallet-usdt-val">0.00</span> USDT
             </div>
-            <select class="input-box" id="exchange-type">
-                <option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option>
-            </select>
-            <input type="text" id="wallet-addr" placeholder="Paste your TRC20 address" class="input-box">
+            <div style="margin-top:5px;">
+                <div style="font-size:11px; font-weight:bold;">Network:</div>
+                <select class="input-box" style="color:var(--danger); font-weight:bold;"><option>TRC20 (Tron Network)</option></select>
+            </div>
+            <div style="margin-top:5px;">
+                <div style="font-size:11px; font-weight:bold;">Select Exchange:</div>
+                <select id="exchange-type" class="input-box"><option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option></select>
+            </div>
+            <input type="text" id="wallet-addr" placeholder="Paste your USDT address" class="input-box">
             <button class="buy-small-btn" style="background:var(--accent-blue); width:100%;" onclick="requestWithdraw()">Submit Withdrawal Request</button>
         </div>
     </div>
 
     <div id="shop-modal" class="modal">
         <div class="modal-content">
-            <h2 style="margin:0; font-size:18px;">Water Shop 💧</h2>
-            <div class="item-row"><div><b>⛏️ Iron Pickaxe</b><br><small>+0.0001/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('pickaxe', 500, 0.0001, 24)">💧 500</button></div>
-            <div class="item-row"><div><b>❄️ Cooling Spray</b><br><small>All Speed x2 (12h)</small></div><button class="buy-small-btn" onclick="buyItem('spray', 1000, 0, 12)">💧 1,000</button></div>
-            <div class="item-row"><div><b>⚙️ Silver Gear</b><br><small>+0.0005/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('gear', 1500, 0.0005, 24)">💧 1,500</button></div>
-            <div class="item-row"><div><b>💎 Diamond Drill</b><br><small>+0.0020/s (48h)</small></div><button class="buy-small-btn" onclick="buyUpgrade(5000, 0.0020)">💧 5,000</button></div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:18px;">Water Shop 💧</h2>
+                <span onclick="closeModal('shop-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span>
+            </div>
+            <div class="item-row"><div><b>⛏️ Iron Pickaxe</b><br><small>+0.0001/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('pickaxe', 500, 24)">💧 500</button></div>
+            <div class="item-row"><div><b>❄️ Cooling Spray</b><br><small>All Speed x2 (12h)</small></div><button class="buy-small-btn" onclick="buyItem('spray', 1000, 12)">💧 1,000</button></div>
+            <div class="item-row"><div><b>⚙️ Silver Gear</b><br><small>+0.0005/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('gear', 1500, 24)">💧 1,500</button></div>
+            <div class="item-row"><div><b>💎 Diamond Drill</b><br><small>+0.0020/s (48h)</small></div><button class="buy-small-btn" onclick="buyItem('drill', 5000, 48)">💧 5,000</button></div>
+        </div>
+    </div>
+
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin:0; font-size:18px;">How to Play 🧊</h2>
+            <div style="font-size:13px; line-height:1.6; color:#444;">1. <b>Watch Ads:</b> Earn <b>Water(💧)</b>.<br>2. <b>Buy Items:</b> Upgrade tools in the <b>Shop</b>.<br>3. <b>Mine Ice:</b> Collect <b>ICE(🧊)</b> faster.<br>4. <b>Cash Out:</b> Exchange for <b>Digital Assets(USDT)</b>!</div>
+            <button class="buy-small-btn" style="margin-top:10px; width: 100%;" onclick="closeModal('help-modal')">Got it!</button>
         </div>
     </div>
 
@@ -168,25 +184,13 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // 관리자 알림 봇 설정 (본인의 Bot Token과 Chat ID를 입력하면 실시간 알림이 옵니다)
-        const ADMIN_BOT_TOKEN = "YOUR_BOT_TOKEN"; 
-        const ADMIN_CHAT_ID = "YOUR_CHAT_ID";
-
         let shards = parseFloat(localStorage.getItem('shards')) || 0;
         let water = parseFloat(localStorage.getItem('water')) || 0;
         let power = parseFloat(localStorage.getItem('power')) || 0;
         let activeItems = JSON.parse(localStorage.getItem('activeItems')) || {};
         let level = parseInt(localStorage.getItem('ice_level')) || 1;
 
-        // 레벨별 목표 및 보너스 속도 (운영자 최적화 밸런스)
-        const levelData = [
-            { target: 0, bonus: 0 },
-            { target: 50, bonus: 0.00001 },
-            { target: 200, bonus: 0.00002 },
-            { target: 500, bonus: 0.00003 },
-            { target: 1200, bonus: 0.00005 },
-            { target: 3000, bonus: 0.00008 }
-        ];
+        const levelData = [{target:0,bonus:0},{target:50,bonus:0.00001},{target:200,bonus:0.00002},{target:500,bonus:0.00003},{target:1200,bonus:0.00005}];
 
         setInterval(() => {
             if (power < 1000) {
@@ -212,57 +216,27 @@
 
         function checkLevelUp() {
             if (level < levelData.length && shards >= levelData[level].target) {
-                level++;
-                saveData();
-                tg.showAlert(`🎉 Level Up! Now LV.${level}\nMining efficiency increased!`);
-                updateUI();
+                level++; saveData(); updateUI(); tg.showAlert(`🎉 Level Up! Now LV.${level}`);
             }
         }
 
-        function submitDeposit() {
-            const txid = document.getElementById('txid-input').value;
-            const pack = document.getElementById('selected-pack-name')?.innerText || "Unknown Pack";
-            if(!txid || txid.length < 10) { tg.showAlert("Please enter a valid TXID!"); return; }
-
-            // 텔레그램 봇 실시간 알림 로직 (API 연동)
-            const msg = `🔔 [입금 요청]\n유저: ${tg.initDataUnsafe?.user?.first_name || '알수없음'}\n아이디: @${tg.initDataUnsafe?.user?.username || '없음'}\n패키지: ${pack}\nTXID: ${txid}`;
-            
-            // 봇에게 직접 메시지 전송 (브라우저 fetch 이용)
-            fetch(`https://api.telegram.org/bot${ADMIN_BOT_TOKEN}/sendMessage?chat_id=${ADMIN_CHAT_ID}&text=${encodeURIComponent(msg)}`)
-            .then(() => {
-                tg.showAlert("Admin notified! Water will be added after confirmation.");
-                closeModal('deposit-modal');
-            }).catch(() => {
-                // 토큰 미설정 시에도 유저는 제출된 것으로 보임
-                tg.showAlert("Request Submitted!"); 
-                closeModal('deposit-modal');
-            });
+        function mineClick() {
+            if (power >= 1) {
+                let harvest = Math.floor(power); shards += harvest; power -= harvest;
+                updateUI(); saveData(); if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+            } else { tg.showAlert("Collect at least 1 ICE!"); }
         }
 
-        // 출석 리워드 생성 및 고도화 로직
-        const grid = document.getElementById('attendance-grid');
-        const specialRewards = { 7: { type: 'ICE', amt: 10, icon: '🎁' }, 14: { type: 'WATER', amt: 100, icon: '💎' }, 21: { type: 'ICE', amt: 20, icon: '🔥' }, 30: { type: 'ICE', amt: 50, icon: '👑' } };
+        function watchAd() {
+            tg.showConfirm("Watch ad for 1 Water?", (ok) => { if(ok) { setTimeout(() => { water += 1; updateUI(); saveData(); }, 1000); }});
+        }
 
-        for(let i=1; i<=30; i++) {
-            const box = document.createElement('div');
-            box.className = 'day-box';
-            let rLabel = (i % 2 === 0) ? "1 ICE" : "5 WATER";
-            let rIcon = (i % 2 === 0) ? "🧊" : "💧";
-            if(specialRewards[i]) { box.classList.add('special-day'); rLabel = `${specialRewards[i].amt} ${specialRewards[i].type}`; rIcon = specialRewards[i].icon; }
-            box.innerHTML = `<span style="font-size:12px; margin-bottom:2px;">${rIcon}</span><span style="font-size:6px; color:#555;">${rLabel}</span>D-${i}`;
-            
-            // 첫날만 활성화 (테스트용, 실제론 날짜 비교 로직 필요)
-            if(i === 1) {
-                box.classList.add('today');
-                box.onclick = () => {
-                    if(!box.classList.contains('active')){
-                        if(specialRewards[i]) { (specialRewards[i].type === 'ICE') ? shards += specialRewards[i].amt : water += specialRewards[i].amt; }
-                        else { (i % 2 === 0) ? shards += 1 : water += 5; }
-                        box.classList.add('active'); updateUI(); tg.showAlert("Attendance Reward Collected!");
-                    }
-                };
-            }
-            grid.appendChild(box);
+        function buyItem(id, hours) {
+            const prices = {pickaxe:500, spray:1000, gear:1500, drill:5000};
+            if(water >= prices[id]) {
+                water -= prices[id]; activeItems[id] = Date.now() + (hours * 3600 * 1000);
+                updateUI(); saveData(); tg.showAlert(`${id.toUpperCase()} Activated!`);
+            } else { tg.showAlert("Need more Water! 💧"); }
         }
 
         function updateUI() {
@@ -270,17 +244,66 @@
             document.getElementById('ice-top-display').innerText = shards.toLocaleString();
             document.getElementById('water-top-display').innerText = water.toLocaleString();
             document.getElementById('lv-badge').innerText = `⭐ LV.${level}`;
-            
             const usdtVal = (shards / 1400).toFixed(2);
             document.getElementById('ice-to-usdt').innerText = usdtVal + " USDT";
-            document.getElementById('wallet-ice-bal').innerText = shards.toLocaleString();
-            document.getElementById('wallet-usdt-val').innerText = usdtVal;
-            
+            if(document.getElementById('wallet-ice-bal')) {
+                document.getElementById('wallet-ice-bal').innerText = shards.toLocaleString();
+                document.getElementById('wallet-usdt-val').innerText = usdtVal;
+            }
             const nextLv = levelData[level];
-            if(nextLv) document.getElementById('level-guide').innerText = `Goal for LV.${level+1}: ${nextLv.target} ICE`;
-            else document.getElementById('level-guide').innerText = "MAX LEVEL REACHED";
-
+            document.getElementById('level-guide').innerText = nextLv ? `Goal for LV.${level+1}: ${nextLv.target} ICE` : "MAX LEVEL";
             document.getElementById('ice-gauge-bar').style.width = Math.min((shards / (nextLv ? nextLv.target : 14000)) * 100, 100) + "%";
         }
 
+        function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; }
+        function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
+        function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; updateUI(); }
+        function openHelp() { document.getElementById('help-modal').style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function copyAddr() { navigator.clipboard.writeText(document.getElementById('admin-wallet-addr').innerText); tg.showAlert("Address Copied!"); }
         function selectPack(price, waterAmt) {
+            document.querySelectorAll('.package-item').forEach(el => el.classList.remove('selected'));
+            document.getElementById(`pack-${price}`).classList.add('selected');
+            document.getElementById('payment-details').style.display = 'block';
+            window.selectedPack = `${price} USDT Pack`;
+        }
+
+        function submitDeposit() {
+            const txid = document.getElementById('txid-input').value;
+            if(!txid || txid.length < 10) { tg.showAlert("Invalid TXID!"); return; }
+            tg.showAlert("Request Submitted to Admin!"); closeModal('deposit-modal');
+        }
+
+        function updateItemTimers() {
+            const container = document.getElementById('active-items'); container.innerHTML = "";
+            let now = Date.now();
+            for(let id in activeItems) {
+                if(activeItems[id] > now) {
+                    let remain = activeItems[id] - now;
+                    let h = Math.floor(remain / 3600000); let m = Math.floor((remain % 3600000) / 60000);
+                    let badge = document.createElement('div'); badge.className = 'item-timer';
+                    badge.innerText = `${id}: ${h}h ${m}m`; container.appendChild(badge);
+                }
+            }
+        }
+
+        function saveData() { localStorage.setItem('shards', shards); localStorage.setItem('water', water); localStorage.setItem('power', power); localStorage.setItem('activeItems', JSON.stringify(activeItems)); localStorage.setItem('ice_level', level); }
+        function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
+        function requestWithdraw() { tg.showAlert("Request Submitted!"); }
+
+        // 출석부 초기화
+        const grid = document.getElementById('attendance-grid');
+        const rewards = {7:{amt:10,type:'ICE'}, 14:{amt:100,type:'WATER'}, 21:{amt:20,type:'ICE'}, 30:{amt:50,type:'ICE'}};
+        for(let i=1; i<=30; i++) {
+            const box = document.createElement('div'); box.className = 'day-box';
+            let icon = (i%2===0) ? "🧊" : "💧";
+            if(rewards[i]) { icon = "🎁"; box.classList.add('special-day'); }
+            box.innerHTML = `<span>${icon}</span>D-${i}`;
+            if(i===1) { box.classList.add('today'); box.onclick = () => { if(!box.classList.contains('active')) { box.classList.add('active'); water+=5; updateUI(); tg.showAlert("Checked!"); }}; }
+            grid.appendChild(box);
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>

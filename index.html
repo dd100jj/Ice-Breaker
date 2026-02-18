@@ -137,14 +137,30 @@
     <div id="deposit-modal" class="modal">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Recharge Water 💧</h2><span onclick="closeModal('deposit-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
-            <div style="font-size:11px; color:var(--danger); text-align:center; margin-bottom:10px;">⚠️ Beta Mode: Contact Admin for manual refill.</div>
+            
             <div class="package-item" onclick="selectPack(10, 1000)" id="pack-10"><b>1,000 WATER</b> (10 USDT)</div>
             <div class="package-item" onclick="selectPack(20, 2200)" id="pack-20"><b>2,200 WATER</b> (20 USDT)</div>
             <div class="package-item" onclick="selectPack(30, 3500)" id="pack-30"><b>3,500 WATER</b> (30 USDT)</div>
-            <div id="payment-details" style="display:none; border-top:1px dashed #eee; padding-top:10px;">
-                <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:10px; word-break:break-all;"><b>Address:</b> <span id="admin-wallet-addr">TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span><br><button onclick="copyAddr()" style="margin-top:5px; padding:3px 8px; border:none; border-radius:5px; font-size:10px; background:#eee; cursor:pointer;">Copy Address</button></div>
-                <input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box" style="margin-top:10px;">
-                <button class="buy-small-btn" style="background:var(--accent-blue); width:100%; margin-top:10px;" onclick="submitDeposit()">Confirm & Notify Admin</button>
+            
+            <div id="payment-details" style="display:none; border-top:1px dashed #eee; padding-top:10px; margin-top:5px;">
+                <div style="background:#f0f7ff; padding:10px; border-radius:12px; font-size:11px; margin-bottom:10px;">
+                    <strong>Selected:</strong> <span id="selected-pack-info">10 USDT</span><br>
+                    <strong>Network:</strong> TRC20 (Tron Network)
+                </div>
+                
+                <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:10px; word-break:break-all;">
+                    <b>Admin Wallet:</b><br>
+                    <span id="admin-wallet-addr">TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span><br>
+                    <button onclick="copyAddr()" style="margin-top:5px; padding:5px 10px; border:none; border-radius:5px; font-size:10px; background:var(--accent-blue); color:white; cursor:pointer;">Copy Address</button>
+                </div>
+
+                <div style="font-size:11px; color:#666; margin-top:15px; margin-bottom:5px;">
+                    Step 1: Send USDT to the address above.<br>
+                    Step 2: Paste your <b>TXID</b> (Transaction ID) below.
+                </div>
+                
+                <input type="text" id="txid-input" placeholder="Paste your TXID here" class="input-box">
+                <button class="buy-small-btn" style="background:var(--accent-orange); width:100%; margin-top:10px; padding:15px;" onclick="submitDeposit()">Confirm & Notify Admin</button>
             </div>
         </div>
     </div>
@@ -154,12 +170,12 @@
             <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Withdraw USDT</h2><span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
             <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;">
                 <strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br>
-               
+                <strong>Value:</strong> <span id="wallet-usdt-val">0.00</span> USDT<br>
                 <strong>Rate:</strong> 1,400 ICE = 1 USDT<br>
                 <strong>Min. Withdrawal:</strong> 10 USDT (14,000 ICE)
             </div>
             <select id="exchange-type" class="input-box" style="margin-top:10px;"><option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option></select>
-            <input type="text" id="wallet-addr" placeholder="Paste TRC20 address" class="input-box">
+            <input type="text" id="wallet-addr" placeholder="Paste your TRC20 address" class="input-box">
             <button class="buy-small-btn" style="background:var(--accent-blue); width:100%;" onclick="requestWithdraw()">Submit Request</button>
         </div>
     </div>
@@ -186,8 +202,8 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // [알림 설정] 관리자 채널 정보
-        const BOT_TOKEN = "8471844828:AAH5dQdEmodHlCohcjMnZy-E88IhNTWMePQ"; 
+        // [알림 설정] 채널 ID
+        const BOT_TOKEN = "여기에_봇_토큰_입력"; 
         const MY_CHAT_ID = "-1003454423385"; 
 
         let shards = parseFloat(localStorage.getItem('shards')) || 0;
@@ -198,7 +214,6 @@
         let usedCodes = JSON.parse(localStorage.getItem('usedCodes')) || [];
 
         const VALID_CODES = { "KJ82-NM91": 1000, "LQ55-ZW10": 2200, "PF23-SD88": 3500 };
-
         const levelData = [{target:0,bonus:0},{target:50,bonus:0.00001},{target:200,bonus:0.00002},{target:500,bonus:0.00003},{target:1200,bonus:0.00005}];
 
         setInterval(() => {
@@ -237,11 +252,20 @@
             } else { tg.showAlert("Collect at least 0.005 ICE!"); }
         }
 
+        // [복구] 패키지 선택 시 상세창 표시
+        function selectPack(price, waterAmt) {
+            document.querySelectorAll('.package-item').forEach(el => el.classList.remove('selected'));
+            document.getElementById(`pack-${price}`).classList.add('selected');
+            document.getElementById('payment-details').style.display = 'block';
+            document.getElementById('selected-pack-info').innerText = `${price} USDT (${waterAmt.toLocaleString()} Water)`;
+        }
+
         function submitDeposit() {
             const txid = document.getElementById('txid-input').value;
+            const packInfo = document.getElementById('selected-pack-info').innerText;
             if(!txid) return tg.showAlert("Please enter TXID!");
             const user = tg.initDataUnsafe?.user?.username || "Unknown";
-            sendNoti(`💰 [DEPOSIT REQUEST]\nUser: @${user}\nTXID: ${txid}`);
+            sendNoti(`💰 [DEPOSIT REQUEST]\nUser: @${user}\nPack: ${packInfo}\nTXID: ${txid}`);
             closeModal('deposit-modal');
         }
 
@@ -285,7 +309,10 @@
             document.getElementById('ice-gauge-bar').style.width = Math.min((shards / (nextLv ? nextLv.target : 14000)) * 100, 100) + "%";
         }
 
-        function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; }
+        function openDeposit() { 
+            document.getElementById('deposit-modal').style.display = 'flex'; 
+            document.getElementById('payment-details').style.display = 'none'; // 초기화
+        }
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; updateUI(); }
         function openHelp() { document.getElementById('help-modal').style.display = 'flex'; }
@@ -296,7 +323,7 @@
             const prices = {pickaxe:500, spray:1000, gear:1500, drill:5000};
             if(water >= prices[id]) {
                 water -= prices[id]; activeItems[id] = Date.now() + (hours * 3600 * 1000);
-                updateUI(); tg.showAlert(`${id.toUpperCase()} Activated!`);
+                updateUI(); saveData(); tg.showAlert(`${id.toUpperCase()} Activated!`);
             } else { tg.showAlert("Need more Water! 💧"); }
         }
         function updateItemTimers() {
@@ -321,7 +348,7 @@
             let icon = (i%2===0) ? "🧊" : "💧";
             if(rewards[i]) { icon = "🎁"; box.classList.add('special-day'); }
             box.innerHTML = `<span>${icon}</span>D-${i}`;
-            if(i===1) { box.classList.add('today'); box.onclick = () => { if(!box.classList.contains('active')) { box.classList.add('active'); water+=5; updateUI(); tg.showAlert("Reward Collected!"); }}; }
+            if(i===1) { box.classList.add('today'); box.onclick = () => { if(!box.classList.contains('active')) { box.classList.add('active'); water+=5; updateUI(); tg.showAlert("Checked!"); }}; }
             grid.appendChild(box);
         }
 

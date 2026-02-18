@@ -37,17 +37,6 @@
         .mining-speed { color: var(--accent-orange); font-weight: bold; font-size: 14px; }
         .guide-text { font-size: 12px; color: var(--accent-orange); font-weight: 600; }
         .limit-text { font-size: 11px; color: var(--gray-text); }
-        .click-info { font-size: 10px; opacity: 0.7; color: var(--gray-text); }
-        .attendance-card { gap: 0; padding: 0; overflow: hidden; }
-        .attendance-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #fff; }
-        .attendance-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: #fff; }
-        .attendance-body.open { max-height: 1200px; padding: 0 15px 20px 15px; }
-        .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-        .day-box { aspect-ratio: 1; background: #fdfdfd; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #bbb; }
-        .day-box.active { background: var(--accent-blue) !important; color: white !important; }
-        .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); }
-        .help-section { display: flex; justify-content: center; margin-top: 10px; }
-        .help-btn { border: none; background: #eee; color: #666; padding: 10px 20px; border-radius: 12px; font-size: 12px; font-weight: bold; cursor: pointer; }
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: #fff; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -2px 15px rgba(0,0,0,0.1); z-index: 999; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--gray-text); flex: 1; cursor: pointer; font-size: 12px; }
         .nav-item.active { color: var(--accent-blue); }
@@ -93,17 +82,6 @@
         <div class="mining-speed" id="speed-display">+ 0.00050 / sec</div>
         <div class="guide-text">Minimum 1 ICE required to collect</div>
         <div class="limit-text">Max storage up to 1,000 ICE</div>
-        <div class="click-info">Exchange your ICE for Digital Assets</div>
-    </div>
-
-    <div class="card attendance-card">
-        <div class="attendance-header" onclick="toggleAttendance()">
-            <h3 style="margin:0; font-size:16px;">📅 30-Day Rewards</h3>
-            <span id="arrow">▼</span>
-        </div>
-        <div id="attendance-body" class="attendance-body">
-            <div class="grid-30" id="attendance-grid"></div>
-        </div>
     </div>
 
     <div class="help-section"><button class="help-btn" onclick="openHelp()">❓ How to Play?</button></div>
@@ -120,38 +98,23 @@
                 <h2 style="margin:0; font-size:18px;">Recharge Water 💧</h2>
                 <span onclick="closeModal('deposit-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span>
             </div>
-            
             <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-top:5px;">
-                <div class="package-item" onclick="selectPack(10, 1000)" id="pack-10"><div style="font-weight:bold;">1,000 WATER</div><div style="font-size:11px; color:var(--accent-blue);">Price: 10 USDT</div></div>
-                <div class="package-item" onclick="selectPack(20, 2200)" id="pack-20"><div style="font-weight:bold;">2,000 + <span style="color:var(--danger);">200 Bonus</span></div><div style="font-size:11px; color:var(--accent-blue);">Price: 20 USDT</div></div>
-                <div class="package-item" onclick="selectPack(30, 3500)" id="pack-30"><div style="font-weight:bold;">3,000 + <span style="color:var(--danger);">500 Bonus</span></div><div style="font-size:11px; color:var(--accent-blue);">Price: 30 USDT</div></div>
+                <div class="package-item" onclick="selectPack(10, 1000)" id="pack-10"><b>1,000 WATER</b><br><small>10 USDT</small></div>
+                <div class="package-item" onclick="selectPack(20, 2200)" id="pack-20"><b>2,200 WATER</b><br><small>20 USDT</small></div>
+                <div class="package-item" onclick="selectPack(30, 3500)" id="pack-30"><b>3,500 WATER</b><br><small>30 USDT</small></div>
             </div>
-
             <div id="payment-details" style="display:none; margin-top:5px; padding-top:10px; border-top:1px dashed #eee;">
-                <div style="background:#f0f7ff; padding:10px; border-radius:12px; font-size:11px; line-height:1.4;">
-                    <strong>Selected:</strong> <span id="selected-pack-name"></span><br>
-                    <strong>Network:</strong> TRC20 (Tron) Only
+                <div style="background:#f0f7ff; padding:10px; border-radius:12px; font-size:11px;">
+                    <strong>Network:</strong> TRC20 (Tron) Only<br>
+                    <strong>Address:</strong> TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
                 </div>
-                
-                <div style="font-size:11px; margin-top:8px; color:#444;">1. Send USDT to Admin Address:</div>
-                <div style="background:#eee; padding:10px; border-radius:10px; font-size:10px; word-break:break-all; border:1px solid #ddd; margin-bottom:10px;">
-                    <span>TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
-                </div>
-
-                <div style="background:#fff9c4; padding:10px; border-radius:10px; font-size:10px; border:1px solid #fbc02d; margin-bottom:10px; line-height:1.4;">
+                <div style="background:#fff9c4; padding:10px; border-radius:10px; font-size:10px; border:1px solid #fbc02d; margin:10px 0;">
                     <strong>💡 Notice:</strong><br>
-                    - After deposit, send your <b>TXID and Amount</b> via Telegram message.<br>
-                    - Verification takes approximately <b>5 minutes</b>.
+                    - After deposit, the Admin Bot will help verify your payment.<br>
+                    - Verification takes approx. <b>5 minutes</b>.
                 </div>
-
-                <div style="font-size:11px; color:#444;"><strong>2. How to find TXID?</strong></div>
-                <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:10px; color:#666; margin: 5px 0 10px 0; line-height:1.5; border:1px solid #eee;">
-                    In your wallet app (<b>Binance, Trust Wallet, etc.</b>), go to <b>"History"</b> or <b>"Activity"</b>. Click your recent transaction to find the <b>"Transaction ID"</b> or <b>"TXID"</b> string. Copy and paste it below.
-                </div>
-
-                <div style="font-size:11px; color:#444;">3. Paste your TXID:</div>
-                <input type="text" id="txid-input" placeholder="Paste Transaction ID (Hash) here" class="input-box">
-                
+                <div style="font-size:11px; color:#444;">Paste your TXID (Check Wallet History):</div>
+                <input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box">
                 <button class="buy-small-btn" style="background:var(--accent-blue); width:100%; padding:15px; margin-top:10px;" onclick="submitDeposit()">Verify Payment</button>
             </div>
         </div>
@@ -160,14 +123,12 @@
     <div id="wallet-modal" class="modal">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center;"><h2 style="margin:0; font-size:18px;">Withdraw USDT</h2><span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
-            <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px; line-height:1.5;">
+            <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;">
                 <strong>Rate:</strong> 1,400 ICE = 1 USDT<br>
-                <strong>Network Fee:</strong> <span style="color:var(--danger); font-weight:bold;">140 ICE</span><br>
-                <strong>Min. Withdrawal:</strong> 10 USDT (14,000 ICE)
+                <strong>Network Fee:</strong> <span style="color:var(--danger); font-weight:bold;">140 ICE</span>
             </div>
-            <div style="margin-top:10px;"><div style="font-size:11px; font-weight:bold;">Network:</div><select class="input-box" style="color:var(--danger); font-weight:bold;"><option>TRC20 (Tron Network) ONLY</option></select></div>
-            <input type="text" id="wallet-addr" placeholder="Enter your TRC20 address" class="input-box" style="margin-top:10px;">
-            <p style="font-size:10px; color:var(--danger); margin-top:8px; line-height:1.4;">⚠️ <b>WARNING:</b> Please make sure your USDT (TRC20) address is <b>100% correct</b>. We are not responsible for any loss of assets due to an incorrect address.</p>
+            <input type="text" id="wallet-addr" placeholder="Paste your TRC20 address" class="input-box" style="margin-top:10px;">
+            <p style="font-size:10px; color:var(--danger); margin-top:8px;">⚠️ <b>WARNING:</b> Double-check your address. We are not responsible for assets lost due to incorrect addresses.</p>
             <button class="buy-small-btn" style="background:var(--accent-blue); width:100%; padding:15px; margin-top:5px;" onclick="requestWithdraw()">Submit Withdrawal Request</button>
         </div>
     </div>
@@ -185,6 +146,7 @@
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+
         let shards = parseFloat(localStorage.getItem('shards')) || 0;
         let water = parseFloat(localStorage.getItem('water')) || 0;
         let baseSpeed = 0.0005;
@@ -203,8 +165,7 @@
         }, 1000);
 
         function calculateSpeed() {
-            let speed = baseSpeed;
-            let now = Date.now();
+            let speed = baseSpeed; let now = Date.now();
             if(activeItems['pickaxe'] > now) speed += 0.0001;
             if(activeItems['gear'] > now) speed += 0.0005;
             if(activeItems['drill'] > now) speed += 0.0020;
@@ -214,11 +175,23 @@
 
         function buyItem(id, cost, addSpeed, hours) {
             if(water >= cost) {
-                water -= cost;
-                activeItems[id] = Date.now() + (hours * 3600 * 1000);
-                updateUI(); saveData();
-                tg.showAlert(`${id.toUpperCase()} activated!`);
+                water -= cost; activeItems[id] = Date.now() + (hours * 3600 * 1000);
+                updateUI(); saveData(); tg.showAlert(`${id.toUpperCase()} activated!`);
             } else { tg.showAlert("Need more Water! 💧"); }
+        }
+
+        function submitDeposit() {
+            const txid = document.getElementById('txid-input').value;
+            const packName = document.getElementById('selected-pack-name').innerText;
+            if(!txid || txid.length < 10) { tg.showAlert("Please enter a valid TXID!"); return; }
+
+            // ⭐ 여기에 생성한 봇 아이디(@ 제외)를 입력하세요!
+            const botId = "IceBreaker_Admin_bot"; 
+            const msg = encodeURIComponent(`[DEPOSIT REQUEST]\nPack: ${packName}\nTXID: ${txid}\n\nPlease verify my payment.`);
+            
+            tg.openTelegramLink(`https://t.me/${botId}?text=${msg}`);
+            tg.showAlert("Redirecting to Admin Bot...");
+            closeModal('deposit-modal');
         }
 
         function selectPack(price, waterAmt) {
@@ -227,8 +200,6 @@
             document.getElementById('payment-details').style.display = 'block';
             document.getElementById('selected-pack-name').innerText = `${price} USDT (${waterAmt.toLocaleString()} Water)`;
         }
-
-        function submitDeposit() { tg.showAlert(`Verification takes approx. 5 mins. Please send TXID and Amount via Telegram.`); closeModal('deposit-modal'); }
 
         function updateItemTimers() {
             const container = document.getElementById('active-items'); container.innerHTML = "";
@@ -269,22 +240,11 @@
             localStorage.setItem('power', power); localStorage.setItem('activeItems', JSON.stringify(activeItems));
         }
 
-        const grid = document.getElementById('attendance-grid');
-        for(let i=1; i<=30; i++) {
-            const box = document.createElement('div'); box.className = 'day-box';
-            let rLabel = (i % 2 === 0) ? "1 ICE" : "5 WATER";
-            box.innerHTML = `<span>${(i%2===0)?'🧊':'💧'}</span><span style="font-size:6px;">${rLabel}</span>D-${i}`;
-            if(i === 1) { box.classList.add('today'); box.onclick = () => { if(!box.classList.contains('active')){ (i%2===0)?shards+=1:water+=5; box.classList.add('active'); updateUI(); saveData(); } }; }
-            grid.appendChild(box);
-        }
-
-        function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
         function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; }
         function openHelp() { document.getElementById('help-modal').style.display = 'flex'; }
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function requestWithdraw() { tg.showAlert("Withdrawal request submitted."); }
         updateUI();
     </script>
 </body>

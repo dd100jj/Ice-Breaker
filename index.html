@@ -32,10 +32,19 @@
         .ice-cube:active { transform: scale(0.9); }
         .mining-power { font-size: 28px; font-weight: 800; }
         
-        /* 보유량 및 환산금액 수평 정렬을 위한 컨테이너 */
-        .balance-container { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding: 0 5px; }
+        /* 보유량 및 환산금액 수평 균형 유지 */
+        .balance-container { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding: 0 2px; }
         .asset-amount { font-size: 24px; font-weight: 900; margin: 0; }
         .usdt-value { font-size: 13px; font-weight: bold; color: var(--accent-orange); }
+
+        .attendance-card { gap: 0; padding: 0; overflow: hidden; margin-top: 5px; }
+        .attendance-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #fff; }
+        .attendance-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: #fff; }
+        .attendance-body.open { max-height: 1200px; padding: 0 15px 20px 15px; }
+        .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+        .day-box { aspect-ratio: 1; background: #fdfdfd; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #bbb; }
+        .day-box.active { background: var(--accent-blue) !important; color: white !important; }
+        .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); }
 
         .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; }
         .buy-small-btn { background: var(--water-color); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; }
@@ -63,16 +72,6 @@
     
     <div class="notice-bar">🚧 Under Construction (Beta Mode)<br>🕒 Support: 05:00-18:00 UTC (14:00-03:00 KST)</div>
 
-    <div class="card mine-card">
-        <div style="position: absolute; top: 10px; right: 15px; font-size: 9px; color: var(--danger); font-weight: bold;">BETA MODE</div>
-        <div class="ice-cube" onclick="mineClick()">🧊</div>
-        <div class="mining-power" id="mining-power">+ 0.00000</div>
-        <div class="mining-speed" style="color: var(--accent-orange); font-weight: bold; font-size: 14px;" id="speed-display">+ 0.00005 / sec</div>
-        <div style="font-size: 14px; color: var(--accent-orange); font-weight: bold;">Minimum 0.005 ICE required to collect</div>
-        <div id="level-guide" style="font-size:11px; color:var(--gray-text);">Goal for LV.2: 50 ICE</div>
-        <div style="font-size: 11px; color: var(--gray-text);">Max storage up to 1,000 ICE</div>
-    </div>
-
     <div class="card">
         <div style="font-size:13px; font-weight:bold; color:var(--gray-text); margin-bottom:8px;">🧊 Ice container</div>
         <div style="width:100%; height:20px; background:#f0f2f5; border-radius:10px; overflow:hidden;"><div id="ice-gauge-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #4fc3f7, #81d4fa); transition:width 0.3s;"></div></div>
@@ -83,11 +82,31 @@
         </div>
     </div>
 
+    <div class="card mine-card">
+        <div style="position: absolute; top: 10px; right: 15px; font-size: 9px; color: var(--danger); font-weight: bold;">BETA MODE</div>
+        <div class="ice-cube" onclick="mineClick()">🧊</div>
+        <div class="mining-power" id="mining-power">+ 0.00000</div>
+        <div class="mining-speed" style="color: var(--accent-orange); font-weight: bold; font-size: 14px;" id="speed-display">+ 0.00005 / sec</div>
+        <div style="font-size: 14px; color: var(--accent-orange); font-weight: bold;">Minimum 0.005 ICE required to collect</div>
+        <div id="level-guide" style="font-size:11px; color:var(--gray-text);">Goal for LV.2: 50 ICE</div>
+        <div style="font-size: 11px; color: var(--gray-text);">Max storage up to 1,000 ICE</div>
+    </div>
+
     <div class="card" style="border: 1.5px dashed var(--accent-blue); padding: 12px;">
         <div style="font-size: 12px; font-weight: bold; color: var(--accent-blue); margin-bottom: 8px;">🎫 Redeem Promo Code</div>
         <div style="display: flex; gap: 8px;">
             <input type="text" id="promo-code" placeholder="Enter code" class="input-box" style="margin:0; flex:1;">
             <button class="buy-small-btn" onclick="redeemCode()" style="width: 80px;">Apply</button>
+        </div>
+    </div>
+
+    <div class="card attendance-card">
+        <div class="attendance-header" onclick="toggleAttendance()">
+            <h3 style="margin:0; font-size:16px;">📅 30-Day Rewards</h3>
+            <span id="arrow">▼</span>
+        </div>
+        <div id="attendance-body" class="attendance-body">
+            <div class="grid-30" id="attendance-grid"></div>
         </div>
     </div>
 
@@ -97,59 +116,11 @@
         <div class="nav-item" onclick="openWallet()"><span class="nav-icon">💼</span><span class="nav-label">Wallet</span></div>
     </nav>
 
-    <div id="deposit-modal" class="modal">
-        <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Recharge Water 💧</h2><span onclick="closeModal('deposit-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
-            <div class="package-item" onclick="selectPack(10, 1000)" id="pack-10"><b>1,000 WATER</b> (10 USDT)</div>
-            <div class="package-item" onclick="selectPack(20, 2200)" id="pack-20"><b>2,200 WATER</b> (20 USDT)</div>
-            <div class="package-item" onclick="selectPack(30, 3500)" id="pack-30"><b>3,500 WATER</b> (30 USDT)</div>
-            <div id="payment-details" style="display:none; border-top:1px dashed #eee; padding-top:10px;">
-                <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:10px; word-break:break-all;"><b>Admin Wallet (TRC20):</b><br><span id="admin-wallet-addr">TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span><br><button onclick="copyAddr()" style="margin-top:5px; padding:5px 10px; border:none; border-radius:5px; font-size:10px; background:var(--accent-blue); color:white; cursor:pointer;">Copy Address</button></div>
-                <input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box" style="margin-top:10px;">
-                <button class="buy-small-btn" style="background:var(--accent-orange); width:100%; margin-top:10px;" onclick="submitDeposit()">Submit Request</button>
-            </div>
-        </div>
-    </div>
+    <div id="deposit-modal" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center;"><h2>Recharge Water 💧</h2><span onclick="closeModal('deposit-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div><div class="package-item" onclick="selectPack(10, 1000)" id="pack-10"><b>1,000 WATER</b> (10 USDT)</div><div class="package-item" onclick="selectPack(20, 2200)" id="pack-20"><b>2,200 WATER</b> (20 USDT)</div><div class="package-item" onclick="selectPack(30, 3500)" id="pack-30"><b>3,500 WATER</b> (30 USDT)</div><div id="payment-details" style="display:none; border-top:1px dashed #eee; padding-top:10px;"><div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:10px; word-break:break-all;"><b>Admin Wallet (TRC20):</b><br><span id="admin-wallet-addr">TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span><br><button onclick="copyAddr()" style="margin-top:5px; padding:5px 10px; border:none; border-radius:5px; font-size:10px; background:var(--accent-blue); color:white; cursor:pointer;">Copy Address</button></div><input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box" style="margin-top:10px;"><button class="buy-small-btn" style="background:var(--accent-orange); width:100%; margin-top:10px;" onclick="submitDeposit()">Submit Request</button></div></div></div>
 
-    <div id="wallet-modal" class="modal">
-        <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Withdraw USDT</h2><span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
-            <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;">
-                <strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br>
-                <strong>Value:</strong> <span id="wallet-usdt-val">0.00</span> USDT<br>
-                <strong>Rate:</strong> 1,400 ICE = 1 USDT<br>
-                <strong>Min. Withdrawal:</strong> 14,000 ICE
-            </div>
-            <div style="margin-top:5px;"><div style="font-size:11px; font-weight:bold;">Network:</div><select class="input-box" style="color:var(--danger); font-weight:bold;"><option>TRC20 (Tron Network)</option></select></div>
-            <div style="margin-top:5px;"><div style="font-size:11px; font-weight:bold;">Select Exchange:</div><select id="exchange-type" class="input-box"><option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option></select></div>
-            <input type="text" id="wallet-addr" placeholder="Paste TRC20 address" class="input-box">
-            <button class="buy-small-btn" style="background:var(--accent-blue); width:100%;" onclick="requestWithdraw()">Request Withdrawal</button>
-        </div>
-    </div>
+    <div id="wallet-modal" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center;"><h2>Withdraw USDT</h2><span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div><div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;"><strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br><strong>Value:</strong> <span id="wallet-usdt-val">0.00</span> USDT<br><strong>Rate:</strong> 1,400 ICE = 1 USDT<br><strong>Min. Withdrawal:</strong> 14,000 ICE</div><div style="margin-top:5px;"><div style="font-size:11px; font-weight:bold;">Network:</div><select class="input-box" style="color:var(--danger); font-weight:bold;"><option>TRC20 (Tron Network)</option></select></div><div style="margin-top:5px;"><div style="font-size:11px; font-weight:bold;">Exchange:</div><select id="exchange-type" class="input-box"><option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option></select></div><input type="text" id="wallet-addr" placeholder="Paste TRC20 address" class="input-box"><button class="buy-small-btn" style="background:var(--accent-blue); width:100%;" onclick="requestWithdraw()">Request Withdrawal</button></div></div>
 
-    <div id="shop-modal" class="modal">
-        <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Water Shop 💧</h2><span onclick="closeModal('shop-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
-                    <div><b>⛏️ Iron Pickaxe</b><br><small>+0.0001/s (24h)</small></div>
-                    <button class="buy-small-btn" onclick="buyItem('pickaxe', 500, 24)">💧 500</button>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
-                    <div><b>❄️ Cooling Spray</b><br><small>All Speed x2 (12h)</small></div>
-                    <button class="buy-small-btn" onclick="buyItem('spray', 1000, 12)">💧 1,000</button>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
-                    <div><b>⚙️ Silver Gear</b><br><small>+0.0005/s (24h)</small></div>
-                    <button class="buy-small-btn" onclick="buyItem('gear', 1500, 24)">💧 1,500</button>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px;">
-                    <div><b>💎 Diamond Drill</b><br><small>+0.0020/s (48h)</small></div>
-                    <button class="buy-small-btn" onclick="buyItem('drill', 5000, 48)">💧 5,000</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div id="shop-modal" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center;"><h2>Water Shop 💧</h2><span onclick="closeModal('shop-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div><div class="item-row"><div><b>⛏️ Iron Pickaxe</b><br><small>+0.0001/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('pickaxe', 500, 24)">💧 500</button></div><div class="item-row"><div><b>❄️ Cooling Spray</b><br><small>All Speed x2 (12h)</small></div><button class="buy-small-btn" onclick="buyItem('spray', 1000, 12)">💧 1,000</button></div><div class="item-row"><div><b>⚙️ Silver Gear</b><br><small>+0.0005/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('gear', 1500, 24)">💧 1,500</button></div><div class="item-row"><div><b>💎 Diamond Drill</b><br><small>+0.0020/s (48h)</small></div><button class="buy-small-btn" onclick="buyItem('drill', 5000, 48)">💧 5,000</button></div></div></div>
 
     <script>
         const tg = window.Telegram.WebApp;
@@ -171,13 +142,14 @@
         const MY_CHAT_ID = "-1003454423385"; 
         const USER_ID = tg.initDataUnsafe?.user?.id?.toString() || "guest_user";
 
-        let userData = { shards: 0, water: 0, power: 0, level: 1, usedCodes: [], activeItems: {} };
+        let userData = { shards: 0, water: 0, power: 0, level: 1, usedCodes: [], activeItems: {}, lastAttendance: 0 };
         const levelData = [{target:0,bonus:0},{target:50,bonus:0.00001},{target:200,bonus:0.00002},{target:500,bonus:0.00003},{target:1200,bonus:0.00005}];
 
         async function loadData() {
             const doc = await db.collection("users").doc(USER_ID).get();
             if (doc.exists) { userData = doc.data(); }
             else { await db.collection("users").doc(USER_ID).set(userData); }
+            initAttendance();
             updateUI();
         }
 
@@ -212,6 +184,22 @@
             } else { tg.showAlert("Collect at least 0.005 ICE!"); }
         }
 
+        function initAttendance() {
+            const grid = document.getElementById('attendance-grid'); grid.innerHTML = "";
+            for(let i=1; i<=30; i++) {
+                const box = document.createElement('div'); box.className = 'day-box';
+                box.innerHTML = `<span>💧</span>D-${i}`;
+                if(i===1) { box.classList.add('today'); box.onclick = () => { 
+                    const today = new Date().toDateString();
+                    if(userData.lastAttendance !== today) {
+                        userData.water += 5; userData.lastAttendance = today; updateUI(); saveData(); tg.showAlert("Checked!");
+                        box.classList.add('active');
+                    } else { tg.showAlert("Already checked today!"); }
+                }};
+                grid.appendChild(box);
+            }
+        }
+
         function updateUI() {
             document.getElementById('balance').innerText = userData.shards.toLocaleString(undefined, {minimumFractionDigits: 5});
             document.getElementById('ice-top-display').innerText = Math.floor(userData.shards).toLocaleString();
@@ -231,19 +219,7 @@
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function copyAddr() { navigator.clipboard.writeText(document.getElementById('admin-wallet-addr').innerText); tg.showAlert("Copied!"); }
-        function submitDeposit() {
-            const txid = document.getElementById('txid-input').value;
-            if(!txid) return tg.showAlert("Please enter TXID!");
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(`💰 [DEPOSIT]\nUser: @${tg.initDataUnsafe?.user?.username}\nTXID: ${txid}`)}`);
-            tg.showAlert("Submitted!"); closeModal('deposit-modal');
-        }
-
-        function requestWithdraw() {
-            const addr = document.getElementById('wallet-addr').value;
-            if(!addr) return tg.showAlert("Enter address!");
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(`📤 [WITHDRAW]\nUser: @${tg.initDataUnsafe?.user?.username}\nAmt: ${(userData.shards/1400).toFixed(2)} USDT\nAddr: ${addr}`)}`);
-            tg.showAlert("Requested!"); closeModal('wallet-modal');
-        }
+        function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
 
         loadData();
     </script>

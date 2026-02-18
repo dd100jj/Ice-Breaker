@@ -82,7 +82,7 @@
         <div class="level-tag" id="lv-badge">⭐ LV.1</div>
     </div>
     
-    <div class="notice-bar">🚧 Under Construction (Beta Test)</div>
+    <div class="notice-bar">🚧 Under Construction (Beta Test Mode)</div>
 
     <div id="active-items"></div>
 
@@ -94,6 +94,14 @@
         <div class="guide-text">Minimum 0.005 ICE required to collect</div>
         <div class="limit-text" id="level-guide">Goal for LV.2: 50 ICE</div>
         <div class="limit-text">Max storage up to 1,000 ICE</div>
+    </div>
+
+    <div class="card" style="border: 1.5px dashed var(--accent-blue); padding: 12px;">
+        <div style="font-size: 12px; font-weight: bold; color: var(--accent-blue); margin-bottom: 8px;">🎫 Redeem Promo Code</div>
+        <div style="display: flex; gap: 8px;">
+            <input type="text" id="promo-code" placeholder="Enter code" class="input-box" style="margin:0; flex:1;">
+            <button class="buy-small-btn" onclick="redeemCode()" style="width: 80px;">Apply</button>
+        </div>
     </div>
 
     <div class="card">
@@ -129,7 +137,7 @@
     <div id="deposit-modal" class="modal">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Recharge Water 💧</h2><span onclick="closeModal('deposit-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
-            <div style="font-size:11px; color:var(--danger); text-align:center; margin-bottom:10px;">⚠️ Deposit function is under maintenance.</div>
+            <div style="font-size:11px; color:var(--danger); text-align:center; margin-bottom:10px;">⚠️ Beta Mode: Contact Admin for manual refill.</div>
             <div class="package-item" onclick="selectPack(10, 1000)" id="pack-10"><b>1,000 WATER</b> (10 USDT)</div>
             <div class="package-item" onclick="selectPack(20, 2200)" id="pack-20"><b>2,200 WATER</b> (20 USDT)</div>
             <div class="package-item" onclick="selectPack(30, 3500)" id="pack-30"><b>3,500 WATER</b> (30 USDT)</div>
@@ -145,7 +153,8 @@
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Withdraw USDT</h2><span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
             <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;"><strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br><strong>Value:</strong> <span id="wallet-usdt-val">0.00</span> USDT</div>
-            <input type="text" id="wallet-addr" placeholder="Paste your USDT address" class="input-box" style="margin-top:10px;">
+            <select id="exchange-type" class="input-box" style="margin-top:10px;"><option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option></select>
+            <input type="text" id="wallet-addr" placeholder="Paste TRC20 address" class="input-box">
             <button class="buy-small-btn" style="background:var(--accent-blue); width:100%;" onclick="requestWithdraw()">Submit Request</button>
         </div>
     </div>
@@ -163,7 +172,7 @@
     <div id="help-modal" class="modal">
         <div class="modal-content">
             <h2 style="margin:0; font-size:18px;">How to Play 🧊</h2>
-            <div style="font-size:13px; line-height:1.6; color:#444;">1. <b>Watch Ads:</b> Earn <b>Water(💧)</b>.<br>2. <b>Buy Items:</b> Upgrade tools in the <b>Shop</b>.<br>3. <b>Mine Ice:</b> Collect <b>ICE(🧊)</b> faster.<br>4. <b>Cash Out:</b> Exchange for <b>USDT</b>!</div>
+            <div style="font-size:13px; line-height:1.6; color:#444;">1. <b>Watch Ads:</b> Earn Water.<br>2. <b>Shop:</b> Buy mining tools.<br>3. <b>Mine:</b> Collect ICE faster.<br>4. <b>Withdraw:</b> Exchange ICE for USDT!</div>
             <button class="buy-small-btn" style="margin-top:10px; width: 100%;" onclick="closeModal('help-modal')">Got it!</button>
         </div>
     </div>
@@ -172,11 +181,19 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+        // 🟢 [알림 설정] 관리자 채널 정보
+        const BOT_TOKEN = "여기에_본인의_봇_토큰을_입력하세요"; // @BotFather에게 받은 토큰
+        const MY_CHAT_ID = "-1003454423385"; // 제공해주신 관리자 채널 ID
+
         let shards = parseFloat(localStorage.getItem('shards')) || 0;
         let water = parseFloat(localStorage.getItem('water')) || 0;
         let power = parseFloat(localStorage.getItem('power')) || 0;
         let activeItems = JSON.parse(localStorage.getItem('activeItems')) || {};
         let level = parseInt(localStorage.getItem('ice_level')) || 1;
+        let usedCodes = JSON.parse(localStorage.getItem('usedCodes')) || [];
+
+        // 난수 코드 예시 (실제 운영 시 더 복잡하게 만드세요)
+        const VALID_CODES = { "KJ82-NM91": 1000, "LQ55-ZW10": 2200, "PF23-SD88": 3500 };
 
         const levelData = [{target:0,bonus:0},{target:50,bonus:0.00001},{target:200,bonus:0.00002},{target:500,bonus:0.00003},{target:1200,bonus:0.00005}];
 
@@ -184,12 +201,12 @@
             if (power < 1000) {
                 let currentTotalSpeed = calculateSpeed();
                 power = Math.min(1000, power + currentTotalSpeed);
-                saveData();
                 document.getElementById('mining-power').innerText = "+ " + power.toFixed(5);
                 document.getElementById('speed-display').innerText = "+ " + currentTotalSpeed.toFixed(5) + " / sec";
             }
             updateItemTimers();
             checkLevelUp();
+            saveData();
         }, 1000);
 
         function calculateSpeed() {
@@ -202,6 +219,14 @@
             return speed;
         }
 
+        // 텔레그램 실시간 알림 함수
+        function sendNoti(text) {
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(text)}`;
+            fetch(url).then(res => res.json()).then(data => {
+                if(data.ok) tg.showAlert("Request sent to Admin!");
+            }).catch(e => console.error(e));
+        }
+
         function mineClick() {
             if (power >= 0.005) {
                 shards += power; power = 0; updateUI(); saveData();
@@ -209,9 +234,35 @@
             } else { tg.showAlert("Collect at least 0.005 ICE!"); }
         }
 
+        function submitDeposit() {
+            const txid = document.getElementById('txid-input').value;
+            if(!txid) return tg.showAlert("Please enter TXID!");
+            const user = tg.initDataUnsafe?.user?.username || "Unknown";
+            sendNoti(`💰 [DEPOSIT REQUEST]\nUser: @${user}\nTXID: ${txid}`);
+            closeModal('deposit-modal');
+        }
+
+        function requestWithdraw() {
+            const addr = document.getElementById('wallet-addr').value;
+            if(!addr) return tg.showAlert("Please enter address!");
+            const user = tg.initDataUnsafe?.user?.username || "Unknown";
+            sendNoti(`📤 [WITHDRAWAL REQUEST]\nUser: @${user}\nAmount: ${(shards/1400).toFixed(2)} USDT\nAddr: ${addr}`);
+            closeModal('wallet-modal');
+        }
+
+        function redeemCode() {
+            const code = document.getElementById('promo-code').value.trim().toUpperCase();
+            if(usedCodes.includes(code)) return tg.showAlert("Already used!");
+            if(VALID_CODES[code]) {
+                water += VALID_CODES[code]; usedCodes.push(code); saveData(); updateUI();
+                tg.showAlert(`🎉 ${VALID_CODES[code]} Water refilled!`);
+                document.getElementById('promo-code').value = "";
+            } else { tg.showAlert("Invalid code."); }
+        }
+
         function checkLevelUp() {
             if (level < levelData.length && shards >= levelData[level].target) {
-                level++; saveData(); updateUI(); tg.showAlert(`🎉 Level Up! Now LV.${level}`);
+                level++; updateUI(); tg.showAlert(`🎉 Level Up! Now LV.${level}`);
             }
         }
 
@@ -237,19 +288,12 @@
         function openHelp() { document.getElementById('help-modal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function copyAddr() { navigator.clipboard.writeText(document.getElementById('admin-wallet-addr').innerText); tg.showAlert("Address Copied!"); }
-        function selectPack(price, waterAmt) {
-            document.querySelectorAll('.package-item').forEach(el => el.classList.remove('selected'));
-            document.getElementById(`pack-${price}`).classList.add('selected');
-            document.getElementById('payment-details').style.display = 'block';
-        }
-        function submitDeposit() { tg.showAlert("Notification sent to Admin!"); closeModal('deposit-modal'); }
-        function requestWithdraw() { tg.showAlert("Withdrawal request submitted!"); }
-        function watchAd() { tg.showConfirm("Watch ad for 1 Water?", (ok) => { if(ok) { setTimeout(() => { water += 1; updateUI(); saveData(); }, 1000); }}); }
+        function watchAd() { tg.showConfirm("Watch ad for 1 Water?", (ok) => { if(ok) { setTimeout(() => { water += 1; updateUI(); }, 1000); }}); }
         function buyItem(id, hours) {
             const prices = {pickaxe:500, spray:1000, gear:1500, drill:5000};
             if(water >= prices[id]) {
                 water -= prices[id]; activeItems[id] = Date.now() + (hours * 3600 * 1000);
-                updateUI(); saveData(); tg.showAlert(`${id.toUpperCase()} Activated!`);
+                updateUI(); tg.showAlert(`${id.toUpperCase()} Activated!`);
             } else { tg.showAlert("Need more Water! 💧"); }
         }
         function updateItemTimers() {
@@ -264,7 +308,7 @@
                 }
             }
         }
-        function saveData() { localStorage.setItem('shards', shards); localStorage.setItem('water', water); localStorage.setItem('power', power); localStorage.setItem('activeItems', JSON.stringify(activeItems)); localStorage.setItem('ice_level', level); }
+        function saveData() { localStorage.setItem('shards', shards); localStorage.setItem('water', water); localStorage.setItem('power', power); localStorage.setItem('activeItems', JSON.stringify(activeItems)); localStorage.setItem('ice_level', level); localStorage.setItem('usedCodes', JSON.stringify(usedCodes)); }
         function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
 
         const grid = document.getElementById('attendance-grid');
@@ -274,7 +318,7 @@
             let icon = (i%2===0) ? "🧊" : "💧";
             if(rewards[i]) { icon = "🎁"; box.classList.add('special-day'); }
             box.innerHTML = `<span>${icon}</span>D-${i}`;
-            if(i===1) { box.classList.add('today'); box.onclick = () => { if(!box.classList.contains('active')) { box.classList.add('active'); water+=5; updateUI(); tg.showAlert("Checked!"); }}; }
+            if(i===1) { box.classList.add('today'); box.onclick = () => { if(!box.classList.contains('active')) { box.classList.add('active'); water+=5; updateUI(); tg.showAlert("Reward Collected!"); }}; }
             grid.appendChild(box);
         }
 

@@ -36,8 +36,12 @@
         .ice-cube { font-size: 85px; margin: 10px 0; cursor: pointer; transition: transform 0.1s; user-select: none; }
         .ice-cube:active { transform: scale(0.9); }
         .mining-power { font-size: 28px; font-weight: 800; }
-        .mining-speed { color: var(--accent-orange); font-weight: bold; font-size: 14px; }
         
+        /* 폰트 크기 동기화: 14px */
+        .mining-speed { color: var(--accent-orange); font-weight: bold; font-size: 14px; }
+        .guide-text { font-size: 14px; color: var(--accent-orange); font-weight: bold; }
+
+        .limit-text { font-size: 11px; color: var(--gray-text); }
         .attendance-card { gap: 0; padding: 0; overflow: hidden; margin-top: 5px; }
         .attendance-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #fff; }
         .attendance-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: #fff; }
@@ -45,7 +49,7 @@
         .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         .day-box { aspect-ratio: 1; background: #fdfdfd; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #bbb; }
         .day-box.active { background: var(--accent-blue) !important; color: white !important; }
-        .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); cursor: pointer; }
+        .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); }
         .special-day { background: #fff9c4 !important; }
 
         .help-section { display: flex; justify-content: center; margin-top: 5px; }
@@ -79,10 +83,11 @@
     <div id="active-items"></div>
 
     <div class="card mine-card">
-        <div class="ice-cube" onclick="mineClick(event)">🧊</div>
+        <div class="ice-cube" onclick="mineClick()">🧊</div>
         <div class="mining-power" id="mining-power">+ 0.00000</div>
         <div class="mining-speed" id="speed-display">+ 0.00005 / sec</div>
-        <div class="guide-text" id="level-guide">Goal for LV.2: 50 ICE</div>
+        <div class="guide-text">Minimum 0.005 ICE required to collect</div>
+        <div class="limit-text" id="level-guide">Goal for LV.2: 50 ICE</div>
         <div class="limit-text">Max storage up to 1,000 ICE</div>
     </div>
 
@@ -118,18 +123,12 @@
 
     <div id="deposit-modal" class="modal">
         <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2 style="margin:0; font-size:18px;">Recharge Water 💧</h2>
-                <span onclick="closeModal('deposit-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span>
-            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Recharge Water 💧</h2><span onclick="closeModal('deposit-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
             <div class="package-item" onclick="selectPack(10, 1000)" id="pack-10"><b>1,000 WATER</b> (10 USDT)</div>
             <div class="package-item" onclick="selectPack(20, 2200)" id="pack-20"><b>2,200 WATER</b> (20 USDT)</div>
             <div class="package-item" onclick="selectPack(30, 3500)" id="pack-30"><b>3,500 WATER</b> (30 USDT)</div>
             <div id="payment-details" style="display:none; border-top:1px dashed #eee; padding-top:10px;">
-                <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:10px; word-break:break-all;">
-                    <b>Address:</b> <span id="admin-wallet-addr">TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span><br>
-                    <button onclick="copyAddr()" style="margin-top:5px; padding:3px 8px; border:none; border-radius:5px; font-size:10px; background:#eee; cursor:pointer;">Copy Address</button>
-                </div>
+                <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:10px; word-break:break-all;"><b>Address:</b> <span id="admin-wallet-addr">TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span><br><button onclick="copyAddr()" style="margin-top:5px; padding:3px 8px; border:none; border-radius:5px; font-size:10px; background:#eee; cursor:pointer;">Copy Address</button></div>
                 <input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box" style="margin-top:10px;">
                 <button class="buy-small-btn" style="background:var(--accent-blue); width:100%; margin-top:10px;" onclick="submitDeposit()">Confirm & Notify Admin</button>
             </div>
@@ -138,22 +137,10 @@
 
     <div id="wallet-modal" class="modal">
         <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2 style="margin:0; font-size:18px;">Withdraw USDT</h2>
-                <span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span>
-            </div>
-            <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;">
-                <strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br>
-                <strong>Value:</strong> <span id="wallet-usdt-val">0.00</span> USDT
-            </div>
-            <div style="margin-top:5px;">
-                <div style="font-size:11px; font-weight:bold;">Network:</div>
-                <select class="input-box" style="color:var(--danger); font-weight:bold;"><option>TRC20 (Tron Network)</option></select>
-            </div>
-            <div style="margin-top:5px;">
-                <div style="font-size:11px; font-weight:bold;">Select Exchange:</div>
-                <select id="exchange-type" class="input-box"><option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option></select>
-            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Withdraw USDT</h2><span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
+            <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;"><strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br><strong>Value:</strong> <span id="wallet-usdt-val">0.00</span> USDT</div>
+            <div style="margin-top:5px;"><div style="font-size:11px; font-weight:bold;">Network:</div><select class="input-box" style="color:var(--danger); font-weight:bold;"><option>TRC20 (Tron Network)</option></select></div>
+            <div style="margin-top:5px;"><div style="font-size:11px; font-weight:bold;">Select Exchange:</div><select id="exchange-type" class="input-box"><option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option></select></div>
             <input type="text" id="wallet-addr" placeholder="Paste your USDT address" class="input-box">
             <button class="buy-small-btn" style="background:var(--accent-blue); width:100%;" onclick="requestWithdraw()">Submit Withdrawal Request</button>
         </div>
@@ -161,10 +148,7 @@
 
     <div id="shop-modal" class="modal">
         <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2 style="margin:0; font-size:18px;">Water Shop 💧</h2>
-                <span onclick="closeModal('shop-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span>
-            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Water Shop 💧</h2><span onclick="closeModal('shop-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
             <div class="item-row"><div><b>⛏️ Iron Pickaxe</b><br><small>+0.0001/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('pickaxe', 500, 24)">💧 500</button></div>
             <div class="item-row"><div><b>❄️ Cooling Spray</b><br><small>All Speed x2 (12h)</small></div><button class="buy-small-btn" onclick="buyItem('spray', 1000, 12)">💧 1,000</button></div>
             <div class="item-row"><div><b>⚙️ Silver Gear</b><br><small>+0.0005/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('gear', 1500, 24)">💧 1,500</button></div>
@@ -214,40 +198,31 @@
             return speed;
         }
 
+        // 수집 조건 수정 완료 (0.005 이상 시 수집)
+        function mineClick() {
+            if (power >= 0.005) {
+                shards += power; 
+                power = 0;
+                updateUI(); saveData(); 
+                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+            } else { tg.showAlert("Collect at least 0.005 ICE!"); }
+        }
+
         function checkLevelUp() {
             if (level < levelData.length && shards >= levelData[level].target) {
                 level++; saveData(); updateUI(); tg.showAlert(`🎉 Level Up! Now LV.${level}`);
             }
         }
 
-        function mineClick() {
-            if (power >= 1) {
-                let harvest = Math.floor(power); shards += harvest; power -= harvest;
-                updateUI(); saveData(); if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-            } else { tg.showAlert("Collect at least 1 ICE!"); }
-        }
-
-        function watchAd() {
-            tg.showConfirm("Watch ad for 1 Water?", (ok) => { if(ok) { setTimeout(() => { water += 1; updateUI(); saveData(); }, 1000); }});
-        }
-
-        function buyItem(id, hours) {
-            const prices = {pickaxe:500, spray:1000, gear:1500, drill:5000};
-            if(water >= prices[id]) {
-                water -= prices[id]; activeItems[id] = Date.now() + (hours * 3600 * 1000);
-                updateUI(); saveData(); tg.showAlert(`${id.toUpperCase()} Activated!`);
-            } else { tg.showAlert("Need more Water! 💧"); }
-        }
-
         function updateUI() {
-            document.getElementById('balance').innerText = shards.toLocaleString();
-            document.getElementById('ice-top-display').innerText = shards.toLocaleString();
+            document.getElementById('balance').innerText = shards.toLocaleString(undefined, {minimumFractionDigits: 5});
+            document.getElementById('ice-top-display').innerText = Math.floor(shards).toLocaleString();
             document.getElementById('water-top-display').innerText = water.toLocaleString();
             document.getElementById('lv-badge').innerText = `⭐ LV.${level}`;
             const usdtVal = (shards / 1400).toFixed(2);
             document.getElementById('ice-to-usdt').innerText = usdtVal + " USDT";
             if(document.getElementById('wallet-ice-bal')) {
-                document.getElementById('wallet-ice-bal').innerText = shards.toLocaleString();
+                document.getElementById('wallet-ice-bal').innerText = shards.toLocaleString(undefined, {minimumFractionDigits: 2});
                 document.getElementById('wallet-usdt-val').innerText = usdtVal;
             }
             const nextLv = levelData[level];
@@ -265,15 +240,17 @@
             document.querySelectorAll('.package-item').forEach(el => el.classList.remove('selected'));
             document.getElementById(`pack-${price}`).classList.add('selected');
             document.getElementById('payment-details').style.display = 'block';
-            window.selectedPack = `${price} USDT Pack`;
         }
-
-        function submitDeposit() {
-            const txid = document.getElementById('txid-input').value;
-            if(!txid || txid.length < 10) { tg.showAlert("Invalid TXID!"); return; }
-            tg.showAlert("Request Submitted to Admin!"); closeModal('deposit-modal');
+        function submitDeposit() { tg.showAlert("Notification sent to Admin!"); closeModal('deposit-modal'); }
+        function requestWithdraw() { tg.showAlert("Withdrawal request submitted!"); }
+        function watchAd() { tg.showConfirm("Watch ad for 1 Water?", (ok) => { if(ok) { setTimeout(() => { water += 1; updateUI(); saveData(); }, 1000); }}); }
+        function buyItem(id, hours) {
+            const prices = {pickaxe:500, spray:1000, gear:1500, drill:5000};
+            if(water >= prices[id]) {
+                water -= prices[id]; activeItems[id] = Date.now() + (hours * 3600 * 1000);
+                updateUI(); saveData(); tg.showAlert(`${id.toUpperCase()} Activated!`);
+            } else { tg.showAlert("Need more Water! 💧"); }
         }
-
         function updateItemTimers() {
             const container = document.getElementById('active-items'); container.innerHTML = "";
             let now = Date.now();
@@ -286,12 +263,9 @@
                 }
             }
         }
-
         function saveData() { localStorage.setItem('shards', shards); localStorage.setItem('water', water); localStorage.setItem('power', power); localStorage.setItem('activeItems', JSON.stringify(activeItems)); localStorage.setItem('ice_level', level); }
         function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
-        function requestWithdraw() { tg.showAlert("Request Submitted!"); }
 
-        // 출석부 초기화
         const grid = document.getElementById('attendance-grid');
         const rewards = {7:{amt:10,type:'ICE'}, 14:{amt:100,type:'WATER'}, 21:{amt:20,type:'ICE'}, 30:{amt:50,type:'ICE'}};
         for(let i=1; i<=30; i++) {
@@ -299,7 +273,7 @@
             let icon = (i%2===0) ? "🧊" : "💧";
             if(rewards[i]) { icon = "🎁"; box.classList.add('special-day'); }
             box.innerHTML = `<span>${icon}</span>D-${i}`;
-            if(i===1) { box.classList.add('today'); box.onclick = () => { if(!box.classList.contains('active')) { box.classList.add('active'); water+=5; updateUI(); tg.showAlert("Checked!"); }}; }
+            if(i===1) { box.classList.add('today'); box.onclick = () => { if(!box.classList.contains('active')) { box.classList.add('active'); water+=5; updateUI(); tg.showAlert("Reward Collected!"); }}; }
             grid.appendChild(box);
         }
 

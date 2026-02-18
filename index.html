@@ -64,9 +64,12 @@
         /* 모달 공통 */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { width: 92%; background: white; border-radius: 25px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; max-height: 85vh; overflow-y: auto; }
-        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
         .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; }
-        .buy-small-btn { background: var(--water-color); color: white; border: none; padding: 8px 12px; border-radius: 10px; font-weight: bold; font-size: 11px; cursor: pointer; }
+        .buy-small-btn { background: var(--water-color); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; font-size: 11px; cursor: pointer; }
+
+        /* 패키지 아이템 스타일 */
+        .package-item { border: 1.5px solid #eee; border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .package-item.selected { border-color: var(--water-color); background-color: #f0f7ff; }
     </style>
 </head>
 <body>
@@ -129,17 +132,35 @@
                 <h2 style="margin:0; font-size:18px;">Recharge Water 💧</h2>
                 <span onclick="closeModal('deposit-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span>
             </div>
-            <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;">
-                <strong>Price:</strong> 10 USDT = 1,000 WATER<br>
-                <strong>Network:</strong> TRC20 (Tron) Only
+            
+            <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-top:5px;">
+                <div class="package-item" onclick="selectPack(10, 1000)" id="pack-10">
+                    <div style="font-weight:bold;">1,000 WATER</div>
+                    <div style="font-size:11px; color:var(--accent-blue);">Price: 10 USDT</div>
+                </div>
+                <div class="package-item" onclick="selectPack(20, 2200)" id="pack-20">
+                    <div style="font-weight:bold;">2,000 + <span style="color:var(--danger);">200 Bonus</span></div>
+                    <div style="font-size:11px; color:var(--accent-blue);">Price: 20 USDT</div>
+                </div>
+                <div class="package-item" onclick="selectPack(30, 3500)" id="pack-30">
+                    <div style="font-weight:bold;">3,000 + <span style="color:var(--danger);">500 Bonus</span></div>
+                    <div style="font-size:11px; color:var(--accent-blue);">Price: 30 USDT</div>
+                </div>
             </div>
-            <div style="font-size:11px; margin-top:5px; color:#444;">1. Copy Address & Send USDT:</div>
-            <div style="background:#eee; padding:10px; border-radius:10px; font-size:10px; word-break:break-all; border:1px solid #ddd;" onclick="copyAddr()">
-                <span id="admin-wallet">TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
+
+            <div id="payment-details" style="display:none; margin-top:5px; padding-top:10px; border-top:1px dashed #eee;">
+                <div style="background:#f0f7ff; padding:10px; border-radius:12px; font-size:11px;">
+                    <strong>Selected:</strong> <span id="selected-pack-name"></span><br>
+                    <strong>Network:</strong> TRC20 (Tron) Only
+                </div>
+                <div style="font-size:11px; margin-top:8px; color:#444;">1. Send USDT to Admin Address:</div>
+                <div style="background:#eee; padding:10px; border-radius:10px; font-size:10px; word-break:break-all; border:1px solid #ddd; position:relative; margin-top:5px;">
+                    <span id="admin-wallet">TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
+                </div>
+                <div style="font-size:11px; margin-top:10px; color:#444;">2. Paste your TXID:</div>
+                <input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box">
+                <button class="buy-small-btn" style="background:var(--accent-blue); width:100%; padding:15px; margin-top:10px;" onclick="submitDeposit()">Verify Payment</button>
             </div>
-            <div style="font-size:11px; margin-top:10px; color:#444;">2. Paste your TXID:</div>
-            <input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box">
-            <button class="buy-small-btn" style="background:var(--accent-blue); width:100%; padding:15px; margin-top:10px;" onclick="submitDeposit()">Verify Payment</button>
         </div>
     </div>
 
@@ -156,12 +177,6 @@
             <div style="margin-top:10px;">
                 <div style="font-size:11px; font-weight:bold;">Network:</div>
                 <select class="input-box" style="color:var(--danger); font-weight:bold;"><option>TRC20 (Tron Network)</option></select>
-            </div>
-            <div style="margin-top:10px;">
-                <div style="font-size:11px; font-weight:bold;">Select Exchange:</div>
-                <select id="exchange-type" class="input-box">
-                    <option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option>
-                </select>
             </div>
             <input type="text" id="wallet-addr" placeholder="Enter your USDT address" class="input-box" style="margin-top:10px;">
             <button class="buy-small-btn" style="background:var(--accent-blue); width:100%; padding:15px; margin-top:10px;" onclick="requestWithdraw()">Submit Withdrawal Request</button>
@@ -232,7 +247,16 @@
             document.getElementById('ice-gauge-bar').style.width = Math.min((shards / 14000) * 100, 100) + "%";
         }
 
-        // [복구] 출석 리워드 30일 로직
+        // 패키지 선택 로직
+        let selectedAmount = 0;
+        function selectPack(price, waterAmt) {
+            document.querySelectorAll('.package-item').forEach(el => el.classList.remove('selected'));
+            document.getElementById(`pack-${price}`).classList.add('selected');
+            document.getElementById('payment-details').style.display = 'block';
+            document.getElementById('selected-pack-name').innerText = `${price} USDT (${waterAmt.toLocaleString()} Water)`;
+            selectedAmount = price;
+        }
+
         const grid = document.getElementById('attendance-grid');
         const specialRewards = { 7: { type: 'ICE', amt: 10, icon: '🎁' }, 14: { type: 'WATER', amt: 100, icon: '💎' }, 21: { type: 'ICE', amt: 10, icon: '🔥' }, 30: { type: 'ICE', amt: 30, icon: '👑' } };
 
@@ -241,11 +265,7 @@
             box.className = 'day-box';
             let rLabel = (i % 2 === 0) ? "1 ICE" : "5 WATER";
             let rIcon = (i % 2 === 0) ? "🧊" : "💧";
-            if(specialRewards[i]) { 
-                box.classList.add('special-day');
-                rLabel = `${specialRewards[i].amt} ${specialRewards[i].type}`;
-                rIcon = specialRewards[i].icon;
-            }
+            if(specialRewards[i]) { box.classList.add('special-day'); rLabel = `${specialRewards[i].amt} ${specialRewards[i].type}`; rIcon = specialRewards[i].icon; }
             box.innerHTML = `<span style="font-size:12px; margin-bottom:2px;">${rIcon}</span><span style="font-size:6px; color:#555;">${rLabel}</span>D-${i}`;
             if(i === 1) {
                 box.classList.add('today');
@@ -265,8 +285,7 @@
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
         function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function copyAddr() { navigator.clipboard.writeText(document.getElementById('admin-wallet').innerText); tg.showAlert("Copied!"); }
-        function submitDeposit() { tg.showAlert("Verification submitted!"); closeModal('deposit-modal'); }
+        function submitDeposit() { tg.showAlert(`Deposit request for ${selectedAmount} USDT submitted!`); closeModal('deposit-modal'); }
         function requestWithdraw() { tg.showAlert("Minimum 14,000 ICE required."); }
         updateUI();
     </script>

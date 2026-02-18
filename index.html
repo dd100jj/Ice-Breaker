@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Ice Breaker Gold</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -18,54 +20,26 @@
         }
         body { background-color: var(--tg-bg); color: var(--text-main); font-family: 'Pretendard', sans-serif; margin: 0; padding: 15px 15px 100px 15px; display: flex; flex-direction: column; gap: 12px; overflow-x: hidden; }
         .card { background: var(--card-bg); border-radius: 15px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
-        
-        .notice-bar { background: #fff9c4; color: #f57f17; padding: 10px; border-radius: 12px; font-size: 12px; font-weight: bold; text-align: center; border: 1px solid #fff176; margin-bottom: 5px; }
-
+        .notice-bar { background: #fff9c4; color: #f57f17; padding: 10px; border-radius: 12px; font-size: 11px; font-weight: bold; text-align: center; border: 1px solid #fff176; margin-bottom: 5px; line-height: 1.4; }
         .top-bar { display: flex; justify-content: space-between; align-items: center; }
         .res-group { display: flex; gap: 8px; }
         .res-tag { background: #fff; border: 1.5px solid #eee; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 5px; }
         .plus-btn { background: var(--water-color); color: white; border: none; width: 18px; height: 18px; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: -5px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .level-tag { background: #ffffff; color: #000000; border: 1px solid #eee; padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; }
-
-        #active-items { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; min-height: 20px; }
-        .item-timer { font-size: 10px; background: #e3f2fd; color: #1565c0; padding: 2px 8px; border-radius: 10px; border: 1px solid #bbdefb; }
-
-        .gauge-track { width: 100%; height: 20px; background: #f0f2f5; border-radius: 10px; overflow: hidden; border: 1px solid #eee; margin: 5px 0; }
-        .gauge-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #4fc3f7, #81d4fa); transition: width 0.3s ease; }
-        .asset-amount { font-size: 24px; font-weight: 900; }
-        
         .mine-card { align-items: center; text-align: center; gap: 6px; position: relative; }
         .ice-cube { font-size: 85px; margin: 10px 0; cursor: pointer; transition: transform 0.1s; user-select: none; }
         .ice-cube:active { transform: scale(0.9); }
         .mining-power { font-size: 28px; font-weight: 800; }
-        
         .mining-speed { color: var(--accent-orange); font-weight: bold; font-size: 14px; }
         .guide-text { font-size: 14px; color: var(--accent-orange); font-weight: bold; }
-
-        .limit-text { font-size: 11px; color: var(--gray-text); }
-        .attendance-card { gap: 0; padding: 0; overflow: hidden; margin-top: 5px; }
-        .attendance-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #fff; }
-        .attendance-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: #fff; }
-        .attendance-body.open { max-height: 1200px; padding: 0 15px 20px 15px; }
-        .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-        .day-box { aspect-ratio: 1; background: #fdfdfd; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #bbb; }
-        .day-box.active { background: var(--accent-blue) !important; color: white !important; }
-        .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); }
-        .special-day { background: #fff9c4 !important; }
-
-        .help-section { display: flex; justify-content: center; margin-top: 5px; }
-        .help-btn { border: none; background: #eee; color: #666; padding: 8px 15px; border-radius: 10px; font-size: 11px; font-weight: bold; cursor: pointer; }
-
+        .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; }
+        .buy-small-btn { background: var(--water-color); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; }
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: #fff; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -2px 15px rgba(0,0,0,0.1); z-index: 999; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--gray-text); flex: 1; cursor: pointer; font-size: 12px; }
         .nav-item.active { color: var(--accent-blue); }
-
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; }
         .modal-content { width: 92%; background: white; border-radius: 25px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; max-height: 85vh; overflow-y: auto; }
-        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
-        .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; }
-        .buy-small-btn { background: var(--water-color); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        .package-item { border: 1.5px solid #eee; border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 5px; }
+        .package-item { border: 1.5px solid #eee; border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; margin-bottom: 5px; }
         .package-item.selected { border-color: var(--water-color); background-color: #f0f7ff; }
     </style>
 </head>
@@ -82,9 +56,7 @@
         <div class="level-tag" id="lv-badge">⭐ LV.1</div>
     </div>
     
-    <div class="notice-bar">🚧 Under Construction (Beta Test Mode)</div>
-
-    <div id="active-items"></div>
+    <div class="notice-bar">🚧 Under Construction (Beta Mode)<br>🕒 Support: 05:00-18:00 UTC </div>
 
     <div class="card mine-card">
         <div style="position: absolute; top: 10px; right: 15px; font-size: 9px; color: var(--danger); font-weight: bold;">BETA MODE</div>
@@ -92,8 +64,7 @@
         <div class="mining-power" id="mining-power">+ 0.00000</div>
         <div class="mining-speed" id="speed-display">+ 0.00005 / sec</div>
         <div class="guide-text">Minimum 0.005 ICE required to collect</div>
-        <div class="limit-text" id="level-guide">Goal for LV.2: 50 ICE</div>
-        <div class="limit-text">Max storage up to 1,000 ICE</div>
+        <div class="limit-text" id="level-guide" style="font-size:11px; color:var(--gray-text);">Goal for LV.2: 50 ICE</div>
     </div>
 
     <div class="card" style="border: 1.5px dashed var(--accent-blue); padding: 12px;">
@@ -106,61 +77,26 @@
 
     <div class="card">
         <div style="font-size:13px; font-weight:bold; color:var(--gray-text); margin-bottom:5px;">🧊 Ice container</div>
-        <div class="gauge-track"><div id="ice-gauge-bar" class="gauge-fill"></div></div>
+        <div style="width:100%; height:20px; background:#f0f2f5; border-radius:10px; overflow:hidden;"><div id="ice-gauge-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #4fc3f7, #81d4fa); transition:width 0.3s;"></div></div>
         <div class="asset-amount" id="balance">0</div>
         <div id="ice-to-usdt" style="font-size:12px; font-weight:bold; color:var(--accent-orange); margin-top:5px;">0.00 USDT</div>
     </div>
 
-    <div class="card" style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); align-items: center; padding: 12px;">
-        <div style="font-size: 13px; font-weight: bold; color: #1565c0;">📺 Water Recharge Station</div>
-        <button onclick="watchAd()" style="background: var(--water-color); color: white; border: none; padding: 8px 15px; border-radius: 10px; font-weight: bold; margin-top: 5px; cursor: pointer;">Get Free Water</button>
-    </div>
-
-    <div class="card attendance-card">
-        <div class="attendance-header" onclick="toggleAttendance()">
-            <h3 style="margin:0; font-size:16px;">📅 30-Day Rewards</h3>
-            <span id="arrow">▼</span>
-        </div>
-        <div id="attendance-body" class="attendance-body">
-            <div class="grid-30" id="attendance-grid"></div>
-        </div>
-    </div>
-
-    <div class="help-section"><button class="help-btn" onclick="openHelp()">❓ How to Play?</button></div>
-
     <nav class="bottom-nav">
         <div class="nav-item active" onclick="location.reload()"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></div>
-        <div class="nav-item" onclick="openShop()"><span class="nav-icon">🛒</span><span class="nav-label">Shop</span></div>
+        <div class="nav-item" onclick="tg.showAlert('Shop coming soon!')"><span class="nav-icon">🛒</span><span class="nav-label">Shop</span></div>
         <div class="nav-item" onclick="openWallet()"><span class="nav-icon">💼</span><span class="nav-label">Wallet</span></div>
     </nav>
 
     <div id="deposit-modal" class="modal">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Recharge Water 💧</h2><span onclick="closeModal('deposit-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
-            
             <div class="package-item" onclick="selectPack(10, 1000)" id="pack-10"><b>1,000 WATER</b> (10 USDT)</div>
             <div class="package-item" onclick="selectPack(20, 2200)" id="pack-20"><b>2,200 WATER</b> (20 USDT)</div>
-            <div class="package-item" onclick="selectPack(30, 3500)" id="pack-30"><b>3,500 WATER</b> (30 USDT)</div>
-            
-            <div id="payment-details" style="display:none; border-top:1px dashed #eee; padding-top:10px; margin-top:5px;">
-                <div style="background:#f0f7ff; padding:10px; border-radius:12px; font-size:11px; margin-bottom:10px;">
-                    <strong>Selected:</strong> <span id="selected-pack-info">10 USDT</span><br>
-                    <strong>Network:</strong> TRC20 (Tron Network)
-                </div>
-                
-                <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:10px; word-break:break-all;">
-                    <b>Admin Wallet:</b><br>
-                    <span id="admin-wallet-addr">TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span><br>
-                    <button onclick="copyAddr()" style="margin-top:5px; padding:5px 10px; border:none; border-radius:5px; font-size:10px; background:var(--accent-blue); color:white; cursor:pointer;">Copy Address</button>
-                </div>
-
-                <div style="font-size:11px; color:#666; margin-top:15px; margin-bottom:5px;">
-                    Step 1: Send USDT to the address above.<br>
-                    Step 2: Paste your <b>TXID</b> (Transaction ID) below.
-                </div>
-                
-                <input type="text" id="txid-input" placeholder="Paste your TXID here" class="input-box">
-                <button class="buy-small-btn" style="background:var(--accent-orange); width:100%; margin-top:10px; padding:15px;" onclick="submitDeposit()">Confirm & Notify Admin</button>
+            <div id="payment-details" style="display:none; border-top:1px dashed #eee; padding-top:10px;">
+                <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:10px;"><b>Admin Wallet:</b><br><span id="admin-wallet-addr">TDDaEzGdXGuuH3RxhHa5LZCSeeTpZuuTd1</span></div>
+                <input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box" style="margin-top:10px;">
+                <button class="buy-small-btn" style="background:var(--accent-orange); width:100%; margin-top:10px;" onclick="submitDeposit()">Submit Request</button>
             </div>
         </div>
     </div>
@@ -172,29 +108,10 @@
                 <strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br>
                 <strong>Value:</strong> <span id="wallet-usdt-val">0.00</span> USDT<br>
                 <strong>Rate:</strong> 1,400 ICE = 1 USDT<br>
-                <strong>Min. Withdrawal:</strong> 10 USDT (14,000 ICE)
+                <strong>Min. Withdrawal:</strong> 14,000 ICE
             </div>
-            <select id="exchange-type" class="input-box" style="margin-top:10px;"><option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option></select>
-            <input type="text" id="wallet-addr" placeholder="Paste your TRC20 address" class="input-box">
-            <button class="buy-small-btn" style="background:var(--accent-blue); width:100%;" onclick="requestWithdraw()">Submit Request</button>
-        </div>
-    </div>
-
-    <div id="shop-modal" class="modal">
-        <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Water Shop 💧</h2><span onclick="closeModal('shop-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
-            <div class="item-row"><div><b>⛏️ Iron Pickaxe</b><br><small>+0.0001/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('pickaxe', 500, 24)">💧 500</button></div>
-            <div class="item-row"><div><b>❄️ Cooling Spray</b><br><small>All Speed x2 (12h)</small></div><button class="buy-small-btn" onclick="buyItem('spray', 1000, 12)">💧 1,000</button></div>
-            <div class="item-row"><div><b>⚙️ Silver Gear</b><br><small>+0.0005/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('gear', 1500, 24)">💧 1,500</button></div>
-            <div class="item-row"><div><b>💎 Diamond Drill</b><br><small>+0.0020/s (48h)</small></div><button class="buy-small-btn" onclick="buyItem('drill', 5000, 48)">💧 5,000</button></div>
-        </div>
-    </div>
-
-    <div id="help-modal" class="modal">
-        <div class="modal-content">
-            <h2 style="margin:0; font-size:18px;">How to Play 🧊</h2>
-            <div style="font-size:13px; line-height:1.6; color:#444;">1. <b>Watch Ads:</b> Earn Water.<br>2. <b>Shop:</b> Buy mining tools.<br>3. <b>Mine:</b> Collect ICE faster.<br>4. <b>Withdraw:</b> Exchange ICE for USDT!</div>
-            <button class="buy-small-btn" style="margin-top:10px; width: 100%;" onclick="closeModal('help-modal')">Got it!</button>
+            <input type="text" id="wallet-addr" placeholder="Paste USDT address" class="input-box" style="margin-top:10px;">
+            <button class="buy-small-btn" style="background:var(--accent-blue); width:100%;" onclick="requestWithdraw()">Request Withdrawal</button>
         </div>
     </div>
 
@@ -202,157 +119,112 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // [알림 설정] 채널 ID
+        // 🟢 Firebase Configuration (Admin Shared)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAAUthhNp0EBbtZ75RDePw0Nxo9uYmwLTw",
+            authDomain: "gifty-icebreaker.firebaseapp.com",
+            projectId: "gifty-icebreaker",
+            storageBucket: "gifty-icebreaker.firebasestorage.app",
+            messagingSenderId: "748696340041",
+            appId: "1:748696340041:web:ce568dca25827f4a042198"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         const BOT_TOKEN = "8471844828:AAH5dQdEmodHlCohcjMnZy-E88IhNTWMePQ"; 
         const MY_CHAT_ID = "-1003454423385"; 
+        const USER_ID = tg.initDataUnsafe?.user?.id?.toString() || "guest_user";
 
-        let shards = parseFloat(localStorage.getItem('shards')) || 0;
-        let water = parseFloat(localStorage.getItem('water')) || 0;
-        let power = parseFloat(localStorage.getItem('power')) || 0;
-        let activeItems = JSON.parse(localStorage.getItem('activeItems')) || {};
-        let level = parseInt(localStorage.getItem('ice_level')) || 1;
-        let usedCodes = JSON.parse(localStorage.getItem('usedCodes')) || [];
+        let userData = { shards: 0, water: 0, power: 0, level: 1, usedCodes: [] };
 
-        const VALID_CODES = { "KJ82-NM91": 1000, "LQ55-ZW10": 2200, "PF23-SD88": 3500 };
-        const levelData = [{target:0,bonus:0},{target:50,bonus:0.00001},{target:200,bonus:0.00002},{target:500,bonus:0.00003},{target:1200,bonus:0.00005}];
+        // 🟢 DB에서 데이터 불러오기
+        async function loadData() {
+            const doc = await db.collection("users").doc(USER_ID).get();
+            if (doc.exists) {
+                userData = doc.data();
+            } else {
+                await db.collection("users").doc(USER_ID).set(userData);
+            }
+            updateUI();
+        }
+
+        async function saveData() {
+            await db.collection("users").doc(USER_ID).update(userData);
+        }
+
+        // 🟢 영업시간 체크 로직 (KST 14:00 - 03:00)
+        function isBusinessHours() {
+            const now = new Date();
+            const kstOffset = 9 * 60 * 60 * 1000;
+            const kstDate = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + kstOffset);
+            const hours = kstDate.getHours();
+            return (hours >= 14 || hours < 3);
+        }
 
         setInterval(() => {
-            if (power < 1000) {
-                let currentTotalSpeed = calculateSpeed();
-                power = Math.min(1000, power + currentTotalSpeed);
-                document.getElementById('mining-power').innerText = "+ " + power.toFixed(5);
-                document.getElementById('speed-display').innerText = "+ " + currentTotalSpeed.toFixed(5) + " / sec";
+            let speed = 0.00005 + (userData.level * 0.00001);
+            if (userData.power < 1000) {
+                userData.power = Math.min(1000, userData.power + speed);
+                document.getElementById('mining-power').innerText = "+ " + userData.power.toFixed(5);
+                document.getElementById('speed-display').innerText = "+ " + speed.toFixed(5) + " / sec";
             }
-            updateItemTimers();
-            checkLevelUp();
-            saveData();
         }, 1000);
 
-        function calculateSpeed() {
-            let baseSpeed = 0.00005 + (levelData[level-1]?.bonus || 0);
-            let speed = baseSpeed; let now = Date.now();
-            if(activeItems['pickaxe'] > now) speed += 0.0001;
-            if(activeItems['gear'] > now) speed += 0.0005;
-            if(activeItems['drill'] > now) speed += 0.0020;
-            if(activeItems['spray'] > now) speed *= 2;
-            return speed;
-        }
-
-        function sendNoti(text) {
-            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(text)}`;
-            fetch(url).then(res => res.json()).then(data => {
-                if(data.ok) tg.showAlert("Request sent to Admin!");
-            }).catch(e => console.error(e));
-        }
+        // 10초마다 자동 서버 저장
+        setInterval(saveData, 10000);
 
         function mineClick() {
-            if (power >= 0.005) {
-                shards += power; power = 0; updateUI(); saveData();
+            if (userData.power >= 0.005) {
+                userData.shards += userData.power;
+                userData.power = 0;
+                updateUI();
                 if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             } else { tg.showAlert("Collect at least 0.005 ICE!"); }
         }
 
-        // [복구] 패키지 선택 시 상세창 표시
-        function selectPack(price, waterAmt) {
-            document.querySelectorAll('.package-item').forEach(el => el.classList.remove('selected'));
-            document.getElementById(`pack-${price}`).classList.add('selected');
-            document.getElementById('payment-details').style.display = 'block';
-            document.getElementById('selected-pack-info').innerText = `${price} USDT (${waterAmt.toLocaleString()} Water)`;
-        }
-
         function submitDeposit() {
             const txid = document.getElementById('txid-input').value;
-            const packInfo = document.getElementById('selected-pack-info').innerText;
             if(!txid) return tg.showAlert("Please enter TXID!");
-            const user = tg.initDataUnsafe?.user?.username || "Unknown";
-            sendNoti(`💰 [DEPOSIT REQUEST]\nUser: @${user}\nPack: ${packInfo}\nTXID: ${txid}`);
+            
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(`💰 [DEPOSIT]\nUser: @${tg.initDataUnsafe?.user?.username}\nTXID: ${txid}`)}`);
+
+            const msg = isBusinessHours() ? 
+                "Request sent! We will verify and send your code via Telegram within 1-2 hours." :
+                "We are offline. Verification starts at 05:00 UTC (14:00 KST).";
+
+            tg.showPopup({ title: 'Submitted', message: msg, buttons: [{type: 'ok'}] });
             closeModal('deposit-modal');
         }
 
         function requestWithdraw() {
             const addr = document.getElementById('wallet-addr').value;
-            if(!addr) return tg.showAlert("Please enter address!");
-            const user = tg.initDataUnsafe?.user?.username || "Unknown";
-            sendNoti(`📤 [WITHDRAWAL REQUEST]\nUser: @${user}\nAmount: ${(shards/1400).toFixed(2)} USDT\nAddr: ${addr}`);
+            if(!addr) return tg.showAlert("Enter address!");
+
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(`📤 [WITHDRAW]\nUser: @${tg.initDataUnsafe?.user?.username}\nAmt: ${(userData.shards/1400).toFixed(2)} USDT\nAddr: ${addr}`)}`);
+
+            const msg = isBusinessHours() ? "Processing today." : "Processing starts at 14:00 KST.";
+            tg.showPopup({ title: 'Pending', message: msg, buttons: [{type: 'ok'}] });
             closeModal('wallet-modal');
         }
 
-        function redeemCode() {
-            const code = document.getElementById('promo-code').value.trim().toUpperCase();
-            if(usedCodes.includes(code)) return tg.showAlert("Already used!");
-            if(VALID_CODES[code]) {
-                water += VALID_CODES[code]; usedCodes.push(code); saveData(); updateUI();
-                tg.showAlert(`🎉 ${VALID_CODES[code]} Water refilled!`);
-                document.getElementById('promo-code').value = "";
-            } else { tg.showAlert("Invalid code."); }
-        }
-
-        function checkLevelUp() {
-            if (level < levelData.length && shards >= levelData[level].target) {
-                level++; updateUI(); tg.showAlert(`🎉 Level Up! Now LV.${level}`);
-            }
-        }
-
         function updateUI() {
-            document.getElementById('balance').innerText = shards.toLocaleString(undefined, {minimumFractionDigits: 5});
-            document.getElementById('ice-top-display').innerText = Math.floor(shards).toLocaleString();
-            document.getElementById('water-top-display').innerText = water.toLocaleString();
-            document.getElementById('lv-badge').innerText = `⭐ LV.${level}`;
-            const usdtVal = (shards / 1400).toFixed(2);
-            document.getElementById('ice-to-usdt').innerText = usdtVal + " USDT";
-            if(document.getElementById('wallet-ice-bal')) {
-                document.getElementById('wallet-ice-bal').innerText = shards.toLocaleString(undefined, {minimumFractionDigits: 2});
-                document.getElementById('wallet-usdt-val').innerText = usdtVal;
-            }
-            const nextLv = levelData[level];
-            document.getElementById('level-guide').innerText = nextLv ? `Goal for LV.${level+1}: ${nextLv.target} ICE` : "MAX LEVEL";
-            document.getElementById('ice-gauge-bar').style.width = Math.min((shards / (nextLv ? nextLv.target : 14000)) * 100, 100) + "%";
+            document.getElementById('balance').innerText = userData.shards.toLocaleString(undefined, {minimumFractionDigits: 5});
+            document.getElementById('ice-top-display').innerText = Math.floor(userData.shards).toLocaleString();
+            document.getElementById('water-top-display').innerText = userData.water.toLocaleString();
+            document.getElementById('lv-badge').innerText = `⭐ LV.${userData.level}`;
+            document.getElementById('ice-to-usdt').innerText = (userData.shards / 1400).toFixed(2) + " USDT";
+            document.getElementById('wallet-usdt-val').innerText = (userData.shards / 1400).toFixed(2);
+            document.getElementById('wallet-ice-bal').innerText = Math.floor(userData.shards).toLocaleString();
+            document.getElementById('ice-gauge-bar').style.width = Math.min((userData.shards/50)*100, 100) + "%";
         }
 
-        function openDeposit() { 
-            document.getElementById('deposit-modal').style.display = 'flex'; 
-            document.getElementById('payment-details').style.display = 'none'; // 초기화
-        }
-        function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
+        function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; document.getElementById('payment-details').style.display = 'none'; }
+        function selectPack(p, w) { document.getElementById('payment-details').style.display = 'block'; }
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; updateUI(); }
-        function openHelp() { document.getElementById('help-modal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function copyAddr() { navigator.clipboard.writeText(document.getElementById('admin-wallet-addr').innerText); tg.showAlert("Address Copied!"); }
-        function watchAd() { tg.showConfirm("Watch ad for 1 Water?", (ok) => { if(ok) { setTimeout(() => { water += 1; updateUI(); }, 1000); }}); }
-        function buyItem(id, hours) {
-            const prices = {pickaxe:500, spray:1000, gear:1500, drill:5000};
-            if(water >= prices[id]) {
-                water -= prices[id]; activeItems[id] = Date.now() + (hours * 3600 * 1000);
-                updateUI(); saveData(); tg.showAlert(`${id.toUpperCase()} Activated!`);
-            } else { tg.showAlert("Need more Water! 💧"); }
-        }
-        function updateItemTimers() {
-            const container = document.getElementById('active-items'); container.innerHTML = "";
-            let now = Date.now();
-            for(let id in activeItems) {
-                if(activeItems[id] > now) {
-                    let remain = activeItems[id] - now;
-                    let h = Math.floor(remain / 3600000); let m = Math.floor((remain % 3600000) / 60000);
-                    let badge = document.createElement('div'); badge.className = 'item-timer';
-                    badge.innerText = `${id}: ${h}h ${m}m`; container.appendChild(badge);
-                }
-            }
-        }
-        function saveData() { localStorage.setItem('shards', shards); localStorage.setItem('water', water); localStorage.setItem('power', power); localStorage.setItem('activeItems', JSON.stringify(activeItems)); localStorage.setItem('ice_level', level); localStorage.setItem('usedCodes', JSON.stringify(usedCodes)); }
-        function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
-
-        const grid = document.getElementById('attendance-grid');
-        const rewards = {7:{amt:10,type:'ICE'}, 14:{amt:100,type:'WATER'}, 21:{amt:20,type:'ICE'}, 30:{amt:50,type:'ICE'}};
-        for(let i=1; i<=30; i++) {
-            const box = document.createElement('div'); box.className = 'day-box';
-            let icon = (i%2===0) ? "🧊" : "💧";
-            if(rewards[i]) { icon = "🎁"; box.classList.add('special-day'); }
-            box.innerHTML = `<span>${icon}</span>D-${i}`;
-            if(i===1) { box.classList.add('today'); box.onclick = () => { if(!box.classList.contains('active')) { box.classList.add('active'); water+=5; updateUI(); tg.showAlert("Checked!"); }}; }
-            grid.appendChild(box);
-        }
-
-        updateUI();
+        
+        loadData();
     </script>
 </body>
 </html>

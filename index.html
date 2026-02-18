@@ -41,6 +41,7 @@
         .mining-power { font-size: 28px; font-weight: 800; }
         .mining-speed { color: var(--accent-orange); font-weight: bold; font-size: 14px; }
         .guide-text { font-size: 12px; color: var(--accent-orange); font-weight: 600; }
+        .limit-text { font-size: 11px; color: var(--gray-text); }
         .click-info { font-size: 10px; opacity: 0.7; color: var(--gray-text); }
 
         .attendance-card { gap: 0; padding: 0; overflow: hidden; }
@@ -98,6 +99,7 @@
         <div class="mining-power" id="mining-power">+ 0.00000</div>
         <div class="mining-speed" id="speed-display">+ 0.00050 / sec</div>
         <div class="guide-text">Minimum 1 ICE required to collect</div>
+        <div class="limit-text">Max storage up to 1,000 ICE</div>
         <div class="click-info">Exchange your ICE for Digital Assets</div>
     </div>
 
@@ -145,8 +147,8 @@
             <div style="font-size:13px; line-height:1.6; color:#444;">
                 1. <b>Water Recharge Station:</b> Watch ads for <b>Water(💧)</b>.<br>
                 2. <b>Shop:</b> Buy mining tools to earn <b>ICE(🧊)</b> faster.<br>
-                3. <b>Collect:</b> Click the Ice Cube when you have at least 1 ICE.<br>
-                4. <b>Duration:</b> Items have a limited life. Check the timers!<br>
+                3. <b>Collect:</b> Click the Ice Cube to harvest your ICE.<br>
+                4. <b>Storage:</b> Max 1,000 ICE can be stored before harvest.<br>
                 5. <b>Exchange:</b> Cash out ICE for <b>USDT</b> in the Wallet.
             </div>
             <button class="buy-small-btn" style="margin-top:10px; width:100%;" onclick="closeModal('help-modal')">Got it!</button>
@@ -164,11 +166,15 @@
         let activeItems = JSON.parse(localStorage.getItem('activeItems')) || {};
 
         setInterval(() => {
-            let currentTotalSpeed = calculateSpeed();
-            power += currentTotalSpeed;
-            saveData();
-            document.getElementById('mining-power').innerText = "+ " + power.toFixed(5);
-            document.getElementById('speed-display').innerText = "+ " + currentTotalSpeed.toFixed(5) + " / sec";
+            if (power < 1000) { // 최대 보관 1,000개 로직 적용
+                let currentTotalSpeed = calculateSpeed();
+                power = Math.min(1000, power + currentTotalSpeed);
+                saveData();
+                document.getElementById('mining-power').innerText = "+ " + power.toFixed(5);
+                document.getElementById('speed-display').innerText = "+ " + currentTotalSpeed.toFixed(5) + " / sec";
+            } else {
+                document.getElementById('mining-power').innerText = "MAX (1000.00000)";
+            }
             updateItemTimers();
         }, 1000);
 

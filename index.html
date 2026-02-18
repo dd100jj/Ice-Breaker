@@ -23,7 +23,6 @@
         .res-group { display: flex; gap: 8px; }
         .res-tag { background: #fff; border: 1.5px solid #eee; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 5px; }
 
-        /* 수정: 레벨 태그 디자인 (하얀 배경, 검정 글자) */
         .level-tag { background: #ffffff; color: #000000; border: 1px solid #eee; padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; }
 
         .ad-card { background: linear-gradient(135deg, #e3f2fd, #bbdefb); border: none; align-items: center; padding: 15px; border-radius: 20px; text-align: center; }
@@ -44,7 +43,6 @@
         .limit-text { font-size: 11px; color: var(--gray-text); }
         .click-info { font-size: 10px; opacity: 0.7; color: var(--gray-text); }
 
-        /* 출석부 스타일 복구 */
         .attendance-card { gap: 0; padding: 0; overflow: hidden; }
         .attendance-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #fff; }
         .attendance-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: #fff; }
@@ -52,8 +50,9 @@
         .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         .day-box { aspect-ratio: 1; background: #fdfdfd; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #bbb; }
         .day-box.active { background: var(--accent-blue) !important; color: white !important; }
-        .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); }
-        .special-day { background: #fff9c4 !important; }
+
+        /* 신규: 도움말 버튼 스타일 */
+        .help-btn { border: none; background: #eee; color: #666; padding: 8px 15px; border-radius: 10px; font-size: 11px; font-weight: bold; cursor: pointer; margin-top: 5px; align-self: center; display: flex; align-items: center; gap: 5px; }
 
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: #fff; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); z-index: 900; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--gray-text); flex: 1; cursor: pointer; }
@@ -64,6 +63,9 @@
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
         .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; }
         .buy-small-btn { background: var(--water-color); color: white; border: none; padding: 8px 12px; border-radius: 10px; font-weight: bold; font-size: 11px; cursor: pointer; }
+        
+        /* 스페셜 아이템 섹션 */
+        .special-section { background: #fff9e6; border: 1.5px dashed #ffcc80; border-radius: 15px; padding: 12px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -95,7 +97,6 @@
         <div class="ice-cube" onclick="mineClick(event)">🧊</div>
         <div class="mining-power" id="mining-power">+ 0.00000</div>
         <div class="mining-speed" id="speed-display">+ 0.00005 / sec</div>
-        
         <div class="guide-text">Minimum 1 ICE required to collect</div>
         <div class="limit-text">Goal for LV.2: 10 ICE</div>
         <div class="limit-text">Max storage up to 1,000 ICE</div>
@@ -112,30 +113,13 @@
         </div>
     </div>
 
+    <button class="help-btn" onclick="openHelp()">❓ How to Play?</button>
+
     <nav class="bottom-nav">
         <div class="nav-item active" onclick="location.reload()"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></div>
         <div class="nav-item" onclick="openShop()"><span class="nav-icon">🛒</span><span class="nav-label">Shop</span></div>
         <div class="nav-item" onclick="openWallet()"><span class="nav-icon">💼</span><span class="nav-label">Wallet</span></div>
     </nav>
-
-    <div id="wallet-modal" class="modal">
-        <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2 style="margin:0; font-size:18px;">Withdraw USDT</h2>
-                <span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span>
-            </div>
-            <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;">
-                <strong>Rate:</strong> 1,400 ICE = 1 USDT<br>
-                <strong>Min. Withdrawal:</strong> 10 USDT (14,000 ICE)
-            </div>
-            <div style="margin-top:10px;">
-                <div style="font-size:11px; font-weight:bold;">Network:</div>
-                <select class="input-box" style="color:var(--danger); font-weight:bold;"><option>TRC20 (Tron Network)</option></select>
-            </div>
-            <input type="text" id="wallet-addr" placeholder="Enter your USDT address" class="input-box" style="margin-top:10px;">
-            <button class="buy-small-btn" style="background:var(--accent-blue); width:100%; padding:15px; margin-top:10px;" onclick="requestWithdraw()">Submit Withdrawal Request</button>
-        </div>
-    </div>
 
     <div id="shop-modal" class="modal">
         <div class="modal-content">
@@ -143,7 +127,6 @@
                 <h2 style="margin:0; font-size:18px;">Water Shop 💧</h2>
                 <span onclick="closeModal('shop-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span>
             </div>
-            <div style="background:#e3f2fd; padding:10px; border-radius:10px; font-size:11px; color:#1565c0;">Buy upgrades with Water!</div>
             <div id="shop-items-container">
                 <div class="item-row">
                     <div><b>🧤 Leather Gloves</b><br><small>Manual Click +1</small></div>
@@ -161,7 +144,44 @@
                     <div><b>💎 Diamond Drill</b><br><small>Auto-mine +0.0010/s</small></div>
                     <button class="buy-small-btn" onclick="buyUpgrade(1500, 0.0010)">💧 1500</button>
                 </div>
+
+                <div class="special-section">
+                    <div style="font-size:13px; font-weight:bold; color:var(--accent-orange); margin-bottom:5px;">✨ Special Asset Pack</div>
+                    <div style="font-size:11px; color:#666; margin-bottom:8px;">Send 10 USDT to our wallet to get <b>1,000 Water</b> instantly!</div>
+                    <div style="background:white; padding:8px; border-radius:8px; font-size:10px; word-break:break-all; border:1px solid #ffe0b2; margin-bottom:8px;">
+                        <b>Wallet:</b> 0x123...456 (TRC20)
+                    </div>
+                    <button class="buy-small-btn" style="background:var(--accent-orange); width:100%;" onclick="requestSpecial()">Request Confirmation</button>
+                </div>
             </div>
+        </div>
+    </div>
+
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin:0; font-size:18px;">How to Play 🧊</h2>
+            <div style="font-size:13px; line-height:1.6; color:#444;">
+                1. <b>Watch Ads:</b> Earn <b>Water(💧)</b> at the Recharge Station.<br>
+                2. <b>Buy Items:</b> Use Water to buy mining tools in the <b>Shop</b>.<br>
+                3. <b>Mine Ice:</b> Tools help you collect <b>ICE(🧊)</b> faster.<br>
+                4. <b>Cash Out:</b> Exchange your ICE for <b>Digital Assets(USDT)</b>!
+            </div>
+            <button class="buy-small-btn" style="margin-top:10px;" onclick="closeModal('help-modal')">Got it!</button>
+        </div>
+    </div>
+
+    <div id="wallet-modal" class="modal">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:18px;">Withdraw USDT</h2>
+                <span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span>
+            </div>
+            <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;">
+                <strong>Rate:</strong> 1,400 ICE = 1 USDT<br>
+                <strong>Min. Withdrawal:</strong> 10 USDT (14,000 ICE)
+            </div>
+            <input type="text" id="wallet-addr" placeholder="Enter your USDT address" class="input-box" style="margin-top:10px;">
+            <button class="buy-small-btn" style="background:var(--accent-blue); width:100%; padding:15px; margin-top:10px;" onclick="requestWithdraw()">Submit Withdrawal Request</button>
         </div>
     </div>
 
@@ -206,6 +226,12 @@
             } else { tg.showAlert("Need more Water! 💧"); }
         }
 
+        function requestSpecial() {
+            tg.showConfirm("Did you send 10 USDT to the address? We will check and add 1,000 Water soon.", (ok) => {
+                if(ok) tg.showAlert("Request Submitted! Checking may take 10-30 mins.");
+            });
+        }
+
         function updateUI() {
             document.getElementById('balance').innerText = shards.toLocaleString();
             document.getElementById('ice-top-display').innerText = shards.toLocaleString();
@@ -215,42 +241,17 @@
             document.getElementById('ice-gauge-bar').style.width = Math.min((shards / 14000) * 100, 100) + "%";
         }
 
-        // 출석 리워드 로직 복구
         const grid = document.getElementById('attendance-grid');
-        const specialRewards = { 
-            7: { type: 'ICE', amt: 10, icon: '🎁' }, 
-            14: { type: 'WATER', amt: 100, icon: '💎' }, 
-            21: { type: 'ICE', amt: 10, icon: '🔥' }, 
-            30: { type: 'ICE', amt: 30, icon: '👑' } 
-        };
-
         for(let i=1; i<=30; i++) {
-            const box = document.createElement('div');
-            box.className = 'day-box';
-            let rLabel = (i % 2 === 0) ? "1 ICE" : "5 WATER";
-            let rIcon = (i % 2 === 0) ? "🧊" : "💧";
-            if(specialRewards[i]) { 
-                box.classList.add('special-day');
-                rLabel = `${specialRewards[i].amt} ${specialRewards[i].type}`;
-                rIcon = specialRewards[i].icon;
-            }
-            box.innerHTML = `<span style="font-size:12px; margin-bottom:2px;">${rIcon}</span><span style="font-size:6px; color:#555;">${rLabel}</span>D-${i}`;
-            if(i === 1) {
-                box.classList.add('today');
-                box.onclick = () => {
-                    if(!box.classList.contains('active')){
-                        if(specialRewards[i]) { (specialRewards[i].type === 'ICE') ? shards += specialRewards[i].amt : water += specialRewards[i].amt; }
-                        else { (i % 2 === 0) ? shards += 1 : water += 5; }
-                        box.classList.add('active'); updateUI(); tg.showAlert("Checked!");
-                    }
-                };
-            }
+            const box = document.createElement('div'); box.className = 'day-box';
+            box.innerHTML = `D-${i}`;
             grid.appendChild(box);
         }
 
         function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; }
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
+        function openHelp() { document.getElementById('help-modal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function requestWithdraw() { tg.showAlert("Minimum 14,000 ICE required."); }
         updateUI();

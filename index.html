@@ -71,16 +71,9 @@
         <div class="level-tag" id="lv-badge">⭐ LV.1</div>
     </div>
     
-    <div class="notice-bar">🚧 Under Construction (Beta Mode)<br>🕒 Support: 05:00-18:00 UTC</div>
+    <div class="notice-bar">🚧 Under Construction (Beta Mode)<br>🕒 Support: 05:00-18:00 UTC (14:00-03:00 KST)</div>
 
     <div id="active-items"></div>
-
-    <div class="card">
-        <div style="font-size:13px; font-weight:bold; color:var(--gray-text); margin-bottom:5px;">🧊 Ice container (Max: 1,000 ICE)</div>
-        <div style="width:100%; height:20px; background:#f0f2f5; border-radius:10px; overflow:hidden;"><div id="ice-gauge-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #4fc3f7, #81d4fa); transition:width 0.3s;"></div></div>
-        <div class="asset-amount" id="balance">0</div>
-        <div id="ice-to-usdt" style="font-size:12px; font-weight:bold; color:var(--accent-orange); margin-top:5px;">0.00 USDT</div>
-    </div>
 
     <div class="card mine-card">
         <div style="position: absolute; top: 10px; right: 15px; font-size: 9px; color: var(--danger); font-weight: bold;">BETA MODE</div>
@@ -89,6 +82,14 @@
         <div class="mining-speed" id="speed-display">+ 0.00005 / sec</div>
         <div class="guide-text">Minimum 0.005 ICE required to collect</div>
         <div id="level-guide" style="font-size:11px; color:var(--gray-text);">Goal for LV.2: 50 ICE</div>
+        <div style="font-size: 11px; color: var(--gray-text);">Max storage up to 1,000 ICE</div>
+    </div>
+
+    <div class="card">
+        <div style="font-size:13px; font-weight:bold; color:var(--gray-text); margin-bottom:5px;">🧊 Ice container</div>
+        <div style="width:100%; height:20px; background:#f0f2f5; border-radius:10px; overflow:hidden;"><div id="ice-gauge-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #4fc3f7, #81d4fa); transition:width 0.3s;"></div></div>
+        <div class="asset-amount" id="balance">0</div>
+        <div id="ice-to-usdt" style="font-size:12px; font-weight:bold; color:var(--accent-orange); margin-top:5px; text-align: left;">0.00 USDT</div>
     </div>
 
     <div class="card" style="border: 1.5px dashed var(--accent-blue); padding: 12px;">
@@ -101,7 +102,7 @@
 
     <div class="card attendance-card">
         <div class="attendance-header" onclick="toggleAttendance()">
-            <h3 style="margin:0; font-size:16px;">📅 30Day Rewards</h3>
+            <h3 style="margin:0; font-size:16px;">📅 30-Day Rewards</h3>
             <span id="arrow">▼</span>
         </div>
         <div id="attendance-body" class="attendance-body">
@@ -123,8 +124,8 @@
             <div class="package-item" onclick="selectPack(30, 3500)" id="pack-30"><b>3,500 WATER</b> (30 USDT)</div>
             <div id="payment-details" style="display:none; border-top:1px dashed #eee; padding-top:10px;">
                 <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:10px; word-break:break-all;">
-                    <b>Admin Wallet (Network : TRC20):</b><br>
-                    <span id="admin-wallet-addr">TDDaEzGdXGuuH3RxhHa5LZCSeeTpZuuTd1</span><br>
+                    <b>Admin Wallet (TRC20):</b><br>
+                    <span id="admin-wallet-addr">TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span><br>
                     <button onclick="copyAddr()" style="margin-top:5px; padding:5px 10px; border:none; border-radius:5px; font-size:10px; background:var(--accent-blue); color:white; cursor:pointer;">Copy Address</button>
                 </div>
                 <input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box" style="margin-top:10px;">
@@ -138,7 +139,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Withdraw USDT</h2><span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
             <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;">
                 <strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br>
-                
+                <strong>Value:</strong> <span id="wallet-usdt-val">0.00</span> USDT<br>
                 <strong>Rate:</strong> 1,400 ICE = 1 USDT<br>
                 <strong>Min. Withdrawal:</strong> 14,000 ICE
             </div>
@@ -155,7 +156,7 @@
             <div class="item-row"><div><b>⛏️ Iron Pickaxe</b><br><small>+0.0001/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('pickaxe', 500, 24)">💧 500</button></div>
             <div class="item-row"><div><b>❄️ Cooling Spray</b><br><small>All Speed x2 (12h)</small></div><button class="buy-small-btn" onclick="buyItem('spray', 1000, 12)">💧 1,000</button></div>
             <div class="item-row"><div><b>⚙️ Silver Gear</b><br><small>+0.0005/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('gear', 1500, 24)">💧 1,500</button></div>
-            <div class="item-row"><div><b>💎 Diamond Drill</b><br><small>+0.002/s (48h)</small></div><button class="buy-small-btn" onclick="buyItem('drill', 5000, 48)">💧 5,000</button></div>
+            <div class="item-row"><div><b>💎 Diamond Drill</b><br><small>+0.0020/s (48h)</small></div><button class="buy-small-btn" onclick="buyItem('drill', 5000, 48)">💧 5,000</button></div>
         </div>
     </div>
 
@@ -175,7 +176,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        const BOT_TOKEN = "8471844828:AAH5dQdEmodHlCohcjMnZy-E88IhNTWMePQ"; 
+        const BOT_TOKEN = "여기에_봇_토큰_입력"; 
         const MY_CHAT_ID = "-1003454423385"; 
         const USER_ID = tg.initDataUnsafe?.user?.id?.toString() || "guest_user";
 

@@ -71,7 +71,7 @@
         <div class="level-tag" id="lv-badge">⭐ LV.1</div>
     </div>
     
-    <div class="notice-bar">🚧 Under Construction (Beta Mode)<br>🕒 Support: 05:00-18:00 UTC (14:00-03:00 KST)</div>
+    <div class="notice-bar">🚧 Under Construction (Beta Mode)<br>🕒 Support: 05:00-18:00 UTC </div>
 
     <div id="active-items"></div>
 
@@ -101,7 +101,7 @@
 
     <div class="card attendance-card">
         <div class="attendance-header" onclick="toggleAttendance()">
-            <h3 style="margin:0; font-size:16px;">📅 30-Day Rewards</h3>
+            <h3 style="margin:0; font-size:16px;">📅 30Day Rewards</h3>
             <span id="arrow">▼</span>
         </div>
         <div id="attendance-body" class="attendance-body">
@@ -122,7 +122,7 @@
             <div class="package-item" onclick="selectPack(20, 2200)" id="pack-20"><b>2,200 WATER</b> (20 USDT)</div>
             <div class="package-item" onclick="selectPack(30, 3500)" id="pack-30"><b>3,500 WATER</b> (30 USDT)</div>
             <div id="payment-details" style="display:none; border-top:1px dashed #eee; padding-top:10px;">
-                <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:10px;"><b>Admin Wallet (TRC20):</b><br><span id="admin-wallet-addr">TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span></div>
+                <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:10px;"><b>Admin Wallet (Net Work : TRC20):</b><br><span id="admin-wallet-addr">TDDaEzGdXGuuH3RxhHa5LZCSeeTpZuuTd1</span></div>
                 <input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box" style="margin-top:10px;">
                 <button class="buy-small-btn" style="background:var(--accent-orange); width:100%; margin-top:10px;" onclick="submitDeposit()">Submit Request</button>
             </div>
@@ -134,13 +134,13 @@
             <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Withdraw USDT</h2><span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
             <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;">
                 <strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br>
-                <strong>Value:</strong> <span id="wallet-usdt-val">0.00</span> USDT<br>
+               
                 <strong>Rate:</strong> 1,400 ICE = 1 USDT<br>
                 <strong>Min. Withdrawal:</strong> 14,000 ICE
             </div>
             <div style="margin-top:5px;"><div style="font-size:11px; font-weight:bold;">Network:</div><select class="input-box" style="color:var(--danger); font-weight:bold;"><option>TRC20 (Tron Network)</option></select></div>
             <div style="margin-top:5px;"><div style="font-size:11px; font-weight:bold;">Select Exchange:</div><select id="exchange-type" class="input-box"><option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option></select></div>
-            <input type="text" id="wallet-addr" placeholder="Paste TRC20 address" class="input-box">
+            <input type="text" id="wallet-addr" placeholder="Paste USDT address" class="input-box">
             <button class="buy-small-btn" style="background:var(--accent-blue); width:100%;" onclick="requestWithdraw()">Request Withdrawal</button>
         </div>
     </div>
@@ -151,7 +151,7 @@
             <div class="item-row"><div><b>⛏️ Iron Pickaxe</b><br><small>+0.0001/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('pickaxe', 500, 24)">💧 500</button></div>
             <div class="item-row"><div><b>❄️ Cooling Spray</b><br><small>All Speed x2 (12h)</small></div><button class="buy-small-btn" onclick="buyItem('spray', 1000, 12)">💧 1,000</button></div>
             <div class="item-row"><div><b>⚙️ Silver Gear</b><br><small>+0.0005/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('gear', 1500, 24)">💧 1,500</button></div>
-            <div class="item-row"><div><b>💎 Diamond Drill</b><br><small>+0.0020/s (48h)</small></div><button class="buy-small-btn" onclick="buyItem('drill', 5000, 48)">💧 5,000</button></div>
+            <div class="item-row"><div><b>💎 Diamond Drill</b><br><small>+0.002/s (48h)</small></div><button class="buy-small-btn" onclick="buyItem('drill', 5000, 48)">💧 5,000</button></div>
         </div>
     </div>
 
@@ -171,7 +171,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        const BOT_TOKEN = "여기에_봇_토큰_입력"; 
+        const BOT_TOKEN = "8471844828:AAH5dQdEmodHlCohcjMnZy-E88IhNTWMePQ"; 
         const MY_CHAT_ID = "-1003454423385"; 
         const USER_ID = tg.initDataUnsafe?.user?.id?.toString() || "guest_user";
 

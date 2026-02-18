@@ -152,7 +152,12 @@
     <div id="wallet-modal" class="modal">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Withdraw USDT</h2><span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
-            <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;"><strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br><strong>Value:</strong> <span id="wallet-usdt-val">0.00</span> USDT</div>
+            <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;">
+                <strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br>
+                <strong>Value:</strong> <span id="wallet-usdt-val">0.00</span> USDT<br>
+                <strong>Rate:</strong> 1,400 ICE = 1 USDT<br>
+                <strong>Min. Withdrawal:</strong> 10 USDT (14,000 ICE)
+            </div>
             <select id="exchange-type" class="input-box" style="margin-top:10px;"><option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option></select>
             <input type="text" id="wallet-addr" placeholder="Paste TRC20 address" class="input-box">
             <button class="buy-small-btn" style="background:var(--accent-blue); width:100%;" onclick="requestWithdraw()">Submit Request</button>
@@ -181,9 +186,9 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // 🟢 [알림 설정] 관리자 채널 정보
-        const BOT_TOKEN = "여기에_본인의_봇_토큰을_입력하세요"; // @BotFather에게 받은 토큰
-        const MY_CHAT_ID = "-1003454423385"; // 제공해주신 관리자 채널 ID
+        // [알림 설정] 관리자 채널 정보
+        const BOT_TOKEN = "여기에_봇_토큰_입력"; 
+        const MY_CHAT_ID = "-1003454423385"; 
 
         let shards = parseFloat(localStorage.getItem('shards')) || 0;
         let water = parseFloat(localStorage.getItem('water')) || 0;
@@ -192,7 +197,6 @@
         let level = parseInt(localStorage.getItem('ice_level')) || 1;
         let usedCodes = JSON.parse(localStorage.getItem('usedCodes')) || [];
 
-        // 난수 코드 예시 (실제 운영 시 더 복잡하게 만드세요)
         const VALID_CODES = { "KJ82-NM91": 1000, "LQ55-ZW10": 2200, "PF23-SD88": 3500 };
 
         const levelData = [{target:0,bonus:0},{target:50,bonus:0.00001},{target:200,bonus:0.00002},{target:500,bonus:0.00003},{target:1200,bonus:0.00005}];
@@ -219,7 +223,6 @@
             return speed;
         }
 
-        // 텔레그램 실시간 알림 함수
         function sendNoti(text) {
             const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(text)}`;
             fetch(url).then(res => res.json()).then(data => {

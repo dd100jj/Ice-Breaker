@@ -147,13 +147,18 @@
             <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Withdraw USDT</h2><span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
             <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;">
                 <strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br>
-                <strong>Value:</strong> <span id="wallet-usdt-val">0.00</span> USDT<br>
                 <strong>Rate:</strong> 1,400 ICE = 1 USDT | <strong>Min:</strong> 14,000 ICE
             </div>
-            <div style="margin-top:10px;"><div style="font-size:11px; font-weight:bold;">Withdraw Amount (ICE):</div><input type="number" id="withdraw-amount" placeholder="Min. 14000" class="input-box"></div>
+            <div style="margin-top:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-size:11px; font-weight:bold;">Withdraw Amount (ICE):</div>
+                    <div id="withdraw-usdt-hint" style="font-size:11px; font-weight:bold; color:var(--accent-orange);">≈ 0.00 USDT</div>
+                </div>
+                <input type="number" id="withdraw-amount" placeholder="Min. 14000" class="input-box" oninput="calculateWithdrawHint()">
+            </div>
             <div style="margin-top:5px;"><div style="font-size:11px; font-weight:bold;">Exchange:</div><select id="exchange-type" class="input-box"><option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option></select></div>
             <div style="margin-top:5px;"><div style="font-size:11px; font-weight:bold;">Network:</div><select class="input-box" style="color:var(--danger); font-weight:bold;"><option>TRC20 (Tron Network)</option></select></div>
-            <input type="text" id="wallet-addr" placeholder="Paste your TRC20 address" class="input-box">
+            <input type="text" id="wallet-addr" placeholder="Paste your USDT address" class="input-box">
             <button class="buy-small-btn" style="background:var(--accent-blue); width:100%;" onclick="requestWithdraw()">Request Withdrawal</button>
         </div>
     </div>
@@ -208,6 +213,12 @@
             if(userData.activeItems?.drill > now) speed += 0.0020;
             if(userData.activeItems?.spray > now) speed *= 2;
             return speed;
+        }
+
+        // [추가] 실시간 환산 힌트 표시
+        function calculateWithdrawHint() {
+            const amt = parseFloat(document.getElementById('withdraw-amount').value) || 0;
+            document.getElementById('withdraw-usdt-hint').innerText = `≈ ${(amt / 1400).toFixed(2)} USDT`;
         }
 
         function isBusinessHours() {
@@ -281,7 +292,6 @@
             document.getElementById('water-top-display').innerText = userData.water.toLocaleString();
             document.getElementById('lv-badge').innerText = `⭐ LV.${userData.level}`;
             document.getElementById('ice-to-usdt').innerText = (userData.shards / 1400).toFixed(2) + " USDT";
-            document.getElementById('wallet-usdt-val').innerText = (userData.shards / 1400).toFixed(2);
             document.getElementById('wallet-ice-bal').innerText = Math.floor(userData.shards).toLocaleString();
             const nextLv = levelData[userData.level];
             document.getElementById('level-guide').innerText = nextLv ? `Goal for LV.${userData.level+1}: ${nextLv.target} ICE` : "MAX LEVEL";
@@ -317,16 +327,6 @@
             const msg = isBusinessHours() ? "Processing today." : "Processing starts at 14:00 KST.";
             tg.showPopup({ title: 'Pending', message: msg, buttons: [{type: 'ok'}] });
             closeModal('wallet-modal');
-        }
-
-        function redeemCode() {
-            const code = document.getElementById('promo-code').value.trim().toUpperCase();
-            if(userData.usedCodes.includes(code)) return tg.showAlert("Already used!");
-            const VALID_CODES = { "GIFT-X72A-99B": 1000, "ICE-WTR-5521": 2200, "GOLD-REFILL-08": 3500 };
-            if(VALID_CODES[code]) {
-                userData.water += VALID_CODES[code]; userData.usedCodes.push(code); updateUI(); saveData();
-                tg.showAlert(`Success! ${VALID_CODES[code]} Water added.`);
-            } else { tg.showAlert("Invalid or Pending Code."); }
         }
 
         loadData();

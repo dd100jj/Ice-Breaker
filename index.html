@@ -19,41 +19,43 @@
         body { background-color: var(--tg-bg); color: var(--text-main); font-family: 'Pretendard', sans-serif; margin: 0; padding: 15px 15px 85px 15px; display: flex; flex-direction: column; gap: 12px; overflow-x: hidden; }
         .card { background: var(--card-bg); border-radius: 15px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
         
+        /* [복구] 상단 자원 표시 (ICE & WATER) */
         .top-bar { display: flex; justify-content: space-between; align-items: center; }
         .res-group { display: flex; gap: 8px; }
         .res-tag { background: #fff; border: 1.5px solid #eee; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 5px; }
 
+        /* [복구] 광고 충전 스테이션 */
         .ad-card { background: linear-gradient(135deg, #e3f2fd, #bbdefb); border: none; align-items: center; padding: 15px; border-radius: 20px; text-align: center; }
         .ad-btn { background: var(--water-color); color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: bold; font-size: 13px; cursor: pointer; margin-top: 8px; width: 100%; }
 
+        /* 홈 화면 게이지 및 자산 */
         .ice-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .gauge-track { width: 100%; height: 20px; background: #f0f2f5; border-radius: 10px; overflow: hidden; border: 1px solid #eee; position: relative; margin: 5px 0; }
         .gauge-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #4fc3f7, #81d4fa); transition: width 0.3s ease; position: relative; }
-        .gauge-fill::after { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); animation: ice-shine 2s infinite; }
-        @keyframes ice-shine { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
         .asset-amount { font-size: 24px; font-weight: 900; }
         
+        /* 마이닝 구역 */
         .mine-card { align-items: center; text-align: center; gap: 6px; }
         .ice-cube { font-size: 85px; margin: 10px 0; cursor: pointer; transition: transform 0.1s; user-select: none; }
         .ice-cube:active { transform: scale(0.9); }
         .mining-power { font-size: 28px; font-weight: 800; }
         .mining-speed { color: var(--accent-orange); font-weight: bold; font-size: 14px; }
         
-        /* 홈 화면 가이드 문구 복구 */
+        /* [유지] 홈 화면 모든 가이드 문구 */
         .guide-text { font-size: 12px; color: var(--accent-orange); font-weight: 600; }
         .limit-text { font-size: 11px; color: var(--gray-text); }
         .click-info { font-size: 10px; opacity: 0.7; color: var(--gray-text); }
 
+        /* 하단 탭 바 */
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: #fff; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); z-index: 900; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--gray-text); flex: 1; cursor: pointer; }
         .nav-item.active { color: var(--accent-blue); }
-        .nav-icon { font-size: 22px; }
-        .nav-label { font-size: 11px; font-weight: bold; }
 
+        /* 모달 스타일 */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { width: 92%; background: white; border-radius: 25px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; }
         .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; }
-        .buy-small-btn { background: var(--water-color); color: white; border: none; padding: 8px 12px; border-radius: 10px; font-weight: bold; }
+        .buy-small-btn { background: var(--water-color); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -87,7 +89,7 @@
         <div class="mining-speed" id="speed-display">+ 0.00005 / sec</div>
         
         <div class="guide-text">Minimum 1 ICE required to collect</div>
-        <div class="limit-text" id="next-level-text">Goal for LV.2: 10 ICE</div>
+        <div class="limit-text">Goal for LV.2: 10 ICE</div>
         <div class="limit-text">Max storage up to 5,000 ICE</div>
         <div class="click-info">Collect ICE to cash out (USDT)</div>
     </div>
@@ -104,40 +106,26 @@
                 <h2 style="margin:0; font-size:18px;">Withdraw USDT</h2>
                 <span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span>
             </div>
-            
             <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;">
                 <strong>Rate:</strong> 1,400 ICE = 1 USDT<br>
                 <strong>Min. Withdrawal:</strong> 10 USDT (14,000 ICE)
             </div>
-
             <div style="margin-top:10px;">
                 <div style="font-size:11px; font-weight:bold;">Network:</div>
                 <select class="input-box" style="color:var(--danger); font-weight:bold;"><option>TRC20 (Tron Network)</option></select>
             </div>
-
             <div style="margin-top:10px;">
                 <div style="font-size:11px; font-weight:bold;">Select Exchange:</div>
                 <select id="exchange-type" class="input-box">
-                    <option>Bitget</option>
-                    <option>Binance</option>
-                    <option>Bybit</option>
-                    <option>OKX</option>
+                    <option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option>
                 </select>
             </div>
-
-            <div style="margin-top:10px;">
-                <div style="font-size:11px; font-weight:bold;">Your USDT Address (TRC20):</div>
-                <input type="text" id="wallet-addr" placeholder="Enter your USDT address" class="input-box">
-            </div>
-
+            <input type="text" id="wallet-addr" placeholder="Enter your USDT address" class="input-box" style="margin-top:10px;">
             <button class="buy-small-btn" style="background:var(--accent-blue); width:100%; padding:15px; margin-top:10px;" onclick="requestWithdraw()">Submit Withdrawal Request</button>
         </div>
     </div>
 
-    <div id="shop-modal" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center;"><h2 id="shop-title" style="margin:0; font-size:18px;">Water Shop 💧</h2><span onclick="closeModal('shop-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div><div id="shop-items-container"></div></div></div>
-
     <script>
-        // (스크립트 부분은 아이스 수정본1의 최신 로직을 그대로 유지합니다)
         const tg = window.Telegram.WebApp;
         tg.expand();
         let shards = 0; let water = 10; let power = 0.00000; let autoSpeed = 0.00005;
@@ -156,6 +144,20 @@
             } else { tg.showAlert("Collect at least 1 ICE!"); }
         }
 
+        // [복구] 광고 시청 및 워터 충전 로직
+        function watchAd() {
+            tg.showConfirm("Watch an ad to get 💧 Water?", (ok) => {
+                if(ok) {
+                    setTimeout(() => {
+                        let reward = Math.floor(Math.random() * 6) + 5;
+                        water += reward;
+                        updateUI();
+                        tg.showAlert(`Reward: 💧 ${reward} Water!`);
+                    }, 1000);
+                }
+            });
+        }
+
         function updateUI() {
             document.getElementById('balance').innerText = shards.toLocaleString();
             document.getElementById('ice-top-display').innerText = shards.toLocaleString();
@@ -166,10 +168,13 @@
         }
 
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; }
-        function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function requestWithdraw() { tg.showAlert("Minimum 14,000 ICE required."); }
-        function watchAd() { tg.showAlert("Ad logic here!"); }
+        function openShop() { tg.showAlert("Shop coming soon!"); }
+        function requestWithdraw() { 
+            if(shards < 14000) tg.showAlert("Minimum 14,000 ICE required.");
+            else tg.showAlert("Request Submitted!");
+        }
+        updateUI();
     </script>
 </body>
 </html>

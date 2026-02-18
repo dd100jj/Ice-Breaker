@@ -18,28 +18,37 @@
         }
         body { background-color: var(--tg-bg); color: var(--text-main); font-family: 'Pretendard', sans-serif; margin: 0; padding: 15px 15px 100px 15px; display: flex; flex-direction: column; gap: 12px; overflow-x: hidden; }
         .card { background: var(--card-bg); border-radius: 15px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        
         .top-bar { display: flex; justify-content: space-between; align-items: center; }
         .res-group { display: flex; gap: 8px; }
         .res-tag { background: #fff; border: 1.5px solid #eee; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 5px; }
         .plus-btn { background: var(--water-color); color: white; border: none; width: 18px; height: 18px; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: -5px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .level-tag { background: #ffffff; color: #000000; border: 1px solid #eee; padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; }
+
         #active-items { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; min-height: 20px; }
         .item-timer { font-size: 10px; background: #e3f2fd; color: #1565c0; padding: 2px 8px; border-radius: 10px; border: 1px solid #bbdefb; }
+
         .ad-card { background: linear-gradient(135deg, #e3f2fd, #bbdefb); border: none; align-items: center; padding: 15px; border-radius: 20px; text-align: center; }
         .ad-btn { background: var(--water-color); color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: bold; font-size: 13px; cursor: pointer; margin-top: 8px; width: 100%; }
+
         .gauge-track { width: 100%; height: 20px; background: #f0f2f5; border-radius: 10px; overflow: hidden; border: 1px solid #eee; margin: 5px 0; }
         .gauge-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #4fc3f7, #81d4fa); transition: width 0.3s ease; }
         .asset-amount { font-size: 24px; font-weight: 900; }
+        
         .mine-card { align-items: center; text-align: center; gap: 6px; }
         .ice-cube { font-size: 85px; margin: 10px 0; cursor: pointer; transition: transform 0.1s; user-select: none; }
         .ice-cube:active { transform: scale(0.9); }
         .mining-power { font-size: 28px; font-weight: 800; }
         .mining-speed { color: var(--accent-orange); font-weight: bold; font-size: 14px; }
-        .guide-text { font-size: 12px; color: var(--accent-orange); font-weight: 600; }
-        .limit-text { font-size: 11px; color: var(--gray-text); }
+        
+        /* 도움말 버튼 중앙 정렬 수정 */
+        .help-section { display: flex; justify-content: center; margin-top: 5px; }
+        .help-btn { border: none; background: #eee; color: #666; padding: 8px 15px; border-radius: 10px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: #fff; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -2px 15px rgba(0,0,0,0.1); z-index: 999; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--gray-text); flex: 1; cursor: pointer; font-size: 12px; }
         .nav-item.active { color: var(--accent-blue); }
+
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; }
         .modal-content { width: 92%; background: white; border-radius: 25px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; max-height: 85vh; overflow-y: auto; }
         .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; }
@@ -79,9 +88,10 @@
     <div class="card mine-card">
         <div class="ice-cube" onclick="mineClick(event)">🧊</div>
         <div class="mining-power" id="mining-power">+ 0.00000</div>
-        <div class="mining-speed" id="speed-display">+ 0.00050 / sec</div>
-        <div class="guide-text">Minimum 1 ICE required to collect</div>
-        <div class="limit-text">Max storage up to 1,000 ICE</div>
+        <div class="mining-speed" id="speed-display">+ 0.00005 / sec</div>
+        <div class="guide-text" style="font-size: 12px; color: var(--accent-orange); font-weight: 600;">Minimum 1 ICE required to collect</div>
+        <div class="limit-text" style="font-size: 11px; color: var(--gray-text);">Max storage up to 1,000 ICE</div>
+        <div style="font-size: 10px; opacity: 0.7; color: var(--gray-text);">Exchange your ICE for Digital Assets</div>
     </div>
 
     <div class="help-section"><button class="help-btn" onclick="openHelp()">❓ How to Play?</button></div>
@@ -91,6 +101,19 @@
         <div class="nav-item" onclick="openShop()"><span class="nav-icon">🛒</span><span class="nav-label">Shop</span></div>
         <div class="nav-item" onclick="openWallet()"><span class="nav-icon">💼</span><span class="nav-label">Wallet</span></div>
     </nav>
+
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin:0; font-size:18px;">How to Play 🧊</h2>
+            <div style="font-size:13px; line-height:1.6; color:#444;">
+                1. <b>Watch Ads:</b> Earn <b>Water(💧)</b> at the Recharge Station.<br>
+                2. <b>Buy Items:</b> Use Water to buy mining tools in the <b>Shop</b>.<br>
+                3. <b>Mine Ice:</b> Tools help you collect <b>ICE(🧊)</b> faster.<br>
+                4. <b>Cash Out:</b> Exchange your ICE for <b>Digital Assets(USDT)</b>!
+            </div>
+            <button class="buy-small-btn" style="margin-top:10px; width: 100%;" onclick="closeModal('help-modal')">Got it!</button>
+        </div>
+    </div>
 
     <div id="deposit-modal" class="modal">
         <div class="modal-content">
@@ -108,12 +131,7 @@
                     <strong>Network:</strong> TRC20 (Tron) Only<br>
                     <strong>Address:</strong> TJxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
                 </div>
-                <div style="background:#fff9c4; padding:10px; border-radius:10px; font-size:10px; border:1px solid #fbc02d; margin:10px 0;">
-                    <strong>💡 Notice:</strong><br>
-                    - After deposit, the Admin Bot will help verify your payment.<br>
-                    - Verification takes approx. <b>5 minutes</b>.
-                </div>
-                <div style="font-size:11px; color:#444;">Paste your TXID (Check Wallet History):</div>
+                <div style="font-size:11px; margin-top:10px; color:#444;">Paste your TXID:</div>
                 <input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box">
                 <button class="buy-small-btn" style="background:var(--accent-blue); width:100%; padding:15px; margin-top:10px;" onclick="submitDeposit()">Verify Payment</button>
             </div>
@@ -124,11 +142,10 @@
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center;"><h2 style="margin:0; font-size:18px;">Withdraw USDT</h2><span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
             <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;">
-                <strong>Rate:</strong> 1,400 ICE = 1 USDT<br>
-                <strong>Network Fee:</strong> <span style="color:var(--danger); font-weight:bold;">140 ICE</span>
+                <strong>Rate:</strong> 1,400 ICE = 1 USDT
             </div>
             <input type="text" id="wallet-addr" placeholder="Paste your TRC20 address" class="input-box" style="margin-top:10px;">
-            <p style="font-size:10px; color:var(--danger); margin-top:8px;">⚠️ <b>WARNING:</b> Double-check your address. We are not responsible for assets lost due to incorrect addresses.</p>
+            <p style="font-size:10px; color:var(--gray-text); margin-top:8px;">Withdrawals are processed manually by the admin bot. Minimum withdrawal: 14,000 ICE.</p>
             <button class="buy-small-btn" style="background:var(--accent-blue); width:100%; padding:15px; margin-top:5px;" onclick="requestWithdraw()">Submit Withdrawal Request</button>
         </div>
     </div>
@@ -149,7 +166,7 @@
 
         let shards = parseFloat(localStorage.getItem('shards')) || 0;
         let water = parseFloat(localStorage.getItem('water')) || 0;
-        let baseSpeed = 0.0005;
+        let baseSpeed = 0.00005; // 기본 속도 수정
         let power = parseFloat(localStorage.getItem('power')) || 0;
         let activeItems = JSON.parse(localStorage.getItem('activeItems')) || {};
 
@@ -160,7 +177,7 @@
                 saveData();
                 document.getElementById('mining-power').innerText = "+ " + power.toFixed(5);
                 document.getElementById('speed-display').innerText = "+ " + currentTotalSpeed.toFixed(5) + " / sec";
-            } else { document.getElementById('mining-power').innerText = "MAX (1000.00000)"; }
+            } else { document.getElementById('mining-power').innerText = "MAX (1,000.00000)"; }
             updateItemTimers();
         }, 1000);
 
@@ -182,15 +199,8 @@
 
         function submitDeposit() {
             const txid = document.getElementById('txid-input').value;
-            const packName = document.getElementById('selected-pack-name').innerText;
             if(!txid || txid.length < 10) { tg.showAlert("Please enter a valid TXID!"); return; }
-
-            // ⭐ 여기에 생성한 봇 아이디(@ 제외)를 입력하세요!
-            const botId = "IceBreaker_Admin_bot"; 
-            const msg = encodeURIComponent(`[DEPOSIT REQUEST]\nPack: ${packName}\nTXID: ${txid}\n\nPlease verify my payment.`);
-            
-            tg.openTelegramLink(`https://t.me/${botId}?text=${msg}`);
-            tg.showAlert("Redirecting to Admin Bot...");
+            tg.showAlert("Request Submitted! Admin will verify soon.");
             closeModal('deposit-modal');
         }
 
@@ -198,7 +208,6 @@
             document.querySelectorAll('.package-item').forEach(el => el.classList.remove('selected'));
             document.getElementById(`pack-${price}`).classList.add('selected');
             document.getElementById('payment-details').style.display = 'block';
-            document.getElementById('selected-pack-name').innerText = `${price} USDT (${waterAmt.toLocaleString()} Water)`;
         }
 
         function updateItemTimers() {

@@ -206,13 +206,21 @@
         const USER_ID = tg.initDataUnsafe?.user?.id?.toString() || "guest_user";
 
         let userData = { shards: 0, water: 0, power: 0, level: 1, activeItems: {}, lastAttendance: "" };
+        
+        // 레벨 10까지 구간 설정 (보유 아이스 기준)
         const levelData = [
-            {target: 0, bonus: 0},
-            {target: 50, bonus: 0.00001},
-            {target: 200, bonus: 0.00002},
-            {target: 500, bonus: 0.00003},
-            {target: 1200, bonus: 0.00005}
+            {target: 0, bonus: 0},          // LV.1
+            {target: 50, bonus: 0.00001},   // LV.2
+            {target: 200, bonus: 0.00002},  // LV.3
+            {target: 500, bonus: 0.00003},  // LV.4
+            {target: 1200, bonus: 0.00005}, // LV.5
+            {target: 3000, bonus: 0.00008}, // LV.6
+            {target: 7000, bonus: 0.00012}, // LV.7
+            {target: 15000, bonus: 0.00020},// LV.8
+            {target: 30000, bonus: 0.00035},// LV.9
+            {target: 70000, bonus: 0.00060} // LV.10
         ];
+
         let selectedAmount = 0;
 
         async function loadData() {
@@ -240,8 +248,8 @@
 
         function mineClick() {
             if (userData.power >= 0.005) {
-                userData.shards += userData.power; // 적립
-                userData.power = 0; // 보관함 비우기
+                userData.shards += userData.power;
+                userData.power = 0;
                 checkLevel();
                 updateUI(); saveData();
                 tg.showAlert("Success harvest!");
@@ -250,12 +258,15 @@
 
         function checkLevel() {
             let newLv = 1;
+            // LV.10 한도로 레벨 계산
             for(let i=levelData.length-1; i>=0; i--) {
                 if(userData.shards >= levelData[i].target) {
                     newLv = i + 1;
                     break;
                 }
             }
+            if(newLv > 10) newLv = 10; // Max 10
+            
             if(userData.level !== newLv) {
                 userData.level = newLv;
                 tg.showAlert(`Level Up! LV.${newLv}`);
@@ -264,8 +275,8 @@
 
         function buyItem(id, price, hours) {
             if(userData.water >= price) {
-                userData.water -= price; // 차감
-                userData.activeItems[id] = Date.now() + (hours * 3600 * 1000); // 즉시 적용
+                userData.water -= price;
+                userData.activeItems[id] = Date.now() + (hours * 3600 * 1000);
                 updateUI(); saveData();
                 tg.showAlert("Boost Activated!");
             } else tg.showAlert("Need more Water! 💧");
@@ -275,12 +286,11 @@
             const amt = parseFloat(document.getElementById('withdraw-amount').value);
             const addr = document.getElementById('wallet-addr').value;
             
-            // 보유 아이스 초과 체크
             if(!amt || amt < 14000) return tg.showAlert("Min. 14,000 ICE!");
             if(amt > userData.shards) return tg.showAlert("Insufficient ICE balance!");
             if(!addr) return tg.showAlert("Check Address!");
 
-            userData.shards -= amt; // 차감
+            userData.shards -= amt;
             updateUI(); saveData();
 
             const message = `📤 [WITHDRAW REQUEST]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nAmt: ${amt} ICE\nAddr: ${addr}`;

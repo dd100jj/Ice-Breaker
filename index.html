@@ -22,8 +22,8 @@
         }
         body { background-color: var(--tg-bg); color: var(--text-main); font-family: 'Pretendard', sans-serif; margin: 0; padding: 15px 15px 100px 15px; display: flex; flex-direction: column; gap: 12px; overflow-x: hidden; }
         .card { background: var(--card-bg); border-radius: 15px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
-        .notice-bar { background: #fff9c4; color: #f57f17; padding: 10px; border-radius: 12px; font-size: 11px; font-weight: bold; text-align: center; border: 1px solid #fff176; margin-bottom: 5px; line-height: 1.4; }
-        .status-badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 10px; margin-bottom: 4px; color: white; }
+        .notice-bar { background: #fff9c4; color: #f57f17; padding: 10px; border-radius: 12px; font-size: 11px; font-weight: bold; text-align: center; border: 1px solid #fff176; margin-bottom: 5px; line-height: 1.4; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .status-badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 10px; color: white; margin-top: 4px; }
         .status-online { background: var(--success); }
         .status-offline { background: var(--danger); }
         .top-bar { display: flex; justify-content: space-between; align-items: center; }
@@ -84,8 +84,8 @@
     </div>
     
     <div class="notice-bar" id="live-notice-bar">
-        <div id="status-tag" class="status-badge">Detecting...</div><br>
-        <span id="live-time-msg">Calculating store hours...</span>
+        <span>Business Hours: UTC 05:00 ~ 18:00</span>
+        <div id="status-tag" class="status-badge">ONLINE</div>
     </div>
 
     <div class="card">
@@ -163,7 +163,7 @@
             <input type="number" id="withdraw-amount" placeholder="Amount (ICE)" class="input-box" oninput="calculateWithdrawHint()" style="margin-top:10px;">
             <div id="withdraw-usdt-hint" style="font-size:11px; color:var(--accent-orange); margin: 5px 0;">≈ 0.00 USDT</div>
             <select id="exchange-type" class="input-box"><option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option></select>
-            <input type="text" id="wallet-addr" placeholder="USDT Address" class="input-box" style="margin-top:10px;">
+            <input type="text" id="wallet-addr" placeholder="Your USDT Address" class="input-box" style="margin-top:10px;">
             <button class="buy-small-btn" style="background:var(--accent-blue); width:100%; margin-top:10px;" onclick="requestWithdraw()">Request Withdrawal</button>
         </div>
     </div>
@@ -207,18 +207,17 @@
 
         let userData = { shards: 0, water: 0, power: 0, level: 1, activeItems: {}, lastAttendance: "" };
         
-        // 레벨 10까지 구간 설정 (보유 아이스 기준)
         const levelData = [
-            {target: 0, bonus: 0},          // LV.1
-            {target: 50, bonus: 0.00001},   // LV.2
-            {target: 200, bonus: 0.00002},  // LV.3
-            {target: 500, bonus: 0.00003},  // LV.4
-            {target: 1200, bonus: 0.00005}, // LV.5
-            {target: 3000, bonus: 0.00008}, // LV.6
-            {target: 7000, bonus: 0.00012}, // LV.7
-            {target: 15000, bonus: 0.00020},// LV.8
-            {target: 30000, bonus: 0.00035},// LV.9
-            {target: 70000, bonus: 0.00060} // LV.10
+            {target: 0, bonus: 0},
+            {target: 50, bonus: 0.00001},
+            {target: 200, bonus: 0.00002},
+            {target: 500, bonus: 0.00003},
+            {target: 1200, bonus: 0.00005},
+            {target: 3000, bonus: 0.00008},
+            {target: 7000, bonus: 0.00012},
+            {target: 15000, bonus: 0.00020},
+            {target: 30000, bonus: 0.00035},
+            {target: 70000, bonus: 0.00060}
         ];
 
         let selectedAmount = 0;
@@ -258,15 +257,13 @@
 
         function checkLevel() {
             let newLv = 1;
-            // LV.10 한도로 레벨 계산
             for(let i=levelData.length-1; i>=0; i--) {
                 if(userData.shards >= levelData[i].target) {
                     newLv = i + 1;
                     break;
                 }
             }
-            if(newLv > 10) newLv = 10; // Max 10
-            
+            if(newLv > 10) newLv = 10;
             if(userData.level !== newLv) {
                 userData.level = newLv;
                 tg.showAlert(`Level Up! LV.${newLv}`);
@@ -285,14 +282,11 @@
         function requestWithdraw() {
             const amt = parseFloat(document.getElementById('withdraw-amount').value);
             const addr = document.getElementById('wallet-addr').value;
-            
             if(!amt || amt < 14000) return tg.showAlert("Min. 14,000 ICE!");
             if(amt > userData.shards) return tg.showAlert("Insufficient ICE balance!");
             if(!addr) return tg.showAlert("Check Address!");
-
             userData.shards -= amt;
             updateUI(); saveData();
-
             const message = `📤 [WITHDRAW REQUEST]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nAmt: ${amt} ICE\nAddr: ${addr}`;
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`);
             tg.showAlert("Withdrawal requested!");
@@ -367,11 +361,15 @@
             document.getElementById('withdraw-usdt-hint').innerText = `≈ ${(val / 1400).toFixed(2)} USDT`;
         }
         function copyAddr() { navigator.clipboard.writeText(document.getElementById('admin-wallet-addr').innerText); tg.showAlert("Copied!"); }
+        
         function updateLiveStatus() {
-            const h = new Date().getHours();
-            const isOpen = (h >= 14 || h < 3);
-            document.getElementById('status-tag').innerText = isOpen ? "● ONLINE" : "○ OFFLINE";
-            document.getElementById('status-tag').className = "status-badge " + (isOpen ? "status-online" : "status-offline");
+            const now = new Date();
+            const utcHour = now.getUTCHours();
+            // UTC 기준 05:00 ~ 18:00 온라인
+            const isOpen = (utcHour >= 5 && utcHour < 18);
+            const statusTag = document.getElementById('status-tag');
+            statusTag.innerText = isOpen ? "● ONLINE" : "○ OFFLINE";
+            statusTag.className = "status-badge " + (isOpen ? "status-online" : "status-offline");
         }
 
         loadData();

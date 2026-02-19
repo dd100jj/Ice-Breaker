@@ -335,20 +335,43 @@
         }
 
         function initAttendance() {
-            const grid = document.getElementById('attendance-grid'); grid.innerHTML = "";
-            for(let i=1; i<=30; i++) {
-                const box = document.createElement('div'); box.className = 'day-box';
-                box.innerHTML = `<span>💧</span>D-${i}`;
-                if(i===1) { box.classList.add('today'); box.onclick = () => { 
-                    const today = new Date().toDateString();
-                    if(userData.lastAttendance !== today) {
-                        userData.water += 5; userData.lastAttendance = today; updateUI(); saveData(); tg.showAlert("Checked!");
-                        box.classList.add('active');
-                    } else { tg.showAlert("Already checked today!"); }
-                }};
-                grid.appendChild(box);
-            }
+    const grid = document.getElementById('attendance-grid'); 
+    grid.innerHTML = "";
+    
+    // 리워드 설정 (워터와 아이스 혼합)
+    const getReward = (day) => {
+        if (day === 30) return { type: 'ICE', amt: 50, icon: '🎁' };
+        if (day === 7 || day === 14 || day === 21) return { type: 'WATER', amt: 20, icon: '🎁' };
+        return (day % 2 === 0) ? { type: 'WATER', amt: 5, icon: '💧' } : { type: 'ICE', amt: 2, icon: '🧊' };
+    };
+
+    for(let i=1; i<=30; i++) {
+        const reward = getReward(i);
+        const box = document.createElement('div'); 
+        box.className = 'day-box';
+        // 7, 14, 21, 30일차는 다르게 표시
+        box.innerHTML = `<span>${reward.icon}</span>D-${i}`;
+        
+        // 오늘 날짜 체크 (예시로 1일차 활성화, 실제 서비스 시 로직에 따라 연동)
+        if(i === 1) { 
+            box.classList.add('today'); 
+            box.onclick = () => { 
+                const today = new Date().toDateString();
+                if(userData.lastAttendance !== today) {
+                    // 보상 지급 로직
+                    if(reward.type === 'WATER') userData.water += reward.amt;
+                    else userData.shards += reward.amt;
+                    
+                    userData.lastAttendance = today; 
+                    updateUI(); saveData(); 
+                    tg.showAlert(`Checked! Received ${reward.amt} ${reward.type}`);
+                    box.classList.add('active');
+                } else { tg.showAlert("Already checked today!"); }
+            };
         }
+        grid.appendChild(box);
+    }
+}
 
         function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; document.getElementById('payment-details').style.display = 'none'; selectedAmount = 0; }
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; updateUI(); }

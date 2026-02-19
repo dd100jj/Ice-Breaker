@@ -174,10 +174,10 @@
     <div id="shop-modal" class="modal">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Water Shop 💧</h2><span onclick="closeModal('shop-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
-            <div class="item-row"><div><b>⛏️ Iron Pickaxe</b><br><small>+0.0001/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('pickaxe', 500, 24)">💧 500</button></div>
-            <div class="item-row"><div><b>❄️ Cooling Spray</b><br><small>All Speed x2 (12h)</small></div><button class="buy-small-btn" onclick="buyItem('spray', 1000, 12)">💧 1,000</button></div>
-            <div class="item-row"><div><b>⚙️ Silver Gear</b><br><small>+0.0005/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('gear', 1500, 24)">💧 1,500</button></div>
-            <div class="item-row"><div><b>💎 Diamond Drill</b><br><small>+0.0020/s (48h)</small></div><button class="buy-small-btn" onclick="buyItem('drill', 5000, 48)">💧 5,000</button></div>
+            <div class="item-row"><div><b>⛏️ Iron Pickaxe</b><br><small>+0.00010/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('pickaxe', 500, 24)">💧 500</button></div>
+            <div class="item-row"><div><b>⚙️ Silver Gear</b><br><small>+0.00050/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('gear', 1500, 24)">💧 1,500</button></div>
+            <div class="item-row"><div><b>💎 Diamond Drill</b><br><small>+0.00200/s (48h)</small></div><button class="buy-small-btn" onclick="buyItem('drill', 5000, 48)">💧 5,000</button></div>
+            <div class="item-row"><div><b>❄️ Cooling Spray</b><br><small>All Speed x2 (12h)</small></div><button class="buy-small-btn" onclick="buyItem('spray', 1500, 12)">💧 1,500</button></div>
         </div>
     </div>
 
@@ -211,9 +211,6 @@
             const kstDate = new Date(now.getTime() + (now.getTimezoneOffset() + kstOffset) * 60000);
             const kstHours = kstDate.getHours();
             const isOpen = (kstHours >= 14 || kstHours < 3);
-            const startKST = 14;
-            const userOffset = -now.getTimezoneOffset() / 60;
-            const userStartHour = (startKST - 9 + userOffset + 24) % 24;
             const statusTag = document.getElementById('status-tag');
             const timeMsg = document.getElementById('live-time-msg');
             if (isOpen) {
@@ -223,7 +220,7 @@
             } else {
                 statusTag.innerText = "○ OFFLINE";
                 statusTag.className = "status-badge status-offline";
-                timeMsg.innerHTML = `Back online at <b>${Math.floor(userStartHour)}:00</b> local time.`;
+                timeMsg.innerHTML = `Admin is away.`;
             }
         }
 
@@ -253,7 +250,6 @@
         }, 1000);
 
         setInterval(saveData, 10000);
-        setInterval(updateLiveStatus, 60000);
 
         function handlePackSelect(selectedId, amount) {
             const packs = document.querySelectorAll('.package-item');
@@ -337,11 +333,9 @@
        function initAttendance() {
     const grid = document.getElementById('attendance-grid'); 
     grid.innerHTML = "";
-    
-    // 리워드 설정 (워터와 아이스 혼합)
     const getReward = (day) => {
         if (day === 30) return { type: 'ICE', amt: 50, icon: '🎁' };
-        if (day === 7 || day === 14 || day || 21) return { type: 'WATER', amt: 20, icon: '🎁' };
+        if (day === 7 || day === 14 || day === 21) return { type: 'WATER', amt: 20, icon: '🎁' };
         return (day % 2 === 0) ? { type: 'WATER', amt: 5, icon: '💧' } : { type: 'ICE', amt: 2, icon: '🧊' };
     };
 
@@ -349,21 +343,15 @@
         const reward = getReward(i);
         const box = document.createElement('div'); 
         box.className = 'day-box';
-        // 7, 14, 21, 30일차는 다르게 표시
         box.innerHTML = `<span>${reward.icon}</span>D-${i}`;
-        
-        // 오늘 날짜 체크 (예시로 1일차 활성화, 실제 서비스 시 로직에 따라 연동)
         if(i === 1) { 
             box.classList.add('today'); 
             box.onclick = () => { 
                 const today = new Date().toDateString();
                 if(userData.lastAttendance !== today) {
-                    // 보상 지급 로직
                     if(reward.type === 'WATER') userData.water += reward.amt;
                     else userData.shards += reward.amt;
-                    
-                    userData.lastAttendance = today; 
-                    updateUI(); saveData(); 
+                    userData.lastAttendance = today; updateUI(); saveData(); 
                     tg.showAlert(`Checked! Received ${reward.amt} ${reward.type}`);
                     box.classList.add('active');
                 } else { tg.showAlert("Already checked today!"); }
@@ -386,7 +374,7 @@
             if(VALID_CODES[code]) {
                 userData.water += VALID_CODES[code]; userData.usedCodes.push(code); updateUI(); saveData();
                 tg.showAlert(`Success! ${VALID_CODES[code]} Water added.`);
-            } else { tg.showAlert("Invalid or Pending Code."); }
+            } else { tg.showAlert("Invalid Code."); }
         }
 
         loadData();

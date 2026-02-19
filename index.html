@@ -46,7 +46,6 @@
         .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         .day-box { aspect-ratio: 1; background: #fdfdfd; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #bbb; }
         .day-box.active { background: var(--accent-blue) !important; color: white !important; }
-        .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); }
 
         .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; }
         .buy-small-btn { background: var(--water-color); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; }
@@ -73,7 +72,7 @@
         <div class="level-tag" id="lv-badge">⭐ LV.1</div>
     </div>
     
-    <div class="notice-bar">🚧 Under Construction (Beta Mode)</div>
+    <div class="notice-bar">🚧 Under Construction (Beta Mode)<br>🕒 Support: 05:00-18:00 UTC (14:00-03:00 KST)</div>
 
     <div id="active-items"></div>
 
@@ -134,7 +133,7 @@
                 <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:11px; word-break:break-all;">
                     <b>Admin USDT Address:</b><br>
                     <span id="admin-wallet-addr" style="font-family:monospace; font-weight:bold; color:#333;">TDDaEzGdXGuuH3RxhHa5LZCSeeTpZuuTd1</span><br>
-                    <button onclick="copyAddr()" style="margin-top:5px; padding:8px; border:none; border-radius:5px; font-size:11px; background:var(--accent-blue); color:white; width:100%; cursor:pointer;">Copy Deposit Address</button>
+                    <button onclick="copyAddr()" style="margin-top:5px; padding:8px; border:none; border-radius:5px; font-size:11px; background:var(--accent-blue); color:white; width:100%; cursor:pointer;">Copy TRC20 Address</button>
                 </div>
                 <input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box" style="margin-top:10px;">
                 <button class="buy-small-btn" style="background:var(--accent-orange); width:100%; margin-top:10px;" onclick="submitDeposit()">Submit Recharge Request</button>
@@ -206,12 +205,14 @@
 
         async function saveData() { await db.collection("users").doc(USER_ID).update(userData); }
 
-        function handlePackSelect(selectedId, amount) {
-            const packs = document.querySelectorAll('.package-item');
-            packs.forEach(p => p.classList.remove('selected'));
-            document.getElementById(selectedId).classList.add('selected');
-            selectedAmount = amount;
-            document.getElementById('payment-details').style.display = 'block';
+        function calculateSpeed() {
+            let baseSpeed = 0.00005 + (levelData[userData.level-1]?.bonus || 0);
+            let speed = baseSpeed; let now = Date.now();
+            if(userData.activeItems?.pickaxe > now) speed += 0.0001;
+            if(userData.activeItems?.gear > now) speed += 0.0005;
+            if(userData.activeItems?.drill > now) speed += 0.0020;
+            if(userData.activeItems?.spray > now) speed *= 2;
+            return speed;
         }
 
         function calculateWithdrawHint() {
@@ -221,7 +222,7 @@
 
         setInterval(() => {
             if (userData.power < 1000) {
-                let speed = 0.00005 + (levelData[userData.level-1]?.bonus || 0);
+                let speed = calculateSpeed();
                 userData.power = Math.min(1000, userData.power + speed);
                 document.getElementById('mining-power').innerText = "+ " + userData.power.toFixed(5);
                 document.getElementById('speed-display').innerText = "+ " + speed.toFixed(5) + " / sec";
@@ -251,6 +252,14 @@
             document.getElementById('ice-gauge-bar').style.width = Math.min((userData.shards / (nextLv ? nextLv.target : 1000)) * 100, 100) + "%";
         }
 
+        function handlePackSelect(selectedId, amount) {
+            const packs = document.querySelectorAll('.package-item');
+            packs.forEach(p => p.classList.remove('selected'));
+            document.getElementById(selectedId).classList.add('selected');
+            selectedAmount = amount;
+            document.getElementById('payment-details').style.display = 'block';
+        }
+
         function submitDeposit() {
             const txid = document.getElementById('txid-input').value;
             if(!txid) return tg.showAlert("Please enter TXID!");
@@ -262,23 +271,17 @@
             });
         }
 
-        // [핵심 수정] 출금 신청: 실보유량 철저 검증 로직
         function requestWithdraw() {
             const amt = parseFloat(document.getElementById('withdraw-amount').value);
             const addr = document.getElementById('wallet-addr').value;
             const ex = document.getElementById('exchange-type').value;
 
-            // 1. 실제 보유량이 인출 시도 금액보다 적은지 확인 (실보유량 검증)
             if(!amt || amt > userData.shards) {
                 return tg.showAlert(`Insufficient balance! You only have ${Math.floor(userData.shards).toLocaleString()} ICE.`);
             }
-
-            // 2. 최소 출금 기준 (14,000 ICE) 확인
             if(amt < 14000) {
                 return tg.showAlert("Minimum withdrawal is 14,000 ICE!");
             }
-
-            // 3. 지갑 주소 입력 확인
             if(!addr) {
                 return tg.showAlert("Please enter your USDT address!");
             }

@@ -17,10 +17,16 @@
             --water-color: #2196f3;
             --gray-text: #888888;
             --danger: #ff5252;
+            --success: #4caf50;
         }
         body { background-color: var(--tg-bg); color: var(--text-main); font-family: 'Pretendard', sans-serif; margin: 0; padding: 15px 15px 100px 15px; display: flex; flex-direction: column; gap: 12px; overflow-x: hidden; }
         .card { background: var(--card-bg); border-radius: 15px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        
         .notice-bar { background: #fff9c4; color: #f57f17; padding: 10px; border-radius: 12px; font-size: 11px; font-weight: bold; text-align: center; border: 1px solid #fff176; margin-bottom: 5px; line-height: 1.4; }
+        .status-badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 10px; margin-bottom: 4px; color: white; }
+        .status-online { background: var(--success); }
+        .status-offline { background: var(--danger); }
+
         .top-bar { display: flex; justify-content: space-between; align-items: center; }
         .res-group { display: flex; gap: 8px; }
         .res-tag { background: #fff; border: 1.5px solid #eee; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 5px; }
@@ -72,7 +78,10 @@
         <div class="level-tag" id="lv-badge">⭐ LV.1</div>
     </div>
     
-    <div class="notice-bar">🚧 Under Construction (Beta Mode)<br>🕒 Support: 05:00-18:00 UTC (14:00-03:00 KST)</div>
+    <div class="notice-bar" id="live-notice-bar">
+        <div id="status-tag" class="status-badge">Detecting...</div><br>
+        <span id="live-time-msg">Calculating store hours...</span>
+    </div>
 
     <div id="active-items"></div>
 
@@ -196,33 +205,45 @@
 
         const levelData = [{target:0,bonus:0},{target:50,bonus:0.00001},{target:200,bonus:0.00002},{target:500,bonus:0.00003},{target:1200,bonus:0.00005}];
 
+        function updateLiveStatus() {
+            const now = new Date();
+            const kstOffset = 9 * 60;
+            const kstDate = new Date(now.getTime() + (now.getTimezoneOffset() + kstOffset) * 60000);
+            const kstHours = kstDate.getHours();
+            const isOpen = (kstHours >= 14 || kstHours < 3);
+            const startKST = 14;
+            const userOffset = -now.getTimezoneOffset() / 60;
+            const userStartHour = (startKST - 9 + userOffset + 24) % 24;
+            const statusTag = document.getElementById('status-tag');
+            const timeMsg = document.getElementById('live-time-msg');
+            if (isOpen) {
+                statusTag.innerText = "● ONLINE";
+                statusTag.className = "status-badge status-online";
+                timeMsg.innerHTML = `Admin is here! Service is active.`;
+            } else {
+                statusTag.innerText = "○ OFFLINE";
+                statusTag.className = "status-badge status-offline";
+                timeMsg.innerHTML = `Back online at <b>${Math.floor(userStartHour)}:00</b> local time.`;
+            }
+        }
+
         async function loadData() {
             const doc = await db.collection("users").doc(USER_ID).get();
             if (doc.exists) { userData = doc.data(); }
             else { await db.collection("users").doc(USER_ID).set(userData); }
-            initAttendance(); updateUI();
+            initAttendance(); updateUI(); updateLiveStatus();
         }
 
         async function saveData() { await db.collection("users").doc(USER_ID).update(userData); }
 
-        function calculateSpeed() {
-            let baseSpeed = 0.00005 + (levelData[userData.level-1]?.bonus || 0);
-            let speed = baseSpeed; let now = Date.now();
-            if(userData.activeItems?.pickaxe > now) speed += 0.0001;
-            if(userData.activeItems?.gear > now) speed += 0.0005;
-            if(userData.activeItems?.drill > now) speed += 0.0020;
-            if(userData.activeItems?.spray > now) speed *= 2;
-            return speed;
-        }
-
-        function calculateWithdrawHint() {
-            const amt = parseFloat(document.getElementById('withdraw-amount').value) || 0;
-            document.getElementById('withdraw-usdt-hint').innerText = `≈ ${(amt / 1400).toFixed(2)} USDT`;
-        }
-
         setInterval(() => {
             if (userData.power < 1000) {
-                let speed = calculateSpeed();
+                let baseSpeed = 0.00005 + (levelData[userData.level-1]?.bonus || 0);
+                let speed = baseSpeed; let now = Date.now();
+                if(userData.activeItems?.pickaxe > now) speed += 0.0001;
+                if(userData.activeItems?.gear > now) speed += 0.0005;
+                if(userData.activeItems?.drill > now) speed += 0.0020;
+                if(userData.activeItems?.spray > now) speed *= 2;
                 userData.power = Math.min(1000, userData.power + speed);
                 document.getElementById('mining-power').innerText = "+ " + userData.power.toFixed(5);
                 document.getElementById('speed-display').innerText = "+ " + speed.toFixed(5) + " / sec";
@@ -232,6 +253,20 @@
         }, 1000);
 
         setInterval(saveData, 10000);
+        setInterval(updateLiveStatus, 60000);
+
+        function handlePackSelect(selectedId, amount) {
+            const packs = document.querySelectorAll('.package-item');
+            packs.forEach(p => p.classList.remove('selected'));
+            document.getElementById(selectedId).classList.add('selected');
+            selectedAmount = amount;
+            document.getElementById('payment-details').style.display = 'block';
+        }
+
+        function calculateWithdrawHint() {
+            const amt = parseFloat(document.getElementById('withdraw-amount').value) || 0;
+            document.getElementById('withdraw-usdt-hint').innerText = `≈ ${(amt / 1400).toFixed(2)} USDT`;
+        }
 
         function mineClick() {
             if (userData.power >= 0.005) {
@@ -249,24 +284,16 @@
             document.getElementById('wallet-ice-bal').innerText = Math.floor(userData.shards).toLocaleString();
             const nextLv = levelData[userData.level];
             document.getElementById('level-guide').innerText = nextLv ? `Goal for LV.${userData.level+1}: ${nextLv.target} ICE` : "MAX LEVEL";
-            document.getElementById('ice-gauge-bar').style.width = Math.min((userData.shards / (nextLv ? nextLv.target : 1000)) * 100, 100) + "%";
-        }
-
-        function handlePackSelect(selectedId, amount) {
-            const packs = document.querySelectorAll('.package-item');
-            packs.forEach(p => p.classList.remove('selected'));
-            document.getElementById(selectedId).classList.add('selected');
-            selectedAmount = amount;
-            document.getElementById('payment-details').style.display = 'block';
+            document.getElementById('ice-gauge-bar').style.width = Math.min((userData.shards / 1000) * 100, 100) + "%";
         }
 
         function submitDeposit() {
             const txid = document.getElementById('txid-input').value;
             if(!txid) return tg.showAlert("Please enter TXID!");
-            const message = `💰 [DEPOSIT REQUEST]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nAmount: ${selectedAmount} USDT\nTXID: ${txid}`;
+            const message = `💰 [DEPOSIT]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nAmount: ${selectedAmount} USDT\nTXID: ${txid}`;
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`)
             .then(() => {
-                tg.showPopup({ title: 'Submitted', message: 'Request sent to admin! Verification will be done soon.', buttons: [{type: 'ok'}] });
+                tg.showPopup({ title: 'Submitted', message: 'Deposit request sent! Admin will verify soon.', buttons: [{type: 'ok'}] });
                 closeModal('deposit-modal');
             });
         }
@@ -275,22 +302,13 @@
             const amt = parseFloat(document.getElementById('withdraw-amount').value);
             const addr = document.getElementById('wallet-addr').value;
             const ex = document.getElementById('exchange-type').value;
-
-            if(!amt || amt > userData.shards) {
-                return tg.showAlert(`Insufficient balance! You only have ${Math.floor(userData.shards).toLocaleString()} ICE.`);
-            }
-            if(amt < 14000) {
-                return tg.showAlert("Minimum withdrawal is 14,000 ICE!");
-            }
-            if(!addr) {
-                return tg.showAlert("Please enter your USDT address!");
-            }
-            
-            const message = `📤 [WITHDRAW REQUEST]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nAmt: ${amt} ICE (${(amt/1400).toFixed(2)} USDT)\nEx: ${ex}\nAddr: ${addr}`;
-            
+            if(!amt || amt > userData.shards) return tg.showAlert(`Insufficient balance! Max: ${Math.floor(userData.shards)}`);
+            if(amt < 14000) return tg.showAlert("Min withdrawal 14,000 ICE!");
+            if(!addr) return tg.showAlert("Enter USDT address!");
+            const message = `📤 [WITHDRAW]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nAmt: ${amt} ICE (${(amt/1400).toFixed(2)} USDT)\nEx: ${ex}\nAddr: ${addr}`;
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`)
             .then(() => {
-                tg.showPopup({ title: 'Pending', message: 'Withdrawal request sent! Admin will process it soon.', buttons: [{type: 'ok'}] });
+                tg.showPopup({ title: 'Pending', message: 'Withdrawal request sent! Admin will process soon.', buttons: [{type: 'ok'}] });
                 closeModal('wallet-modal');
             });
         }

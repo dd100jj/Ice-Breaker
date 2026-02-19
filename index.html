@@ -123,9 +123,9 @@
     <div id="deposit-modal" class="modal">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Recharge Water 💧</h2><span onclick="closeModal('deposit-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
-            <div class="package-item" id="btn-pack-10" onclick="handlePackSelect('btn-pack-10')"><b>1,000 WATER</b> (10 USDT)</div>
-            <div class="package-item" id="btn-pack-20" onclick="handlePackSelect('btn-pack-20')"><b>2,200 WATER</b> (20 USDT)</div>
-            <div class="package-item" id="btn-pack-30" onclick="handlePackSelect('btn-pack-30')"><b>3,500 WATER</b> (30 USDT)</div>
+            <div class="package-item" id="btn-pack-10" onclick="handlePackSelect('btn-pack-10', 10)"><b>1,000 WATER</b> (10 USDT)</div>
+            <div class="package-item" id="btn-pack-20" onclick="handlePackSelect('btn-pack-20', 20)"><b>2,200 WATER</b> (20 USDT)</div>
+            <div class="package-item" id="btn-pack-30" onclick="handlePackSelect('btn-pack-30', 30)"><b>3,500 WATER</b> (30 USDT)</div>
             <div id="payment-details" style="display:none; border-top:1px dashed #eee; padding-top:10px;">
                 <div style="background:#fff3e0; padding:12px; border-radius:12px; border:1px solid #ffe0b2; margin-bottom:10px; font-size:11px; line-height:1.4;">
                     <b style="color:#e65100;">Network: TRC20 (Tron) | Asset: USDT</b><br>
@@ -193,6 +193,8 @@
         const USER_ID = tg.initDataUnsafe?.user?.id?.toString() || "guest_user";
 
         let userData = { shards: 0, water: 0, power: 0, level: 1, usedCodes: [], activeItems: {}, lastAttendance: 0 };
+        let selectedAmount = 0; // 선택된 USDT 금액 저장 변수
+
         const levelData = [{target:0,bonus:0},{target:50,bonus:0.00001},{target:200,bonus:0.00002},{target:500,bonus:0.00003},{target:1200,bonus:0.00005}];
 
         async function loadData() {
@@ -204,14 +206,12 @@
 
         async function saveData() { await db.collection("users").doc(USER_ID).update(userData); }
 
-        function calculateSpeed() {
-            let baseSpeed = 0.00005 + (levelData[userData.level-1]?.bonus || 0);
-            let speed = baseSpeed; let now = Date.now();
-            if(userData.activeItems?.pickaxe > now) speed += 0.0001;
-            if(userData.activeItems?.gear > now) speed += 0.0005;
-            if(userData.activeItems?.drill > now) speed += 0.0020;
-            if(userData.activeItems?.spray > now) speed *= 2;
-            return speed;
+        function handlePackSelect(selectedId, amount) {
+            const packs = document.querySelectorAll('.package-item');
+            packs.forEach(p => p.classList.remove('selected'));
+            document.getElementById(selectedId).classList.add('selected');
+            selectedAmount = amount; // 금액 저장
+            document.getElementById('payment-details').style.display = 'block';
         }
 
         function calculateWithdrawHint() {
@@ -221,7 +221,7 @@
 
         setInterval(() => {
             if (userData.power < 1000) {
-                let speed = calculateSpeed();
+                let speed = 0.00005 + (levelData[userData.level-1]?.bonus || 0);
                 userData.power = Math.min(1000, userData.power + speed);
                 document.getElementById('mining-power').innerText = "+ " + userData.power.toFixed(5);
                 document.getElementById('speed-display').innerText = "+ " + speed.toFixed(5) + " / sec";
@@ -239,44 +239,6 @@
             } else { tg.showAlert("Collect at least 0.005 ICE!"); }
         }
 
-        function buyItem(id, price, hours) {
-            if(userData.water >= price) {
-                userData.water -= price;
-                userData.activeItems = userData.activeItems || {};
-                userData.activeItems[id] = Date.now() + (hours * 3600 * 1000);
-                updateUI(); saveData(); tg.showAlert(`${id.toUpperCase()} Activated!`);
-            } else { tg.showAlert("Need more Water! 💧"); }
-        }
-
-        function updateItemTimers() {
-            const container = document.getElementById('active-items'); container.innerHTML = "";
-            let now = Date.now();
-            for(let id in userData.activeItems) {
-                if(userData.activeItems[id] > now) {
-                    let remain = userData.activeItems[id] - now;
-                    let h = Math.floor(remain / 3600000); let m = Math.floor((remain % 3600000) / 60000);
-                    let badge = document.createElement('div'); badge.className = 'item-timer';
-                    badge.innerText = `${id}: ${h}h ${m}m`; container.appendChild(badge);
-                }
-            }
-        }
-
-        function initAttendance() {
-            const grid = document.getElementById('attendance-grid'); grid.innerHTML = "";
-            for(let i=1; i<=30; i++) {
-                const box = document.createElement('div'); box.className = 'day-box';
-                box.innerHTML = `<span>💧</span>D-${i}`;
-                if(i===1) { box.classList.add('today'); box.onclick = () => { 
-                    const today = new Date().toDateString();
-                    if(userData.lastAttendance !== today) {
-                        userData.water += 5; userData.lastAttendance = today; updateUI(); saveData(); tg.showAlert("Checked!");
-                        box.classList.add('active');
-                    } else { tg.showAlert("Already checked today!"); }
-                }};
-                grid.appendChild(box);
-            }
-        }
-
         function updateUI() {
             document.getElementById('balance').innerText = userData.shards.toLocaleString(undefined, {minimumFractionDigits: 5});
             document.getElementById('ice-top-display').innerText = Math.floor(userData.shards).toLocaleString();
@@ -289,19 +251,18 @@
             document.getElementById('ice-gauge-bar').style.width = Math.min((userData.shards / (nextLv ? nextLv.target : 1000)) * 100, 100) + "%";
         }
 
-        function handlePackSelect(selectedId) {
-            const packs = document.querySelectorAll('.package-item');
-            packs.forEach(p => p.classList.remove('selected'));
-            document.getElementById(selectedId).classList.add('selected');
-            document.getElementById('payment-details').style.display = 'block';
-        }
-
+        // [수정] 충전 알림: 이름, 금액, TXID 포함
         function submitDeposit() {
             const txid = document.getElementById('txid-input').value;
             if(!txid) return tg.showAlert("Please enter TXID!");
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(`💰 [DEPOSIT]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nTXID: ${txid}`)}`);
-            tg.showPopup({ title: 'Submitted', message: 'Deposit request sent! Admin will verify soon.', buttons: [{type: 'ok'}] });
-            closeModal('deposit-modal');
+            
+            const message = `💰 [DEPOSIT REQUEST]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nAmount: ${selectedAmount} USDT\nTXID: ${txid}`;
+            
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`)
+            .then(() => {
+                tg.showPopup({ title: 'Submitted', message: 'Request sent to admin! Verification will be done soon.', buttons: [{type: 'ok'}] });
+                closeModal('deposit-modal');
+            });
         }
 
         function requestWithdraw() {
@@ -311,27 +272,23 @@
             if(!amt || amt < 14000) return tg.showAlert("Minimum 14,000 ICE!");
             if(amt > userData.shards) return tg.showAlert("Insufficient balance!");
             if(!addr) return tg.showAlert("Enter address!");
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(`📤 [WITHDRAW]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nAmt: ${amt} ICE (${(amt/1400).toFixed(2)} USDT)\nEx: ${ex}\nAddr: ${addr}`)}`);
-            tg.showPopup({ title: 'Pending', message: 'Withdrawal request sent! Admin will process it soon.', buttons: [{type: 'ok'}] });
-            closeModal('wallet-modal');
+            
+            const message = `📤 [WITHDRAW REQUEST]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nAmt: ${amt} ICE (${(amt/1400).toFixed(2)} USDT)\nEx: ${ex}\nAddr: ${addr}`;
+            
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`)
+            .then(() => {
+                tg.showPopup({ title: 'Pending', message: 'Withdrawal request sent! Admin will process it soon.', buttons: [{type: 'ok'}] });
+                closeModal('wallet-modal');
+            });
         }
 
-        function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; document.getElementById('payment-details').style.display = 'none'; }
+        function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; document.getElementById('payment-details').style.display = 'none'; selectedAmount = 0; }
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; updateUI(); }
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function copyAddr() { navigator.clipboard.writeText(document.getElementById('admin-wallet-addr').innerText); tg.showAlert("Address Copied!"); }
         function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
-        function redeemCode() {
-            const code = document.getElementById('promo-code').value.trim().toUpperCase();
-            if(userData.usedCodes.includes(code)) return tg.showAlert("Already used!");
-            const VALID_CODES = { "GIFT-X72A-99B": 1000, "ICE-WTR-5521": 2200, "GOLD-REFILL-08": 3500 };
-            if(VALID_CODES[code]) {
-                userData.water += VALID_CODES[code]; userData.usedCodes.push(code); updateUI(); saveData();
-                tg.showAlert(`Success! ${VALID_CODES[code]} Water added.`);
-            } else { tg.showAlert("Invalid or Pending Code."); }
-        }
-
+        
         loadData();
     </script>
 </body>

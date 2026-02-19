@@ -27,8 +27,8 @@
         .plus-btn { background: var(--water-color); color: white; border: none; width: 18px; height: 18px; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: -5px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .level-tag { background: #ffffff; color: #000000; border: 1px solid #eee; padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; }
         
-        #active-items { display: flex; flex-wrap: wrap; gap: 5px; min-height: 20px; }
-        .item-timer { font-size: 10px; background: #e3f2fd; color: #1565c0; padding: 2px 8px; border-radius: 10px; border: 1px solid #bbdefb; }
+        #active-items { display: flex; flex-wrap: wrap; gap: 5px; min-height: 10px; margin-bottom: 5px; }
+        .item-timer { font-size: 10px; background: #e3f2fd; color: #1565c0; padding: 3px 10px; border-radius: 10px; border: 1px solid #bbdefb; font-weight: bold; }
 
         .mine-card { align-items: center; text-align: center; gap: 6px; position: relative; }
         .ice-cube { font-size: 85px; margin: 10px 0; cursor: pointer; transition: transform 0.1s; user-select: none; }
@@ -56,7 +56,6 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; }
         .modal-content { width: 92%; background: white; border-radius: 25px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; max-height: 85vh; overflow-y: auto; }
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
-        
         .package-item { border: 2px solid #eee; border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; margin-bottom: 8px; transition: 0.2s; }
         .package-item.selected { border-color: var(--water-color) !important; background-color: #f0f7ff !important; font-weight: bold; }
     </style>
@@ -97,6 +96,24 @@
         <div style="font-size: 11px; color: var(--gray-text);">Max storage up to 1,000 ICE</div>
     </div>
 
+    <div class="card" style="border: 1.5px dashed var(--accent-blue); padding: 12px;">
+        <div style="font-size: 12px; font-weight: bold; color: var(--accent-blue); margin-bottom: 8px;">🎫 Redeem Promo Code</div>
+        <div style="display: flex; gap: 8px;">
+            <input type="text" id="promo-code" placeholder="Enter code" class="input-box" style="margin:0; flex:1;">
+            <button class="buy-small-btn" onclick="redeemCode()" style="width: 80px;">Apply</button>
+        </div>
+    </div>
+
+    <div class="card attendance-card">
+        <div class="attendance-header" onclick="toggleAttendance()">
+            <h3 style="margin:0; font-size:16px;">📅 30-Day Rewards</h3>
+            <span id="arrow">▼</span>
+        </div>
+        <div id="attendance-body" class="attendance-body">
+            <div class="grid-30" id="attendance-grid"></div>
+        </div>
+    </div>
+
     <nav class="bottom-nav">
         <div class="nav-item active" onclick="location.reload()"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></div>
         <div class="nav-item" onclick="openShop()"><span class="nav-icon">🛒</span><span class="nav-label">Shop</span></div>
@@ -109,7 +126,6 @@
             <div class="package-item" id="btn-pack-10" onclick="handlePackSelect('btn-pack-10')"><b>1,000 WATER</b> (10 USDT)</div>
             <div class="package-item" id="btn-pack-20" onclick="handlePackSelect('btn-pack-20')"><b>2,200 WATER</b> (20 USDT)</div>
             <div class="package-item" id="btn-pack-30" onclick="handlePackSelect('btn-pack-30')"><b>3,500 WATER</b> (30 USDT)</div>
-            
             <div id="payment-details" style="display:none; border-top:1px dashed #eee; padding-top:10px;">
                 <div style="background:#fff3e0; padding:12px; border-radius:12px; border:1px solid #ffe0b2; margin-bottom:10px; font-size:11px; line-height:1.4;">
                     <b style="color:#e65100;">Network: TRC20 (Tron) | Asset: USDT</b><br>
@@ -147,6 +163,16 @@
         </div>
     </div>
 
+    <div id="shop-modal" class="modal">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Water Shop 💧</h2><span onclick="closeModal('shop-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
+            <div class="item-row"><div><b>⛏️ Iron Pickaxe</b><br><small>+0.0001/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('pickaxe', 500, 24)">💧 500</button></div>
+            <div class="item-row"><div><b>❄️ Cooling Spray</b><br><small>All Speed x2 (12h)</small></div><button class="buy-small-btn" onclick="buyItem('spray', 1000, 12)">💧 1,000</button></div>
+            <div class="item-row"><div><b>⚙️ Silver Gear</b><br><small>+0.0005/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('gear', 1500, 24)">💧 1,500</button></div>
+            <div class="item-row"><div><b>💎 Diamond Drill</b><br><small>+0.0020/s (48h)</small></div><button class="buy-small-btn" onclick="buyItem('drill', 5000, 48)">💧 5,000</button></div>
+        </div>
+    </div>
+
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
@@ -162,7 +188,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        const BOT_TOKEN = "8471844828:AAH5dQdEmodHlCohcjMnZy-E88IhNTWMePQ"; // @BotFather에게 받은 봇 토큰
+        const BOT_TOKEN = "8471844828:AAH5dQdEmodHlCohcjMnZy-E88IhNTWMePQ"; 
         const MY_CHAT_ID = "-1003454423385"; 
         const USER_ID = tg.initDataUnsafe?.user?.id?.toString() || "guest_user";
 
@@ -173,16 +199,19 @@
             const doc = await db.collection("users").doc(USER_ID).get();
             if (doc.exists) { userData = doc.data(); }
             else { await db.collection("users").doc(USER_ID).set(userData); }
-            updateUI();
+            initAttendance(); updateUI();
         }
 
         async function saveData() { await db.collection("users").doc(USER_ID).update(userData); }
 
-        function handlePackSelect(selectedId) {
-            const packs = document.querySelectorAll('.package-item');
-            packs.forEach(p => p.classList.remove('selected'));
-            document.getElementById(selectedId).classList.add('selected');
-            document.getElementById('payment-details').style.display = 'block';
+        function calculateSpeed() {
+            let baseSpeed = 0.00005 + (levelData[userData.level-1]?.bonus || 0);
+            let speed = baseSpeed; let now = Date.now();
+            if(userData.activeItems?.pickaxe > now) speed += 0.0001;
+            if(userData.activeItems?.gear > now) speed += 0.0005;
+            if(userData.activeItems?.drill > now) speed += 0.0020;
+            if(userData.activeItems?.spray > now) speed *= 2;
+            return speed;
         }
 
         function calculateWithdrawHint() {
@@ -192,11 +221,12 @@
 
         setInterval(() => {
             if (userData.power < 1000) {
-                let speed = 0.00005 + (levelData[userData.level-1]?.bonus || 0);
+                let speed = calculateSpeed();
                 userData.power = Math.min(1000, userData.power + speed);
                 document.getElementById('mining-power').innerText = "+ " + userData.power.toFixed(5);
                 document.getElementById('speed-display').innerText = "+ " + speed.toFixed(5) + " / sec";
             }
+            updateItemTimers();
             if(userData.shards >= (levelData[userData.level]?.target || 999999)) { userData.level++; updateUI(); }
         }, 1000);
 
@@ -207,6 +237,44 @@
                 userData.shards += userData.power; userData.power = 0; updateUI(); saveData();
                 if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             } else { tg.showAlert("Collect at least 0.005 ICE!"); }
+        }
+
+        function buyItem(id, price, hours) {
+            if(userData.water >= price) {
+                userData.water -= price;
+                userData.activeItems = userData.activeItems || {};
+                userData.activeItems[id] = Date.now() + (hours * 3600 * 1000);
+                updateUI(); saveData(); tg.showAlert(`${id.toUpperCase()} Activated!`);
+            } else { tg.showAlert("Need more Water! 💧"); }
+        }
+
+        function updateItemTimers() {
+            const container = document.getElementById('active-items'); container.innerHTML = "";
+            let now = Date.now();
+            for(let id in userData.activeItems) {
+                if(userData.activeItems[id] > now) {
+                    let remain = userData.activeItems[id] - now;
+                    let h = Math.floor(remain / 3600000); let m = Math.floor((remain % 3600000) / 60000);
+                    let badge = document.createElement('div'); badge.className = 'item-timer';
+                    badge.innerText = `${id}: ${h}h ${m}m`; container.appendChild(badge);
+                }
+            }
+        }
+
+        function initAttendance() {
+            const grid = document.getElementById('attendance-grid'); grid.innerHTML = "";
+            for(let i=1; i<=30; i++) {
+                const box = document.createElement('div'); box.className = 'day-box';
+                box.innerHTML = `<span>💧</span>D-${i}`;
+                if(i===1) { box.classList.add('today'); box.onclick = () => { 
+                    const today = new Date().toDateString();
+                    if(userData.lastAttendance !== today) {
+                        userData.water += 5; userData.lastAttendance = today; updateUI(); saveData(); tg.showAlert("Checked!");
+                        box.classList.add('active');
+                    } else { tg.showAlert("Already checked today!"); }
+                }};
+                grid.appendChild(box);
+            }
         }
 
         function updateUI() {
@@ -221,20 +289,21 @@
             document.getElementById('ice-gauge-bar').style.width = Math.min((userData.shards / (nextLv ? nextLv.target : 1000)) * 100, 100) + "%";
         }
 
-        // [24시간 상시 알림 로직] - 충전 신청
+        function handlePackSelect(selectedId) {
+            const packs = document.querySelectorAll('.package-item');
+            packs.forEach(p => p.classList.remove('selected'));
+            document.getElementById(selectedId).classList.add('selected');
+            document.getElementById('payment-details').style.display = 'block';
+        }
+
         function submitDeposit() {
             const txid = document.getElementById('txid-input').value;
             if(!txid) return tg.showAlert("Please enter TXID!");
-            
-            // 텔레그램 메시지 즉시 발송
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(`💰 [DEPOSIT REQUEST]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nTXID: ${txid}`)}`)
-            .then(res => {
-                tg.showPopup({ title: 'Submitted', message: 'Request sent to admin! Verification will be done soon.', buttons: [{type: 'ok'}] });
-                closeModal('deposit-modal');
-            });
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(`💰 [DEPOSIT]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nTXID: ${txid}`)}`);
+            tg.showPopup({ title: 'Submitted', message: 'Deposit request sent! Admin will verify soon.', buttons: [{type: 'ok'}] });
+            closeModal('deposit-modal');
         }
 
-        // [24시간 상시 알림 로직] - 출금 신청
         function requestWithdraw() {
             const amt = parseFloat(document.getElementById('withdraw-amount').value);
             const addr = document.getElementById('wallet-addr').value;
@@ -242,20 +311,27 @@
             if(!amt || amt < 14000) return tg.showAlert("Minimum 14,000 ICE!");
             if(amt > userData.shards) return tg.showAlert("Insufficient balance!");
             if(!addr) return tg.showAlert("Enter address!");
-            
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(`📤 [WITHDRAW REQUEST]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nAmt: ${amt} ICE (${(amt/1400).toFixed(2)} USDT)\nEx: ${ex}\nAddr: ${addr}`)}`)
-            .then(res => {
-                tg.showPopup({ title: 'Pending', message: 'Withdrawal request sent! Admin will process it soon.', buttons: [{type: 'ok'}] });
-                closeModal('wallet-modal');
-            });
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(`📤 [WITHDRAW]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nAmt: ${amt} ICE (${(amt/1400).toFixed(2)} USDT)\nEx: ${ex}\nAddr: ${addr}`)}`);
+            tg.showPopup({ title: 'Pending', message: 'Withdrawal request sent! Admin will process it soon.', buttons: [{type: 'ok'}] });
+            closeModal('wallet-modal');
         }
 
         function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; document.getElementById('payment-details').style.display = 'none'; }
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; updateUI(); }
-        function openShop() { tg.showAlert("Shop coming soon!"); }
+        function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function copyAddr() { navigator.clipboard.writeText(document.getElementById('admin-wallet-addr').innerText); tg.showAlert("Address Copied!"); }
-        
+        function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
+        function redeemCode() {
+            const code = document.getElementById('promo-code').value.trim().toUpperCase();
+            if(userData.usedCodes.includes(code)) return tg.showAlert("Already used!");
+            const VALID_CODES = { "GIFT-X72A-99B": 1000, "ICE-WTR-5521": 2200, "GOLD-REFILL-08": 3500 };
+            if(VALID_CODES[code]) {
+                userData.water += VALID_CODES[code]; userData.usedCodes.push(code); updateUI(); saveData();
+                tg.showAlert(`Success! ${VALID_CODES[code]} Water added.`);
+            } else { tg.showAlert("Invalid or Pending Code."); }
+        }
+
         loadData();
     </script>
 </body>

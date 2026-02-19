@@ -34,9 +34,9 @@
         #active-items { display: flex; flex-wrap: wrap; gap: 5px; min-height: 10px; margin-bottom: 5px; }
         .item-timer { font-size: 10px; background: #e3f2fd; color: #1565c0; padding: 3px 10px; border-radius: 10px; border: 1px solid #bbdefb; font-weight: bold; }
         .mine-card { align-items: center; text-align: center; gap: 6px; position: relative; }
-        .ice-cube { width: 180px; height: 180px; margin: 10px 0; user-select: none; display: flex; justify-content: center; align-items: center; }
+        .ice-cube { width: 180px; height: 180px; margin: 10px 0; user-select: none; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: transform 0.1s; }
+        .ice-cube:active { transform: scale(0.9); }
         .mining-power { font-size: 28px; font-weight: 800; }
-        .collect-btn { background: var(--water-color); color: white; border: none; width: 80%; padding: 12px; border-radius: 15px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background 0.2s; box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3); margin-top: 10px; }
         .balance-container { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding: 0 2px; }
         .asset-amount { font-size: 24px; font-weight: 900; margin: 0; }
         .usdt-value { font-size: 13px; font-weight: bold; color: var(--accent-orange); }
@@ -47,6 +47,7 @@
         .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         .day-box { aspect-ratio: 1; background: #fdfdfd; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #bbb; }
         .day-box.active { background: var(--accent-blue) !important; color: white !important; }
+        .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); }
         .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; }
         .buy-small-btn { background: var(--water-color); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; }
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: #fff; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -2px 15px rgba(0,0,0,0.1); z-index: 999; }
@@ -88,9 +89,19 @@
         </div>
     </div>
 
+    <div class="card attendance-card">
+        <div class="attendance-header" onclick="toggleAttendance()">
+            <h3 style="margin:0; font-size:16px;">📅 30-Day Rewards</h3>
+            <span id="arrow">▼</span>
+        </div>
+        <div id="attendance-body" class="attendance-body">
+            <div class="grid-30" id="attendance-grid"></div>
+        </div>
+    </div>
+
     <div class="card mine-card">
         <div style="position: absolute; top: 10px; right: 15px; font-size: 9px; color: var(--danger); font-weight: bold;">BETA MODE</div>
-        <div class="ice-cube">
+        <div class="ice-cube" onclick="mineClick()">
             <lottie-player 
                 src="https://lottie.host/872a8b1d-7fb8-4e06-9566-575c112ceb60/4RHshKiCu8.json" 
                 background="transparent" speed="1" style="width: 180px; height: 180px;" loop autoplay>
@@ -98,12 +109,16 @@
         </div>
         <div class="mining-power" id="mining-power">+ 0.00000</div>
         <div class="mining-speed" style="color: var(--accent-orange); font-weight: bold; font-size: 14px;" id="speed-display">+ 0.00005 / sec</div>
-        
-        <button class="collect-btn" onclick="mineClick()">Collect Ice 🧊</button>
-        
-        <div style="font-size: 14px; color: var(--accent-orange); font-weight: bold; margin-top: 5px;">Minimum 0.005 ICE required to collect</div>
+        <div style="font-size: 14px; color: var(--accent-orange); font-weight: bold;">Tap Lottie to collect (Min. 0.005 ICE)</div>
         <div id="level-guide" style="font-size:11px; color:var(--gray-text);">Goal for LV.2: 50 ICE</div>
-        <div style="font-size: 11px; color: var(--gray-text);">Max storage up to 1,000 ICE</div>
+    </div>
+
+    <div class="card" style="border: 1.5px dashed var(--accent-blue); padding: 12px;">
+        <div style="font-size: 12px; font-weight: bold; color: var(--accent-blue); margin-bottom: 8px;">🎫 Redeem Promo Code</div>
+        <div style="display: flex; gap: 8px;">
+            <input type="text" id="promo-code" placeholder="Enter code" class="input-box" style="margin:0; flex:1;">
+            <button class="buy-small-btn" onclick="redeemCode()" style="width: 80px;">Apply</button>
+        </div>
     </div>
 
     <nav class="bottom-nav">
@@ -168,22 +183,25 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        const BOT_TOKEN = "여기에_봇_토큰_입력"; 
+        const BOT_TOKEN = "8471844828:AAH5dQdEmodHlCohcjMnZy-E88IhNTWMePQ"; 
         const MY_CHAT_ID = "-1003454423385"; 
         const USER_ID = tg.initDataUnsafe?.user?.id?.toString() || "guest_user";
 
-        let userData = { shards: 0, water: 0, power: 0, level: 1, activeItems: {} };
+        let userData = { shards: 0, water: 0, power: 0, level: 1, usedCodes: [], activeItems: {}, lastAttendance: 0 };
+        let selectedAmount = 0;
         const levelData = [{target:0,bonus:0},{target:50,bonus:0.00001},{target:200,bonus:0.00002},{target:500,bonus:0.00003},{target:1200,bonus:0.00005}];
 
+        // Core Functions
         async function loadData() {
             const doc = await db.collection("users").doc(USER_ID).get();
             if (doc.exists) { userData = doc.data(); }
             else { await db.collection("users").doc(USER_ID).set(userData); }
-            updateUI();
+            initAttendance(); updateUI(); updateLiveStatus();
         }
 
         async function saveData() { await db.collection("users").doc(USER_ID).update(userData); }
 
+        // Real-time Mining Calculation
         setInterval(() => {
             if (userData.power < 1000) {
                 let baseSpeed = 0.00005 + (levelData[userData.level-1]?.bonus || 0);
@@ -192,16 +210,20 @@
                 if(userData.activeItems?.gear > now) speed += 0.0005;
                 if(userData.activeItems?.drill > now) speed += 0.0020;
                 if(userData.activeItems?.spray > now) speed *= 2;
+                
                 userData.power = Math.min(1000, userData.power + speed);
                 document.getElementById('mining-power').innerText = "+ " + userData.power.toFixed(5);
                 document.getElementById('speed-display').innerText = "+ " + speed.toString().replace(/(\.\d*?[1-9])0+$|\.0*$/, '$1') + " / sec";
             }
+            updateItemTimers();
+            if(userData.shards >= (levelData[userData.level]?.target || 999999)) { userData.level++; updateUI(); }
         }, 1000);
 
         function mineClick() {
             if (userData.power >= 0.005) {
                 userData.shards += userData.power; userData.power = 0;
                 updateUI(); saveData();
+                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             } else { tg.showAlert("Collect at least 0.005 ICE!"); }
         }
 
@@ -219,7 +241,10 @@
             if(!amt || amt > userData.shards) return tg.showAlert("Insufficient balance!");
             userData.shards -= amt;
             updateUI(); saveData();
-            tg.showAlert("Withdrawal requested!");
+            
+            const message = `📤 [WITHDRAW]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nAmt: ${amt} ICE`;
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`);
+            tg.showPopup({ title: 'Success', message: 'Withdrawal requested!', buttons: [{type: 'ok'}] });
         }
 
         function updateUI() {
@@ -227,13 +252,81 @@
             document.getElementById('ice-top-display').innerText = Math.floor(userData.shards).toLocaleString();
             document.getElementById('water-top-display').innerText = userData.water.toLocaleString();
             document.getElementById('ice-to-usdt').innerText = (userData.shards / 1400).toFixed(2) + " USDT";
+            document.getElementById('wallet-ice-bal').innerText = Math.floor(userData.shards).toLocaleString();
+            document.getElementById('ice-gauge-bar').style.width = Math.min((userData.shards / 1000) * 100, 100) + "%";
         }
 
+        function submitDeposit() {
+            const txid = document.getElementById('txid-input').value;
+            if(!txid) return tg.showAlert("Enter TXID!");
+            const message = `💰 [DEPOSIT]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nAmt: ${selectedAmount} USDT\nTXID: ${txid}`;
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`);
+            tg.showAlert("Request Submitted!");
+            closeModal('deposit-modal');
+        }
+
+        // Helper Functions
+        function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
-        function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; }
+        function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; document.getElementById('payment-details').style.display = 'none'; }
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; updateUI(); }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function handlePackSelect(id, amt) {
+            document.querySelectorAll('.package-item').forEach(p => p.classList.remove('selected'));
+            document.getElementById(id).classList.add('selected');
+            selectedAmount = amt; document.getElementById('payment-details').style.display = 'block';
+        }
+        function copyAddr() { navigator.clipboard.writeText(document.getElementById('admin-wallet-addr').innerText); tg.showAlert("Copied!"); }
         
+        function updateLiveStatus() {
+            const h = new Date().getHours();
+            const isOpen = (h >= 14 || h < 3);
+            const tag = document.getElementById('status-tag');
+            tag.innerText = isOpen ? "● ONLINE" : "○ OFFLINE";
+            tag.className = "status-badge " + (isOpen ? "status-online" : "status-offline");
+            document.getElementById('live-time-msg').innerText = isOpen ? "Admin is active!" : "Admin is away.";
+        }
+
+        function updateItemTimers() {
+            const container = document.getElementById('active-items'); container.innerHTML = "";
+            let now = Date.now();
+            for(let id in userData.activeItems) {
+                if(userData.activeItems[id] > now) {
+                    let remain = userData.activeItems[id] - now;
+                    let h = Math.floor(remain / 3600000); let m = Math.floor((remain % 3600000) / 60000);
+                    let badge = document.createElement('div'); badge.className = 'item-timer';
+                    badge.innerText = `${id}: ${h}h ${m}m`; container.appendChild(badge);
+                }
+            }
+        }
+
+        function initAttendance() {
+            const grid = document.getElementById('attendance-grid'); grid.innerHTML = "";
+            const getReward = (d) => {
+                if (d === 30) return { t: 'ICE', a: 50, i: '🎁' };
+                if ([7, 14, 21].includes(d)) return { t: 'WATER', a: 20, i: '🎁' };
+                return (d % 2 === 0) ? { t: 'WATER', a: 5, i: '💧' } : { t: 'ICE', a: 2, i: '🧊' };
+            };
+            for(let i=1; i<=30; i++) {
+                const r = getReward(i);
+                const box = document.createElement('div'); box.className = 'day-box';
+                box.innerHTML = `<span>${r.i}</span>D-${i}`;
+                if(i === 1) { 
+                    box.classList.add('today');
+                    box.onclick = () => {
+                        const now = new Date().toDateString();
+                        if(userData.lastAttendance !== now) {
+                            if(r.t === 'WATER') userData.water += r.a; else userData.shards += r.a;
+                            userData.lastAttendance = now; updateUI(); saveData();
+                            tg.showAlert(`Checked! +${r.a} ${r.t}`);
+                            box.classList.add('active');
+                        } else tg.showAlert("Already checked!");
+                    };
+                }
+                grid.appendChild(box);
+            }
+        }
+
         loadData();
     </script>
 </body>

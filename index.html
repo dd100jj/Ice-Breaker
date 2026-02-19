@@ -140,9 +140,9 @@
                     * Sending other assets may result in permanent loss.
                 </div>
                 <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:11px; word-break:break-all;">
-                    <b>Admin USDT Address:</b><br>
+                    <b>Admin Deposit Address:</b><br>
                     <span id="admin-wallet-addr" style="font-family:monospace; font-weight:bold; color:#333;">TDDaEzGdXGuuH3RxhHa5LZCSeeTpZuuTd1</span><br>
-                    <button onclick="copyAddr()" style="margin-top:5px; padding:8px; border:none; border-radius:5px; font-size:11px; background:var(--accent-blue); color:white; width:100%; cursor:pointer;">Copy TRC20 Address</button>
+                    <button onclick="copyAddr()" style="margin-top:5px; padding:8px; border:none; border-radius:5px; font-size:11px; background:var(--accent-blue); color:white; width:100%; cursor:pointer;">Copy Deposit Address</button>
                 </div>
                 <input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box" style="margin-top:10px;">
                 <button class="buy-small-btn" style="background:var(--accent-orange); width:100%; margin-top:10px;" onclick="submitDeposit()">Submit Recharge Request</button>
@@ -196,7 +196,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        const BOT_TOKEN = "여기에_봇_토큰_입력"; 
+        const BOT_TOKEN = "8471844828:AAH5dQdEmodHlCohcjMnZy-E88IhNTWMePQ"; 
         const MY_CHAT_ID = "-1003454423385"; 
         const USER_ID = tg.initDataUnsafe?.user?.id?.toString() || "guest_user";
 
@@ -341,7 +341,7 @@
     // 리워드 설정 (워터와 아이스 혼합)
     const getReward = (day) => {
         if (day === 30) return { type: 'ICE', amt: 50, icon: '🎁' };
-        if (day === 7 || day === 14 || day === 21) return { type: 'WATER', amt: 20, icon: '🎁' };
+        if (day === 7 || day === 14 || day || 21) return { type: 'WATER', amt: 20, icon: '🎁' };
         return (day % 2 === 0) ? { type: 'WATER', amt: 5, icon: '💧' } : { type: 'ICE', amt: 2, icon: '🧊' };
     };
 

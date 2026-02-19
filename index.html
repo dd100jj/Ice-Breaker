@@ -42,16 +42,21 @@
         .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); }
 
         .mine-card { align-items: center; text-align: center; gap: 6px; position: relative; }
-        .ice-cube { width: 180px; height: 180px; margin: 10px 0; user-select: none; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: transform 0.1s; }
-        .ice-cube:active { transform: scale(0.9); }
+        .ice-cube { width: 180px; height: 180px; margin: 10px 0; user-select: none; display: flex; justify-content: center; align-items: center; transition: transform 0.1s; }
         .mining-power { font-size: 28px; font-weight: 800; }
         .balance-container { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding: 0 2px; }
         .asset-amount { font-size: 24px; font-weight: 900; margin: 0; }
         .usdt-value { font-size: 13px; font-weight: bold; color: var(--accent-orange); }
         
-        .guide-box { background: #f8f9fa; border-radius: 12px; padding: 12px; border-left: 4px solid var(--water-color); margin-top: 5px; }
-        .guide-title { font-size: 13px; font-weight: bold; color: var(--water-color); margin-bottom: 5px; }
-        .guide-content { font-size: 11px; color: #666; line-height: 1.5; }
+        /* Guide Accordion */
+        .guide-box { background: #f8f9fa; border-radius: 12px; border-left: 4px solid var(--water-color); margin-top: 5px; overflow: hidden; }
+        .guide-header { padding: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .guide-title { font-size: 13px; font-weight: bold; color: var(--water-color); }
+        .guide-content { font-size: 11px; color: #666; line-height: 1.5; padding: 0 12px 12px 12px; display: none; }
+        .guide-content.open { display: block; }
+
+        .harvest-btn { background: var(--accent-blue); color: white; border: none; width: 80%; padding: 15px; border-radius: 15px; font-weight: bold; font-size: 16px; margin-top: 10px; cursor: pointer; box-shadow: 0 4px 0 #02a9f4; transition: 0.1s; }
+        .harvest-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #02a9f4; }
 
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: #fff; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -2px 15px rgba(0,0,0,0.1); z-index: 999; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--gray-text); flex: 1; cursor: pointer; font-size: 12px; }
@@ -85,7 +90,7 @@
     </div>
 
     <div class="card">
-        <div style="font-size:13px; font-weight:bold; color:var(--gray-text); margin-bottom:8px;">🧊 Ice Container</div>
+        <div style="font-size:13px; font-weight:bold; color:var(--gray-text); margin-bottom:8px;">🧊 Ice Container (Max. 1,000)</div>
         <div style="width:100%; height:20px; background:#f0f2f5; border-radius:10px; overflow:hidden;"><div id="ice-gauge-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #4fc3f7, #81d4fa); transition:width 0.3s;"></div></div>
         <div class="balance-container">
             <div class="asset-amount" id="balance">0</div>
@@ -95,7 +100,7 @@
 
     <div class="card attendance-card">
         <div class="attendance-header" onclick="toggleAttendance()">
-            <h3 style="margin:0; font-size:16px;">📅 30-Day Rewards</h3>
+            <h3 style="margin:0; font-size:16px;">📅 30Day Rewards</h3>
             <span id="arrow">▼</span>
         </div>
         <div id="attendance-body" class="attendance-body">
@@ -104,9 +109,12 @@
     </div>
 
     <div class="guide-box">
-        <div class="guide-title">📖 How to Play</div>
-        <div class="guide-content">
-            1. Tap the <b>Ice Lottie</b> to collect mined Ice.<br>
+        <div class="guide-header" onclick="toggleGuide()">
+            <div class="guide-title">📖 How to Play</div>
+            <span id="guide-arrow" style="font-size: 12px; color: var(--water-color);">▼</span>
+        </div>
+        <div class="guide-content" id="guide-content">
+            1. Press the <b>Harvest Button</b> to collect mined Ice.<br>
             2. Collected Ice is displayed in the <b>Top Bar</b>.<br>
             3. Use <b>Water 💧</b> to buy boosters in the Shop.<br>
             4. <b>1,400 ICE = 1 USDT</b> (Min. withdrawal: 14,000 ICE).
@@ -115,7 +123,7 @@
 
     <div class="card mine-card">
         <div style="position: absolute; top: 10px; right: 15px; font-size: 9px; color: var(--danger); font-weight: bold;">BETA MODE</div>
-        <div class="ice-cube" onclick="mineClick()">
+        <div class="ice-cube">
             <lottie-player 
                 src="https://lottie.host/872a8b1d-7fb8-4e06-9566-575c112ceb60/4RHshKiCu8.json" 
                 background="transparent" speed="1" style="width: 180px; height: 180px;" loop autoplay>
@@ -123,7 +131,10 @@
         </div>
         <div class="mining-power" id="mining-power">+ 0.00000</div>
         <div class="mining-speed" style="color: var(--accent-orange); font-weight: bold; font-size: 14px;" id="speed-display">+ 0.00005 / sec</div>
-        <div style="font-size: 11px; color: var(--gray-text);">Tap Lottie to collect (Min. 0.005 ICE)</div>
+        <div style="font-size: 11px; color: var(--gray-text); margin-bottom: 5px;">Storage Capacity: Max 1,000 ICE</div>
+        
+        <button class="harvest-btn" onclick="mineClick()">🧊 HARVEST ICE</button>
+        <div style="font-size: 11px; color: var(--gray-text); margin-top: 8px;">Tap Button to collect (Min. 0.005 ICE)</div>
     </div>
 
     <nav class="bottom-nav">
@@ -191,7 +202,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        const BOT_TOKEN = "여기에_봇_토큰_입력"; 
+        const BOT_TOKEN = "8471844828:AAH5dQdEmodHlCohcjMnZy-E88IhNTWMePQ"; 
         const MY_CHAT_ID = "-1003454423385"; 
         const USER_ID = tg.initDataUnsafe?.user?.id?.toString() || "guest_user";
 
@@ -207,7 +218,6 @@
 
         async function saveData() { await db.collection("users").doc(USER_ID).update(userData); }
 
-        // Core 실시간 계산
         setInterval(() => {
             let baseSpeed = 0.00005 + (levelData[userData.level-1]?.bonus || 0);
             let speed = baseSpeed; let now = Date.now();
@@ -225,7 +235,7 @@
 
         function mineClick() {
             if (userData.power >= 0.005) {
-                userData.shards += userData.power; // 실시간 적립
+                userData.shards += userData.power;
                 userData.power = 0;
                 updateUI(); saveData();
             } else tg.showAlert("Min. 0.005 ICE required!");
@@ -233,7 +243,7 @@
 
         function buyItem(id, price, hours) {
             if(userData.water >= price) {
-                userData.water -= price; // 실시간 차감
+                userData.water -= price;
                 userData.activeItems[id] = Date.now() + (hours * 3600 * 1000);
                 updateUI(); saveData();
                 tg.showAlert("Boost Activated!");
@@ -245,7 +255,7 @@
             const addr = document.getElementById('wallet-addr').value;
             if(!amt || amt > userData.shards) return tg.showAlert("Check balance!");
             
-            userData.shards -= amt; // 실시간 차감
+            userData.shards -= amt;
             updateUI(); saveData();
 
             const message = `📤 [WITHDRAW REQUEST]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nAmt: ${amt} ICE\nAddr: ${addr}`;
@@ -271,7 +281,6 @@
             document.getElementById('ice-gauge-bar').style.width = Math.min((userData.shards / 1000) * 100, 100) + "%";
         }
 
-        // 출석체크 로직 완벽 통합
         function initAttendance() {
             const grid = document.getElementById('attendance-grid'); grid.innerHTML = "";
             const getReward = (d) => {
@@ -300,6 +309,12 @@
         }
 
         function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
+        function toggleGuide() { 
+            const content = document.getElementById('guide-content');
+            const arrow = document.getElementById('guide-arrow');
+            const isOpen = content.classList.toggle('open');
+            arrow.innerText = isOpen ? "▲" : "▼";
+        }
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
         function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; }
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; updateUI(); }

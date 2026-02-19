@@ -57,7 +57,6 @@
         .modal-content { width: 92%; background: white; border-radius: 25px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; max-height: 85vh; overflow-y: auto; }
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
         
-        /* [핵심] 패키지 선택 스타일 확실히 정의 */
         .package-item { border: 2px solid #eee; border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; margin-bottom: 8px; transition: 0.2s; }
         .package-item.selected { border-color: var(--water-color) !important; background-color: #f0f7ff !important; font-weight: bold; }
     </style>
@@ -98,24 +97,6 @@
         <div style="font-size: 11px; color: var(--gray-text);">Max storage up to 1,000 ICE</div>
     </div>
 
-    <div class="card" style="border: 1.5px dashed var(--accent-blue); padding: 12px;">
-        <div style="font-size: 12px; font-weight: bold; color: var(--accent-blue); margin-bottom: 8px;">🎫 Redeem Promo Code</div>
-        <div style="display: flex; gap: 8px;">
-            <input type="text" id="promo-code" placeholder="Enter code" class="input-box" style="margin:0; flex:1;">
-            <button class="buy-small-btn" onclick="redeemCode()">Apply</button>
-        </div>
-    </div>
-
-    <div class="card attendance-card">
-        <div class="attendance-header" onclick="toggleAttendance()">
-            <h3 style="margin:0; font-size:16px;">📅 30-Day Rewards</h3>
-            <span id="arrow">▼</span>
-        </div>
-        <div id="attendance-body" class="attendance-body">
-            <div class="grid-30" id="attendance-grid"></div>
-        </div>
-    </div>
-
     <nav class="bottom-nav">
         <div class="nav-item active" onclick="location.reload()"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></div>
         <div class="nav-item" onclick="openShop()"><span class="nav-icon">🛒</span><span class="nav-label">Shop</span></div>
@@ -145,6 +126,27 @@
         </div>
     </div>
 
+    <div id="wallet-modal" class="modal">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Withdraw USDT</h2><span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px; color:#ccc;">&times;</span></div>
+            <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;">
+                <strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br>
+                <strong>Rate:</strong> 1,400 ICE = 1 USDT | <strong>Min:</strong> 14,000 ICE
+            </div>
+            <div style="margin-top:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-size:11px; font-weight:bold;">Withdraw Amount (ICE):</div>
+                    <div id="withdraw-usdt-hint" style="font-size:11px; font-weight:bold; color:var(--accent-orange);">≈ 0.00 USDT</div>
+                </div>
+                <input type="number" id="withdraw-amount" placeholder="Min. 14000" class="input-box" oninput="calculateWithdrawHint()">
+            </div>
+            <div style="margin-top:5px;"><div style="font-size:11px; font-weight:bold;">Exchange:</div><select id="exchange-type" class="input-box"><option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option></select></div>
+            <div style="margin-top:5px;"><div style="font-size:11px; font-weight:bold;">Network:</div><select class="input-box" style="color:var(--danger); font-weight:bold;"><option>TRC20 (Tron Network)</option></select></div>
+            <input type="text" id="wallet-addr" placeholder="Paste your USDT address" class="input-box">
+            <button class="buy-small-btn" style="background:var(--accent-blue); width:100%;" onclick="requestWithdraw()">Request Withdrawal</button>
+        </div>
+    </div>
+
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
@@ -160,53 +162,99 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        const BOT_TOKEN = "8471844828:AAH5dQdEmodHlCohcjMnZy-E88IhNTWMePQ"; 
+        const BOT_TOKEN = "8471844828:AAH5dQdEmodHlCohcjMnZy-E88IhNTWMePQ"; // @BotFather에게 받은 봇 토큰
         const MY_CHAT_ID = "-1003454423385"; 
         const USER_ID = tg.initDataUnsafe?.user?.id?.toString() || "guest_user";
 
         let userData = { shards: 0, water: 0, power: 0, level: 1, usedCodes: [], activeItems: {}, lastAttendance: 0 };
+        const levelData = [{target:0,bonus:0},{target:50,bonus:0.00001},{target:200,bonus:0.00002},{target:500,bonus:0.00003},{target:1200,bonus:0.00005}];
 
         async function loadData() {
             const doc = await db.collection("users").doc(USER_ID).get();
             if (doc.exists) { userData = doc.data(); }
             else { await db.collection("users").doc(USER_ID).set(userData); }
-            initAttendance(); updateUI();
+            updateUI();
         }
 
         async function saveData() { await db.collection("users").doc(USER_ID).update(userData); }
 
-        // [핵심] 패키지 선택 핸들러 - 가장 확실한 방식
         function handlePackSelect(selectedId) {
-            // 1. 모든 패키지에서 selected 클래스 제거
             const packs = document.querySelectorAll('.package-item');
             packs.forEach(p => p.classList.remove('selected'));
-            
-            // 2. 누른 항목에만 클래스 추가
             document.getElementById(selectedId).classList.add('selected');
-            
-            // 3. 결제창 보여주기
             document.getElementById('payment-details').style.display = 'block';
         }
 
-        function openDeposit() { 
-            document.getElementById('deposit-modal').style.display = 'flex'; 
-            document.getElementById('payment-details').style.display = 'none';
-            // 초기화
-            document.querySelectorAll('.package-item').forEach(p => p.classList.remove('selected'));
+        function calculateWithdrawHint() {
+            const amt = parseFloat(document.getElementById('withdraw-amount').value) || 0;
+            document.getElementById('withdraw-usdt-hint').innerText = `≈ ${(amt / 1400).toFixed(2)} USDT`;
         }
 
-        // ... 나머지 mineClick, calculateSpeed, updateUI 함수들 유지 ...
+        setInterval(() => {
+            if (userData.power < 1000) {
+                let speed = 0.00005 + (levelData[userData.level-1]?.bonus || 0);
+                userData.power = Math.min(1000, userData.power + speed);
+                document.getElementById('mining-power').innerText = "+ " + userData.power.toFixed(5);
+                document.getElementById('speed-display').innerText = "+ " + speed.toFixed(5) + " / sec";
+            }
+            if(userData.shards >= (levelData[userData.level]?.target || 999999)) { userData.level++; updateUI(); }
+        }, 1000);
+
+        setInterval(saveData, 10000);
+
+        function mineClick() {
+            if (userData.power >= 0.005) {
+                userData.shards += userData.power; userData.power = 0; updateUI(); saveData();
+                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+            } else { tg.showAlert("Collect at least 0.005 ICE!"); }
+        }
+
         function updateUI() {
             document.getElementById('balance').innerText = userData.shards.toLocaleString(undefined, {minimumFractionDigits: 5});
             document.getElementById('ice-top-display').innerText = Math.floor(userData.shards).toLocaleString();
             document.getElementById('water-top-display').innerText = userData.water.toLocaleString();
             document.getElementById('lv-badge').innerText = `⭐ LV.${userData.level}`;
             document.getElementById('ice-to-usdt').innerText = (userData.shards / 1400).toFixed(2) + " USDT";
-            document.getElementById('ice-gauge-bar').style.width = Math.min((userData.shards / 1000) * 100, 100) + "%";
+            document.getElementById('wallet-ice-bal').innerText = Math.floor(userData.shards).toLocaleString();
+            const nextLv = levelData[userData.level];
+            document.getElementById('level-guide').innerText = nextLv ? `Goal for LV.${userData.level+1}: ${nextLv.target} ICE` : "MAX LEVEL";
+            document.getElementById('ice-gauge-bar').style.width = Math.min((userData.shards / (nextLv ? nextLv.target : 1000)) * 100, 100) + "%";
         }
+
+        // [24시간 상시 알림 로직] - 충전 신청
+        function submitDeposit() {
+            const txid = document.getElementById('txid-input').value;
+            if(!txid) return tg.showAlert("Please enter TXID!");
+            
+            // 텔레그램 메시지 즉시 발송
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(`💰 [DEPOSIT REQUEST]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nTXID: ${txid}`)}`)
+            .then(res => {
+                tg.showPopup({ title: 'Submitted', message: 'Request sent to admin! Verification will be done soon.', buttons: [{type: 'ok'}] });
+                closeModal('deposit-modal');
+            });
+        }
+
+        // [24시간 상시 알림 로직] - 출금 신청
+        function requestWithdraw() {
+            const amt = parseFloat(document.getElementById('withdraw-amount').value);
+            const addr = document.getElementById('wallet-addr').value;
+            const ex = document.getElementById('exchange-type').value;
+            if(!amt || amt < 14000) return tg.showAlert("Minimum 14,000 ICE!");
+            if(amt > userData.shards) return tg.showAlert("Insufficient balance!");
+            if(!addr) return tg.showAlert("Enter address!");
+            
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(`📤 [WITHDRAW REQUEST]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nAmt: ${amt} ICE (${(amt/1400).toFixed(2)} USDT)\nEx: ${ex}\nAddr: ${addr}`)}`)
+            .then(res => {
+                tg.showPopup({ title: 'Pending', message: 'Withdrawal request sent! Admin will process it soon.', buttons: [{type: 'ok'}] });
+                closeModal('wallet-modal');
+            });
+        }
+
+        function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; document.getElementById('payment-details').style.display = 'none'; }
+        function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; updateUI(); }
+        function openShop() { tg.showAlert("Shop coming soon!"); }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function copyAddr() { navigator.clipboard.writeText(document.getElementById('admin-wallet-addr').innerText); tg.showAlert("Address Copied!"); }
-        function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
         
         loadData();
     </script>

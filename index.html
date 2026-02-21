@@ -144,7 +144,6 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // FIREBASE & BOT CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyAAUthhNp0EBbtZ75RDePw0Nxo9uYmwLTw",
             authDomain: "gifty-icebreaker.firebaseapp.com",
@@ -182,7 +181,6 @@
             if (doc.exists) {
                 const data = doc.data();
                 const now = Date.now();
-                // [부정방지] 오프라인 시간 검증
                 const offlineTime = (now - data.lastUpdate) / 1000;
                 let offlineMining = 0;
                 if (offlineTime > 0) {
@@ -234,7 +232,7 @@
             } else tg.showAlert("Need more Water! 💧");
         }
 
-        // [핵심 보완] 관리자 승인 버튼 및 유저 상세 정보 포함
+        // [핵심] 입금 요청 메시지 전송 (버튼 없이 텍스트 중심)
         async function submitDeposit() {
             const txid = document.getElementById('txid-input').value.trim();
             if(!txid || txid.length < 10) return tg.showAlert("Paste TXID!");
@@ -246,20 +244,6 @@
 
             if(waterReward === 0) return tg.showAlert("Select package!");
 
-            // [승인/거절 버튼 설정] - Inline Keyboard
-            const keyboard = {
-                inline_keyboard: [[
-                    { 
-                        text: `✅ Approve (${waterReward}💧)`, 
-                        callback_data: `approve_${USER_ID}_${waterReward}_${txid}` 
-                    },
-                    { 
-                        text: "❌ Reject", 
-                        callback_data: `reject_${USER_ID}_${txid}` 
-                    }
-                ]]
-            };
-
             const message = `💰 [NEW DEPOSIT REQUEST]\n\n` +
                             `👤 Name: ${userFullName}\n` +
                             `🆔 ID: ${USER_ID}\n` +
@@ -269,14 +253,12 @@
                             `🧾 TXID: ${txid}`;
 
             try {
-                // reply_markup을 포함하여 fetch 요청
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         chat_id: MY_CHAT_ID,
-                        text: message,
-                        reply_markup: keyboard
+                        text: message
                     })
                 });
                 tg.showPopup({ title: 'Request Sent', message: 'Admin will verify your payment.', buttons: [{type: 'ok'}] });
@@ -286,6 +268,7 @@
             }
         }
 
+        // [핵심] 출금 요청 메시지 전송
         async function requestWithdraw() {
             const amt = parseFloat(document.getElementById('withdraw-amount').value);
             const addr = document.getElementById('wallet-addr').value;
@@ -294,7 +277,13 @@
             
             userData.shards -= amt;
             updateUI(); await saveData();
-            const message = `📤 [WITHDRAW REQUEST]\nUser: ${userFullName} (@${userName})\nID: ${USER_ID}\nAmt: ${amt} ICE\nAddr: ${addr}`;
+            const message = `📤 [NEW WITHDRAW REQUEST]\n\n` +
+                            `👤 Name: ${userFullName}\n` +
+                            `🆔 ID: ${USER_ID}\n` +
+                            `🏷 Username: @${userName}\n` +
+                            `Amt: ${amt} ICE\n` +
+                            `Addr: ${addr}`;
+
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`);
             tg.showAlert("Withdrawal Requested!");
             closeModal('wallet-modal');
@@ -327,8 +316,8 @@
                             userData.lastAttendance = now;
                             updateUI(); await saveData();
                             box.classList.add('active');
-                            tg.showAlert("Checked!");
-                        } else tg.showAlert("Already checked!");
+                            tg.showAlert("Daily Reward: +5 Water!");
+                        } else tg.showAlert("Already Checked Today!");
                     };
                 }
                 grid.appendChild(box);

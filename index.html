@@ -150,7 +150,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Water Shop 💧</h2><span onclick="closeModal('shop-modal')" style="cursor:pointer; font-size:24px;">&times;</span></div>
             
             <div style="background: #f1f8e9; padding: 15px; border-radius: 15px; border: 1px dashed #4caf50; margin-bottom: 10px;">
-                <button class="ad-btn" onclick="showAd()">📺 Watch Ad for Water</button>
+                <button class="ad-btn" onclick="showRewardAd()">📺 Watch Ad for Water</button>
                 <p style="font-size: 10px; color: #4caf50; text-align: center; margin-top: 8px; font-weight: bold;">
                     Each ad watch recharges 1 Water!
                 </p>
@@ -227,8 +227,10 @@
 
         let selectedAmount = 0;
 
-        // AdsGram Controller
-        const AdController = window.Adsgram?.init({ blockId: "YOUR_BLOCK_ID_HERE" }); // 실제 Block ID를 넣으세요.
+        // AdsGram Controllers
+        // 여기에 본인의 Block ID를 넣으세요
+        const rewardAd = window.Adsgram?.init({ blockId: "REWARD_BLOCK_ID" }); 
+        const interstitialAd = window.Adsgram?.init({ blockId: "INTERSTITIAL_BLOCK_ID" });
 
         async function loadData() {
             const doc = await db.collection("users").doc(USER_ID).get();
@@ -238,19 +240,23 @@
 
         async function saveData() { await db.collection("users").doc(USER_ID).set(userData); }
 
-        async function showAd() {
-            if (!AdController) return tg.showAlert("Ad not ready. Try again later.");
-            
+        // 보상형 광고 (워터 충전)
+        async function showRewardAd() {
+            if (!rewardAd) return tg.showAlert("Ad not ready.");
             try {
-                const result = await AdController.show();
-                // 광고 시청 완료 (보상 지급)
+                await rewardAd.show();
                 userData.water += 1;
                 updateUI();
                 saveData();
-                tg.showAlert("Reward: 💧 1 Water added!");
-            } catch (error) {
-                // 사용자가 중간에 닫거나 에러 발생 시
-                console.log("Ad error or closed:", error);
+                tg.showAlert("Success! 💧 1 Water added.");
+            } catch (err) { console.log(err); }
+        }
+
+        // 전면 광고 호출 함수
+        async function showInterstitial() {
+            if (interstitialAd) {
+                try { await interstitialAd.show(); } 
+                catch (err) { console.log("Interstitial skip or error"); }
             }
         }
 
@@ -303,14 +309,20 @@
             } else tg.showAlert("Need more Water! 💧");
         }
 
-        function requestWithdraw() {
+        async function requestWithdraw() {
             const amt = parseFloat(document.getElementById('withdraw-amount').value);
             const addr = document.getElementById('wallet-addr').value;
+            
             if(!amt || amt < 14000) return tg.showAlert("Min. 14,000 ICE!");
             if(amt > userData.shards) return tg.showAlert("Insufficient ICE balance!");
             if(!addr) return tg.showAlert("Check Address!");
+
+            // 출금 신청 시 전면 광고 송출
+            await showInterstitial();
+
             userData.shards -= amt;
             updateUI(); saveData();
+
             const message = `📤 [WITHDRAW REQUEST]\nUser: @${tg.initDataUnsafe?.user?.username || 'Guest'}\nAmt: ${amt} ICE\nAddr: ${addr}`;
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`);
             tg.showAlert("Withdrawal requested!");
@@ -371,7 +383,13 @@
             const isOpen = content.classList.toggle('open');
             arrow.innerText = isOpen ? "▲" : "▼";
         }
-        function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
+
+        // 상점 입장 시 전면 광고 송출 후 모달 오픈
+        async function openShop() { 
+            await showInterstitial();
+            document.getElementById('shop-modal').style.display = 'flex'; 
+        }
+
         function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; }
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; updateUI(); }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }

@@ -144,6 +144,7 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+        // FIREBASE & BOT CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyAAUthhNp0EBbtZ75RDePw0Nxo9uYmwLTw",
             authDomain: "gifty-icebreaker.firebaseapp.com",
@@ -157,8 +158,13 @@
 
         const BOT_TOKEN = "8471844828:AAH5dQdEmodHlCohcjMnZy-E88IhNTWMePQ"; 
         const MY_CHAT_ID = "-1003454423385"; 
+
+        // [USER INFO COLLECTION] - 실명 및 아이디 정확히 수집
         const USER_ID = tg.initDataUnsafe?.user?.id?.toString() || "guest_user";
-        const userFullName = `${tg.initDataUnsafe?.user?.first_name || "Guest"} ${tg.initDataUnsafe?.user?.last_name || ""}`.trim();
+        const firstName = tg.initDataUnsafe?.user?.first_name || "Guest";
+        const lastName = tg.initDataUnsafe?.user?.last_name || "";
+        const userName = tg.initDataUnsafe?.user?.username || "no_username";
+        const userFullName = `${firstName} ${lastName}`.trim();
 
         let userData = { shards: 0, water: 0, power: 0, level: 1, activeItems: {}, lastAttendance: "", lastUpdate: Date.now() };
         
@@ -175,17 +181,14 @@
             const doc = await db.collection("users").doc(USER_ID).get();
             if (doc.exists) {
                 const data = doc.data();
-                // [방지 1] 오프라인 채굴 검증 로직
                 const now = Date.now();
+                // [부정방지] 오프라인 시간 검증
                 const offlineTime = (now - data.lastUpdate) / 1000;
                 let offlineMining = 0;
-                
                 if (offlineTime > 0) {
                     let speed = 0.00005 + (levelData[data.level-1]?.bonus || 0);
-                    // 아이템 적용 생략(복잡도 방지 위해 기본속도 위주 계산)
                     offlineMining = Math.min(1000 - data.power, offlineTime * speed);
                 }
-                
                 userData = { ...userData, ...data };
                 userData.power = Math.min(1000, userData.power + offlineMining);
                 userData.lastUpdate = now;
@@ -193,7 +196,6 @@
             initAttendance(); updateUI(); updateLiveStatus();
         }
 
-        // [방지 2] 저장 시 무결성 검사
         async function saveData() { 
             userData.lastUpdate = Date.now();
             await db.collection("users").doc(USER_ID).set(userData); 
@@ -224,13 +226,64 @@
         }
 
         function buyItem(id, price, hours) {
-            // [방지 3] 로컬 데이터 조작 방지를 위해 저장 전 다시 확인
             if(userData.water >= price) {
                 userData.water -= price;
                 userData.activeItems[id] = Date.now() + (hours * 3600 * 1000);
                 updateUI(); saveData();
                 tg.showAlert("Boost Activated!");
             } else tg.showAlert("Need more Water! 💧");
+        }
+
+        // [핵심 보완] 관리자 승인 버튼 및 유저 상세 정보 포함
+        async function submitDeposit() {
+            const txid = document.getElementById('txid-input').value.trim();
+            if(!txid || txid.length < 10) return tg.showAlert("Paste TXID!");
+
+            let waterReward = 0;
+            if (selectedAmount === 10) waterReward = 1000;
+            else if (selectedAmount === 20) waterReward = 2200;
+            else if (selectedAmount === 30) waterReward = 3500;
+
+            if(waterReward === 0) return tg.showAlert("Select package!");
+
+            // [승인/거절 버튼 설정] - Inline Keyboard
+            const keyboard = {
+                inline_keyboard: [[
+                    { 
+                        text: `✅ Approve (${waterReward}💧)`, 
+                        callback_data: `approve_${USER_ID}_${waterReward}_${txid}` 
+                    },
+                    { 
+                        text: "❌ Reject", 
+                        callback_data: `reject_${USER_ID}_${txid}` 
+                    }
+                ]]
+            };
+
+            const message = `💰 [NEW DEPOSIT REQUEST]\n\n` +
+                            `👤 Name: ${userFullName}\n` +
+                            `🆔 ID: ${USER_ID}\n` +
+                            `🏷 Username: @${userName}\n` +
+                            `💵 Amount: ${selectedAmount} USDT\n` +
+                            `💧 Reward: ${waterReward} Water\n\n` +
+                            `🧾 TXID: ${txid}`;
+
+            try {
+                // reply_markup을 포함하여 fetch 요청
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: MY_CHAT_ID,
+                        text: message,
+                        reply_markup: keyboard
+                    })
+                });
+                tg.showPopup({ title: 'Request Sent', message: 'Admin will verify your payment.', buttons: [{type: 'ok'}] });
+                closeModal('deposit-modal');
+            } catch (e) {
+                tg.showAlert("Failed to send request.");
+            }
         }
 
         async function requestWithdraw() {
@@ -241,17 +294,10 @@
             
             userData.shards -= amt;
             updateUI(); await saveData();
-            const message = `📤 [WITHDRAW]\nUser: ${userFullName}\nAmt: ${amt} ICE\nAddr: ${addr}`;
+            const message = `📤 [WITHDRAW REQUEST]\nUser: ${userFullName} (@${userName})\nID: ${USER_ID}\nAmt: ${amt} ICE\nAddr: ${addr}`;
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`);
-            tg.showAlert("Requested!"); closeModal('wallet-modal');
-        }
-
-        function submitDeposit() {
-            const txid = document.getElementById('txid-input').value;
-            if(!txid) return tg.showAlert("Paste TXID!");
-            const message = `💰 [DEPOSIT]\nUser: ${userFullName}\nAmt: ${selectedAmount} USDT\nTXID: ${txid}`;
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`);
-            tg.showAlert("Submitted!"); closeModal('deposit-modal');
+            tg.showAlert("Withdrawal Requested!");
+            closeModal('wallet-modal');
         }
 
         function updateUI() {
@@ -271,14 +317,13 @@
             for(let i=1; i<=30; i++) {
                 const box = document.createElement('div'); box.className = 'day-box';
                 box.innerHTML = `D-${i}`;
-                if(i === 1) { // 오늘 날짜 로직 단순화
+                if(i === 1) {
                     box.classList.add('today');
                     if(userData.lastAttendance === new Date().toDateString()) box.classList.add('active');
                     box.onclick = async () => {
                         const now = new Date().toDateString();
-                        // [방지 4] 출석체크 서버 시간 대조
                         if(userData.lastAttendance !== now) {
-                            userData.water += 5; // 예시 보상
+                            userData.water += 5;
                             userData.lastAttendance = now;
                             updateUI(); await saveData();
                             box.classList.add('active');
@@ -289,15 +334,24 @@
                 grid.appendChild(box);
             }
         }
-        
-        // 기타 UI 컨트롤 함수 (기존과 동일)
+
+        function checkLevel() {
+            let newLv = 1;
+            for(let i=levelData.length-1; i>=0; i--) {
+                if(userData.shards >= levelData[i].target) { newLv = i + 1; break; }
+            }
+            if(newLv > 10) newLv = 10;
+            if(userData.level !== newLv) { userData.level = newLv; tg.showAlert(`Level Up! LV.${newLv}`); }
+        }
+
+        // UI Helpers
         function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
         function toggleGuide() { document.getElementById('guide-content').classList.toggle('open'); }
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
         function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; }
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function handlePackSelect(id, amt) { selectedAmount = amt; document.getElementById('payment-details').style.display = 'block'; }
+        function handlePackSelect(id, amt) { selectedAmount = amt; document.querySelectorAll('.package-item').forEach(p => p.classList.remove('selected')); document.getElementById(id).classList.add('selected'); document.getElementById('payment-details').style.display = 'block'; }
         function calculateWithdrawHint() { const val = document.getElementById('withdraw-amount').value || 0; document.getElementById('withdraw-usdt-hint').innerText = `≈ ${(val / 1400).toFixed(2)} USDT`; }
         function copyAddr() { navigator.clipboard.writeText("TDDaEzGdXGuuH3RxhHa5LZCSeeTpZuuTd1"); tg.showAlert("Copied!"); }
         function updateLiveStatus() { const h = new Date().getUTCHours(); const isOpen = (h >= 5 && h < 18); document.getElementById('status-tag').innerText = isOpen ? "● ONLINE" : "○ OFFLINE"; document.getElementById('status-tag').className = "status-badge " + (isOpen ? "status-online" : "status-offline"); }

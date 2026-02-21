@@ -8,7 +8,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-    <script src="https://sad.adsgram.ai/js/sad.js"></script>
     <style>
         :root {
             --tg-bg: var(--tg-theme-bg-color, #f0f2f5);
@@ -69,8 +68,6 @@
         .buy-small-btn { background: var(--water-color); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; }
         .package-item { border: 2px solid #eee; border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
         .package-item.selected { border-color: var(--water-color); background-color: #f0f7ff; font-weight: bold; }
-        
-        .ad-btn { background: #4caf50; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; width: 100%; margin-top: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
     </style>
 </head>
 <body>
@@ -148,14 +145,6 @@
     <div id="shop-modal" class="modal">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Water Shop 💧</h2><span onclick="closeModal('shop-modal')" style="cursor:pointer; font-size:24px;">&times;</span></div>
-            
-            <div style="background: #f1f8e9; padding: 15px; border-radius: 15px; border: 1px dashed #4caf50; margin-bottom: 10px;">
-                <button class="ad-btn" onclick="showRewardAd()">📺 Watch Ad for Water</button>
-                <p style="font-size: 10px; color: #4caf50; text-align: center; margin-top: 8px; font-weight: bold;">
-                    Each ad watch recharges 1 Water!
-                </p>
-            </div>
-
             <div class="item-row"><div><b>⛏️ Iron Pickaxe</b><br><small>+0.0001/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('pickaxe', 500, 24)">💧 500</button></div>
             <div class="item-row"><div><b>⚙️ Silver Gear</b><br><small>+0.0005/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('gear', 1500, 24)">💧 1,500</button></div>
             <div class="item-row"><div><b>❄️ Cooling Spray</b><br><small>All Speed x2 (12h)</small></div><button class="buy-small-btn" onclick="buyItem('spray', 1500, 12)">💧 1,500</button></div>
@@ -174,7 +163,7 @@
             <input type="number" id="withdraw-amount" placeholder="Amount (ICE)" class="input-box" oninput="calculateWithdrawHint()" style="margin-top:10px;">
             <div id="withdraw-usdt-hint" style="font-size:11px; color:var(--accent-orange); margin: 5px 0;">≈ 0.00 USDT</div>
             <select id="exchange-type" class="input-box"><option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option></select>
-            <input type="text" id="wallet-addr" placeholder="USDT Address" class="input-box" style="margin-top:10px;">
+            <input type="text" id="wallet-addr" placeholder="USDT TRC20 Address" class="input-box" style="margin-top:10px;">
             <button class="buy-small-btn" style="background:var(--accent-blue); width:100%; margin-top:10px;" onclick="requestWithdraw()">Request Withdrawal</button>
         </div>
     </div>
@@ -227,10 +216,6 @@
 
         let selectedAmount = 0;
 
-        // AdsGram Controllers (ID 적용됨)
-        const rewardAd = window.Adsgram?.init({ blockId: "23419" }); 
-        const interstitialAd = window.Adsgram?.init({ blockId: "int-23421" });
-
         async function loadData() {
             const doc = await db.collection("users").doc(USER_ID).get();
             if (doc.exists) userData = { ...userData, ...doc.data() };
@@ -238,26 +223,6 @@
         }
 
         async function saveData() { await db.collection("users").doc(USER_ID).set(userData); }
-
-        // 보상형 광고 (워터 충전)
-        async function showRewardAd() {
-            if (!rewardAd) return tg.showAlert("Ad not ready.");
-            try {
-                await rewardAd.show();
-                userData.water += 1;
-                updateUI();
-                saveData();
-                tg.showAlert("Success! 💧 1 Water added.");
-            } catch (err) { console.log(err); }
-        }
-
-        // 전면 광고 호출 함수
-        async function showInterstitial() {
-            if (interstitialAd) {
-                try { await interstitialAd.show(); } 
-                catch (err) { console.log("Interstitial skip or error"); }
-            }
-        }
 
         setInterval(() => {
             let baseSpeed = 0.00005 + (levelData[userData.level-1]?.bonus || 0);
@@ -315,9 +280,6 @@
             if(!amt || amt < 14000) return tg.showAlert("Min. 14,000 ICE!");
             if(amt > userData.shards) return tg.showAlert("Insufficient ICE balance!");
             if(!addr) return tg.showAlert("Check Address!");
-
-            // 출금 신청 시 전면 광고 송출
-            await showInterstitial();
 
             userData.shards -= amt;
             updateUI(); saveData();
@@ -383,12 +345,7 @@
             arrow.innerText = isOpen ? "▲" : "▼";
         }
 
-        // 상점 입장 시 전면 광고 송출 후 모달 오픈
-        async function openShop() { 
-            await showInterstitial();
-            document.getElementById('shop-modal').style.display = 'flex'; 
-        }
-
+        function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
         function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; }
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; updateUI(); }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }

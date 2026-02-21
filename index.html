@@ -172,7 +172,6 @@
         const BOT_TOKEN = "8471844828:AAH5dQdEmodHlCohcjMnZy-E88IhNTWMePQ"; 
         const MY_CHAT_ID = "-1003454423385"; 
 
-        // [USER INFO COLLECTION] - 실명 및 아이디 정확히 수집
         const USER_ID = tg.initDataUnsafe?.user?.id?.toString() || "guest_user";
         const firstName = tg.initDataUnsafe?.user?.first_name || "Guest";
         const lastName = tg.initDataUnsafe?.user?.last_name || "";
@@ -190,29 +189,53 @@
 
         let selectedAmount = 0;
 
+        // [핵심] 데이터 로드 시 오프라인 채굴 계산
         async function loadData() {
-            const doc = await db.collection("users").doc(USER_ID).get();
-            if (doc.exists) {
-                const data = doc.data();
-                const now = Date.now();
-                const offlineTime = (now - data.lastUpdate) / 1000;
-                let offlineMining = 0;
-                if (offlineTime > 0) {
+            try {
+                const doc = await db.collection("users").doc(USER_ID).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    const now = Date.now();
+                    
+                    // 오프라인 시간 차이 계산
+                    const lastUpdate = data.lastUpdate || now;
+                    const offlineTime = (now - lastUpdate) / 1000;
+                    
                     let speed = 0.00005 + (levelData[data.level-1]?.bonus || 0);
-                    offlineMining = Math.min(1000 - data.power, offlineTime * speed);
+                    // 아이템 속도 보정 (오프라인 시에도 기본 로직 적용)
+                    if(data.activeItems?.pickaxe > now) speed += 0.0001;
+                    if(data.activeItems?.gear > now) speed += 0.0005;
+                    if(data.activeItems?.drill > now) speed += 0.0020;
+                    if(data.activeItems?.spray > now) speed *= 2;
+
+                    let offlineMining = Math.min(1000 - (data.power || 0), offlineTime * speed);
+                    
+                    userData = { ...userData, ...data };
+                    userData.power = (data.power || 0) + offlineMining;
+                    userData.lastUpdate = now;
+                    
+                    console.log("Data loaded. Offline mining added:", offlineMining);
+                } else {
+                    await saveData();
                 }
-                userData = { ...userData, ...data };
-                userData.power = Math.min(1000, userData.power + offlineMining);
-                userData.lastUpdate = now;
+                initAttendance(); updateUI(); updateLiveStatus();
+            } catch (e) {
+                console.error("Load error:", e);
             }
-            initAttendance(); updateUI(); updateLiveStatus();
         }
 
+        // [핵심] 서버에 실시간 기록하는 함수 (중복 호출 방지 위해 merge 사용)
         async function saveData() { 
-            userData.lastUpdate = Date.now();
-            await db.collection("users").doc(USER_ID).set(userData); 
+            try {
+                userData.lastUpdate = Date.now();
+                await db.collection("users").doc(USER_ID).set(userData, { merge: true }); 
+                console.log("Data saved to server.");
+            } catch (e) {
+                console.error("Save error:", e);
+            }
         }
 
+        // 1초마다 화면 업데이트 (실시간 UI 반영)
         setInterval(() => {
             if (userData.power >= 1000) return;
             let speed = 0.00005 + (levelData[userData.level-1]?.bonus || 0);
@@ -226,22 +249,29 @@
             updateUI();
         }, 1000);
 
+        // [중요] 1분마다 자동 서버 저장 (안전장치)
         setInterval(saveData, 60000);
 
+        // [핵심] 수집 시 즉시 서버 저장 (데이터 증발 방지)
         function mineClick() {
             if (userData.power >= 0.005) {
                 userData.shards += userData.power;
                 userData.power = 0;
-                checkLevel(); updateUI(); saveData();
+                checkLevel(); updateUI(); 
+                saveData(); // 수집 즉시 저장
                 tg.showAlert("Success harvest!");
             } else tg.showAlert("Min. 0.005 ICE required!");
         }
+
+        // [안전장치] 창을 닫을 때 마지막으로 데이터 저장
+        window.addEventListener('beforeunload', saveData);
+        window.addEventListener('unload', saveData);
 
         function buyItem(id, price, hours) {
             if(userData.water >= price) {
                 userData.water -= price;
                 userData.activeItems[id] = Date.now() + (hours * 3600 * 1000);
-                updateUI(); saveData();
+                updateUI(); saveData(); // 아이템 구매 시 즉시 저장
                 tg.showAlert("Boost Activated!");
             } else tg.showAlert("Need more Water! 💧");
         }
@@ -249,36 +279,17 @@
         async function submitDeposit() {
             const txid = document.getElementById('txid-input').value.trim();
             if(!txid || txid.length < 10) return tg.showAlert("Paste TXID!");
-
-            let waterReward = 0;
-            if (selectedAmount === 10) waterReward = 1000;
-            else if (selectedAmount === 20) waterReward = 2200;
-            else if (selectedAmount === 30) waterReward = 3500;
-
-            if(waterReward === 0) return tg.showAlert("Select package!");
-
-            const message = `💰 [NEW DEPOSIT REQUEST]\n\n` +
-                            `👤 Name: ${userFullName}\n` +
-                            `🆔 ID: ${USER_ID}\n` +
-                            `🏷 Username: @${userName}\n` +
-                            `💵 Amount: ${selectedAmount} USDT\n` +
-                            `💧 Reward: ${waterReward} Water\n\n` +
-                            `🧾 TXID: ${txid}`;
-
+            let waterReward = (selectedAmount === 10) ? 1000 : (selectedAmount === 20) ? 2200 : (selectedAmount === 30) ? 3500 : 0;
+            const message = `💰 [NEW DEPOSIT REQUEST]\n\n👤 Name: ${userFullName}\n🆔 ID: ${USER_ID}\n🏷 Username: @${userName}\n💵 Amount: ${selectedAmount} USDT\n💧 Reward: ${waterReward} Water\n\n🧾 TXID: ${txid}`;
             try {
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: MY_CHAT_ID,
-                        text: message
-                    })
+                    body: JSON.stringify({ chat_id: MY_CHAT_ID, text: message })
                 });
                 tg.showPopup({ title: 'Request Sent', message: 'Admin will verify your payment.', buttons: [{type: 'ok'}] });
                 closeModal('deposit-modal');
-            } catch (e) {
-                tg.showAlert("Failed to send request.");
-            }
+            } catch (e) { tg.showAlert("Failed to send request."); }
         }
 
         async function requestWithdraw() {
@@ -286,16 +297,9 @@
             const addr = document.getElementById('wallet-addr').value;
             if(!amt || amt < 14000) return tg.showAlert("Min. 14,000 ICE!");
             if(amt > userData.shards) return tg.showAlert("Insufficient ICE!");
-            
             userData.shards -= amt;
-            updateUI(); await saveData();
-            const message = `📤 [NEW WITHDRAW REQUEST]\n\n` +
-                            `👤 Name: ${userFullName}\n` +
-                            `🆔 ID: ${USER_ID}\n` +
-                            `🏷 Username: @${userName}\n` +
-                            `Amt: ${amt} ICE\n` +
-                            `Addr: ${addr}`;
-
+            updateUI(); await saveData(); // 차감 후 즉시 저장
+            const message = `📤 [NEW WITHDRAW REQUEST]\n\n👤 Name: ${userFullName}\n🆔 ID: ${USER_ID}\n🏷 Username: @${userName}\nAmt: ${amt} ICE\nAddr: ${addr}`;
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`);
             tg.showAlert("Withdrawal Requested!");
             closeModal('wallet-modal');

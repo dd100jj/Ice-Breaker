@@ -205,6 +205,7 @@
         const MY_CHAT_ID = "-1003454423385"; 
         const USER_ID = tg.initDataUnsafe?.user?.id?.toString() || "guest_user";
 
+        // 초기 데이터 로드 (Firebase에 저장된 유저 데이터를 최우선으로 함)
         let userData = { shards: 0, water: 0, power: 0, level: 1, activeItems: {}, lastAttendance: "" };
         
         const levelData = [
@@ -218,13 +219,23 @@
 
         async function loadData() {
             const doc = await db.collection("users").doc(USER_ID).get();
-            if (doc.exists) userData = { ...userData, ...doc.data() };
+            if (doc.exists) {
+                userData = { ...userData, ...doc.data() };
+            } else {
+                // 신규 유저라면 초기 데이터 생성
+                await saveData();
+            }
             initAttendance(); updateUI(); updateLiveStatus();
         }
 
-        async function saveData() { await db.collection("users").doc(USER_ID).set(userData); }
+        async function saveData() { 
+            await db.collection("users").doc(USER_ID).set(userData); 
+        }
 
+        // 1초마다 자동 채굴 (1000 ICE 넘어가면 중단)
         setInterval(() => {
+            if (userData.power >= 1000) return; // 1000개 넘어가면 채굴 중단
+
             let baseSpeed = 0.00005 + (levelData[userData.level-1]?.bonus || 0);
             let speed = baseSpeed; let now = Date.now();
             if(userData.activeItems?.pickaxe > now) speed += 0.0001;
@@ -232,19 +243,26 @@
             if(userData.activeItems?.drill > now) speed += 0.0020;
             if(userData.activeItems?.spray > now) speed *= 2;
             
-            if (userData.power < 1000) {
-                userData.power = Math.min(1000, userData.power + speed);
-                document.getElementById('mining-power').innerText = "+ " + userData.power.toFixed(5);
-                document.getElementById('speed-display').innerText = "+ " + speed.toString().replace(/(\.\d*?[1-9])0+$|\.0*$/, '$1') + " / sec";
-            }
+            userData.power = Math.min(1000, userData.power + speed);
+            document.getElementById('mining-power').innerText = "+ " + userData.power.toFixed(5);
+            document.getElementById('speed-display').innerText = "+ " + speed.toString().replace(/(\.\d*?[1-9])0+$|\.0*$/, '$1') + " / sec";
+            
+            // 실시간 게이지 업데이트
+            document.getElementById('ice-gauge-bar').style.width = Math.min((userData.power / 1000) * 100, 100) + "%";
+            
+            // 정기적으로 서버 저장 (1분마다 혹은 수집 시 저장됨)
         }, 1000);
+
+        // 1분마다 자동 서버 저장 (폰을 꺼도 데이터가 유지되도록 안전장치)
+        setInterval(saveData, 60000);
 
         function mineClick() {
             if (userData.power >= 0.005) {
                 userData.shards += userData.power;
                 userData.power = 0;
                 checkLevel();
-                updateUI(); saveData();
+                updateUI(); 
+                saveData(); // 수집 시 즉시 서버 저장
                 tg.showAlert("Success harvest!");
             } else tg.showAlert("Min. 0.005 ICE required!");
         }
@@ -307,6 +325,7 @@
             document.getElementById('wallet-ice-bal').innerText = Math.floor(userData.shards).toLocaleString();
             document.getElementById('ice-gauge-bar').style.width = Math.min((userData.power / 1000) * 100, 100) + "%";
             document.getElementById('lv-badge').innerText = `⭐ LV.${userData.level}`;
+            document.getElementById('mining-power').innerText = "+ " + userData.power.toFixed(5);
         }
 
         function initAttendance() {

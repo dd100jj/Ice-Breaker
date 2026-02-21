@@ -137,8 +137,22 @@
     </nav>
 
     <div id="shop-modal" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center;"><h2>Water Shop 💧</h2><span onclick="closeModal('shop-modal')" style="cursor:pointer; font-size:24px;">&times;</span></div><div class="item-row"><div><b>⛏️ Iron Pickaxe</b><br><small>+0.0001/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('pickaxe', 500, 24)">💧 500</button></div><div class="item-row"><div><b>⚙️ Silver Gear</b><br><small>+0.0005/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('gear', 1500, 24)">💧 1,500</button></div><div class="item-row"><div><b>❄️ Cooling Spray</b><br><small>All Speed x2 (12h)</small></div><button class="buy-small-btn" onclick="buyItem('spray', 1500, 12)">💧 1,500</button></div><div class="item-row"><div><b>💎 Diamond Drill</b><br><small>+0.002/s (48h)</small></div><button class="buy-small-btn" onclick="buyItem('drill', 5000, 48)">💧 5,000</button></div></div></div>
-    <div id="wallet-modal" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center;"><h2>Withdraw USDT</h2><span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px;">&times;</span></div><div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;"><strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br><strong>Rate:</strong> 1,400 ICE = 1 USDT | <strong>Min:</strong> 14,000 ICE<br><strong style="color:var(--danger);">Network: TRC20 (Tron Network)</strong></div><input type="number" id="withdraw-amount" placeholder="Amount (ICE)" class="input-box" oninput="calculateWithdrawHint()" style="margin-top:10px;"><div id="withdraw-usdt-hint" style="font-size:11px; color:var(--accent-orange); margin: 5px 0;">≈ 0.00 USDT</div><select id="exchange-type" class="input-box"><option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option></select><input type="text" id="wallet-addr" placeholder="USDT TRC20 Address" class="input-box" style="margin-top:10px;"><button class="buy-small-btn" style="background:var(--accent-blue); width:100%; margin-top:10px;" onclick="requestWithdraw()">Request Withdrawal</button></div></div>
-    <div id="deposit-modal" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center;"><h2>Recharge Water 💧</h2><span onclick="closeModal('deposit-modal')" style="cursor:pointer; font-size:24px;">&times;</span></div><div class="package-item" id="btn-pack-10" onclick="handlePackSelect('btn-pack-10', 10)"><b>1,000 WATER</b> (10 USDT)</div><div class="package-item" id="btn-pack-20" onclick="handlePackSelect('btn-pack-20', 20)"><b>2,200 WATER</b> (20 USDT)</div><div class="package-item" id="btn-pack-30" onclick="handlePackSelect('btn-pack-30', 30)"><b>3,500 WATER</b> (30 USDT)</div><div id="payment-details" style="display:none;"><div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:11px; margin-top:10px;"><b>Admin Deposit Address:</b><br><span id="admin-wallet-addr" style="font-family:monospace;">TDDaEzGdXGuuH3RxhHa5LZCSeeTpZuuTd1</span><br><button onclick="copyAddr()" style="margin-top:5px; padding:8px; background:var(--accent-blue); color:white; border:none; border-radius:5px; width:100%;">Copy Deposit Address</button></div><input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box" style="margin-top:10px;"><button class="buy-small-btn" style="background:var(--accent-orange); width:100%; margin-top:10px;" onclick="submitDeposit()">Submit Recharge Request</button></div></div></div>
+    
+    <div id="wallet-modal" class="modal">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Withdraw USDT</h2><span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px;">&times;</span></div>
+            <div style="background:#fff4f4; border:1px solid #ffcccc; color:#d32f2f; padding:10px; border-radius:10px; font-size:11px; font-weight:bold; margin-bottom:10px; text-align:center;">
+                ⚠️ 네트워크 잘못 선택해서 오입금되면 우리한테는 책임이 없다. (TRC20 전용)
+            </div>
+            <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;"><strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br><strong>Rate:</strong> 1,400 ICE = 1 USDT | <strong>Min:</strong> 14,000 ICE<br><strong style="color:var(--danger);">Network: TRC20 (Tron Network)</strong></div><input type="number" id="withdraw-amount" placeholder="Amount (ICE)" class="input-box" oninput="calculateWithdrawHint()" style="margin-top:10px;"><div id="withdraw-usdt-hint" style="font-size:11px; color:var(--accent-orange); margin: 5px 0;">≈ 0.00 USDT</div><select id="exchange-type" class="input-box"><option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option></select><input type="text" id="wallet-addr" placeholder="USDT TRC20 Address" class="input-box" style="margin-top:10px;"><button class="buy-small-btn" style="background:var(--accent-blue); width:100%; margin-top:10px;" onclick="requestWithdraw()">Request Withdrawal</button></div></div>
+    
+    <div id="deposit-modal" class="modal">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Recharge Water 💧</h2><span onclick="closeModal('deposit-modal')" style="cursor:pointer; font-size:24px;">&times;</span></div>
+            <div style="background:#fff4f4; border:1px solid #ffcccc; color:#d32f2f; padding:10px; border-radius:10px; font-size:11px; font-weight:bold; margin-bottom:10px; text-align:center;">
+                ⚠️ 네트워크 잘못 선택해서 오입금되면 우리한테는 책임이 없다. (TRC20 전용)
+            </div>
+            <div class="package-item" id="btn-pack-10" onclick="handlePackSelect('btn-pack-10', 10)"><b>1,000 WATER</b> (10 USDT)</div><div class="package-item" id="btn-pack-20" onclick="handlePackSelect('btn-pack-20', 20)"><b>2,200 WATER</b> (20 USDT)</div><div class="package-item" id="btn-pack-30" onclick="handlePackSelect('btn-pack-30', 30)"><b>3,500 WATER</b> (30 USDT)</div><div id="payment-details" style="display:none;"><div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:11px; margin-top:10px;"><b>Admin Deposit Address:</b><br><span id="admin-wallet-addr" style="font-family:monospace;">TDDaEzGdXGuuH3RxhHa5LZCSeeTpZuuTd1</span><br><button onclick="copyAddr()" style="margin-top:5px; padding:8px; background:var(--accent-blue); color:white; border:none; border-radius:5px; width:100%;">Copy Deposit Address</button></div><input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box" style="margin-top:10px;"><button class="buy-small-btn" style="background:var(--accent-orange); width:100%; margin-top:10px;" onclick="submitDeposit()">Submit Recharge Request</button></div></div></div>
 
     <script>
         const tg = window.Telegram.WebApp;
@@ -232,7 +246,6 @@
             } else tg.showAlert("Need more Water! 💧");
         }
 
-        // [핵심] 입금 요청 메시지 전송 (버튼 없이 텍스트 중심)
         async function submitDeposit() {
             const txid = document.getElementById('txid-input').value.trim();
             if(!txid || txid.length < 10) return tg.showAlert("Paste TXID!");
@@ -268,7 +281,6 @@
             }
         }
 
-        // [핵심] 출금 요청 메시지 전송
         async function requestWithdraw() {
             const amt = parseFloat(document.getElementById('withdraw-amount').value);
             const addr = document.getElementById('wallet-addr').value;
@@ -333,7 +345,6 @@
             if(userData.level !== newLv) { userData.level = newLv; tg.showAlert(`Level Up! LV.${newLv}`); }
         }
 
-        // UI Helpers
         function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
         function toggleGuide() { document.getElementById('guide-content').classList.toggle('open'); }
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }

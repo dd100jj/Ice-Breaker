@@ -227,10 +227,9 @@
 
         let selectedAmount = 0;
 
-        // AdsGram Controllers
-        // 여기에 본인의 Block ID를 넣으세요
-        const rewardAd = window.Adsgram?.init({ blockId: "REWARD_BLOCK_ID" }); 
-        const interstitialAd = window.Adsgram?.init({ blockId: "INTERSTITIAL_BLOCK_ID" });
+        // AdsGram Controllers (ID 적용됨)
+        const rewardAd = window.Adsgram?.init({ blockId: "23419" }); 
+        const interstitialAd = window.Adsgram?.init({ blockId: "int-23421" });
 
         async function loadData() {
             const doc = await db.collection("users").doc(USER_ID).get();

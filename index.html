@@ -46,15 +46,17 @@
         .asset-amount { font-size: 24px; font-weight: 900; margin: 0; }
         .usdt-value { font-size: 13px; font-weight: bold; color: var(--accent-orange); }
         .harvest-btn { background: var(--accent-blue); color: white; border: none; width: 80%; padding: 15px; border-radius: 15px; font-weight: bold; font-size: 16px; margin-top: 10px; cursor: pointer; box-shadow: 0 4px 0 #02a9f4; transition: 0.1s; }
+        .harvest-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #02a9f4; }
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: #fff; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -2px 15px rgba(0,0,0,0.1); z-index: 999; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--gray-text); flex: 1; cursor: pointer; font-size: 12px; }
+        .nav-item.active { color: var(--accent-blue); }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; }
         .modal-content { width: 92%; background: white; border-radius: 25px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; max-height: 85vh; overflow-y: auto; }
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
         .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; }
         .buy-small-btn { background: var(--water-color); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        .package-item { border: 2px solid #eee; border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; }
-        .package-item.selected { border-color: var(--water-color); background-color: #f0f7ff; }
+        .package-item { border: 2px solid #eee; border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .package-item.selected { border-color: var(--water-color); background-color: #f0f7ff; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -97,7 +99,10 @@
     <div class="card mine-card">
         <div style="position: absolute; top: 10px; right: 15px; font-size: 9px; color: var(--danger); font-weight: bold;">BETA MODE</div>
         <div class="ice-cube">
-            <lottie-player src="https://lottie.host/872a8b1d-7fb8-4e06-9566-575c112ceb60/4RHshKiCu8.json" background="transparent" speed="1" style="width: 180px; height: 180px;" loop autoplay></lottie-player>
+            <lottie-player 
+                src="https://lottie.host/872a8b1d-7fb8-4e06-9566-575c112ceb60/4RHshKiCu8.json" 
+                background="transparent" speed="1" style="width: 180px; height: 180px;" loop autoplay>
+            </lottie-player>
         </div>
         <div class="mining-power" id="mining-power">+ 0.00000</div>
         <div class="mining-speed" style="color: var(--accent-orange); font-weight: bold; font-size: 14px;" id="speed-display">+ 0.00005 / sec</div>
@@ -112,7 +117,7 @@
     </nav>
 
     <div id="shop-modal" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center;"><h2>Water Shop 💧</h2><span onclick="closeModal('shop-modal')" style="cursor:pointer; font-size:24px;">&times;</span></div><div class="item-row"><div><b>⛏️ Iron Pickaxe</b><br><small>+0.0001/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('pickaxe', 500, 24)">💧 500</button></div><div class="item-row"><div><b>⚙️ Silver Gear</b><br><small>+0.0005/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('gear', 1500, 24)">💧 1,500</button></div><div class="item-row"><div><b>❄️ Cooling Spray</b><br><small>All Speed x2 (12h)</small></div><button class="buy-small-btn" onclick="buyItem('spray', 1500, 12)">💧 1,500</button></div><div class="item-row"><div><b>💎 Diamond Drill</b><br><small>+0.002/s (48h)</small></div><button class="buy-small-btn" onclick="buyItem('drill', 5000, 48)">💧 5,000</button></div></div></div>
-    <div id="wallet-modal" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center;"><h2>Withdraw USDT</h2><span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px;">&times;</span></div><div style="background:#fff4f4; border:1px solid #ffcccc; color:#d32f2f; padding:10px; border-radius:10px; font-size:11px; font-weight:bold; margin-bottom:10px; text-align:center;">⚠️ 네트워크 잘못 선택해서 오입금되면 우리한테는 책임이 없다. (TRC20 전용)</div><div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;"><strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br><strong>Rate:</strong> 1,400 ICE = 1 USDT | <strong>Min:</strong> 14,000 ICE</div><input type="number" id="withdraw-amount" placeholder="Amount (ICE)" class="input-box" oninput="calculateWithdrawHint()" style="margin-top:10px;"><div id="withdraw-usdt-hint" style="font-size:11px; color:var(--accent-orange); margin: 5px 0;">≈ 0.00 USDT</div><select id="exchange-type" class="input-box"><option>Bitget</option><option>Binance</option><option>Bybit</option><option>OKX</option></select><input type="text" id="wallet-addr" placeholder="USDT TRC20 Address" class="input-box" style="margin-top:10px;"><button class="buy-small-btn" style="background:var(--accent-blue); width:100%; margin-top:10px;" onclick="requestWithdraw()">Request Withdrawal</button></div></div>
+    <div id="wallet-modal" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center;"><h2>Withdraw USDT</h2><span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px;">&times;</span></div><div style="background:#fff4f4; border:1px solid #ffcccc; color:#d32f2f; padding:10px; border-radius:10px; font-size:11px; font-weight:bold; margin-bottom:10px; text-align:center;">⚠️ 네트워크 잘못 선택해서 오입금되면 우리한테는 책임이 없다. (TRC20 전용)</div><div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;"><strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br><strong>Rate:</strong> 1,400 ICE = 1 USDT | <strong>Min:</strong> 14,000 ICE</div><input type="number" id="withdraw-amount" placeholder="Amount (ICE)" class="input-box" oninput="calculateWithdrawHint()" style="margin-top:10px;"><div id="withdraw-usdt-hint" style="font-size:11px; color:var(--accent-orange); margin: 5px 0;">≈ 0.00 USDT</div><input type="text" id="wallet-addr" placeholder="USDT TRC20 Address" class="input-box" style="margin-top:10px;"><button class="buy-small-btn" style="background:var(--accent-blue); width:100%; margin-top:10px;" onclick="requestWithdraw()">Request Withdrawal</button></div></div>
     <div id="deposit-modal" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center;"><h2>Recharge Water 💧</h2><span onclick="closeModal('deposit-modal')" style="cursor:pointer; font-size:24px;">&times;</span></div><div style="background:#fff4f4; border:1px solid #ffcccc; color:#d32f2f; padding:10px; border-radius:10px; font-size:11px; font-weight:bold; margin-bottom:10px; text-align:center;">⚠️ 네트워크 잘못 선택해서 오입금되면 우리한테는 책임이 없다. (TRC20 전용)</div><div class="package-item" id="btn-pack-10" onclick="handlePackSelect('btn-pack-10', 10)"><b>1,000 WATER</b> (10 USDT)</div><div class="package-item" id="btn-pack-20" onclick="handlePackSelect('btn-pack-20', 20)"><b>2,200 WATER</b> (20 USDT)</div><div class="package-item" id="btn-pack-30" onclick="handlePackSelect('btn-pack-30', 30)"><b>3,500 WATER</b> (30 USDT)</div><div id="payment-details" style="display:none;"><div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:11px; margin-top:10px;"><b>Admin (TRC20):</b><br>TDDaEzGdXGuuH3RxhHa5LZCSeeTpZuuTd1<br><button onclick="copyAddr()" style="margin-top:5px; padding:8px; background:var(--accent-blue); color:white; border:none; border-radius:5px; width:100%;">Copy Address</button></div><input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box" style="margin-top:10px;"><button class="buy-small-btn" style="background:var(--accent-orange); width:100%; margin-top:10px;" onclick="submitDeposit()">Submit Recharge Request</button></div></div></div>
 
     <script>
@@ -138,22 +143,21 @@
         const userFullName = `${firstName} ${lastName}`.trim();
         const userName = tg.initDataUnsafe?.user?.username || "no_username";
 
-        // [핵심] userData 초기값에 userId 포함 (Firebase 조회용)
         let userData = { userId: USER_ID, shards: 0, water: 0, power: 0, level: 1, activeItems: {}, lastAttendance: "", lastUpdate: Date.now() };
         const levelData = [{target:0, bonus:0}, {target:50, bonus:0.00001}, {target:200, bonus:0.00002}, {target:500, bonus:0.00003}, {target:1200, bonus:0.00005}, {target:3000, bonus:0.00008}, {target:7000, bonus:0.00012}, {target:15000, bonus:0.00020}, {target:30000, bonus:0.00035}, {target:70000, bonus:0.00060}];
         let selectedAmount = 0;
 
-        // [실시간 저장 함수]
+        // [핵심 1] 서버 저장 함수
         async function saveData() { 
             if(USER_ID === "guest_user") return;
             try {
                 userData.lastUpdate = Date.now();
                 await db.collection("users").doc(USER_ID).set(userData, { merge: true }); 
-                console.log("Synced to server");
+                console.log("서버 동기화 완료");
             } catch (e) { console.error("Sync Error:", e); }
         }
 
-        // [데이터 로드 및 오프라인 채굴 합산]
+        // [핵심 2] 로드 및 오프라인 채굴 합산
         async function loadData() {
             try {
                 const doc = await db.collection("users").doc(USER_ID).get();
@@ -164,37 +168,34 @@
                     const offlineSec = (now - lastUpdate) / 1000;
                     
                     let speed = 0.00005 + (levelData[(data.level || 1)-1]?.bonus || 0);
+                    // 아이템 속도 반영
                     if(data.activeItems?.pickaxe > now) speed += 0.0001;
                     if(data.activeItems?.gear > now) speed += 0.0005;
                     if(data.activeItems?.drill > now) speed += 0.0020;
                     if(data.activeItems?.spray > now) speed *= 2;
 
                     const offlineMining = Math.min(1000 - (data.power || 0), Math.max(0, offlineSec * speed));
-                    
-                    // 서버 데이터 불러오기 + 오프라인 수량 합산
                     userData = { ...userData, ...data };
                     userData.power = Math.min(1000, (data.power || 0) + offlineMining);
                     userData.lastUpdate = now;
-                    console.log("Load Success. Added offline:", offlineMining);
                 } else {
-                    await saveData(); // 신규 유저 생성
+                    await saveData(); 
                 }
                 initAttendance(); updateUI(); updateLiveStatus();
             } catch (e) { console.error("Load Error:", e); }
         }
 
-        // 수확 버튼 - 누르자마자 즉시 서버에 강제 저장!!
+        // 수확 버튼 - 누르자마자 즉시 서버 저장
         async function mineClick() {
             if (userData.power >= 0.005) {
                 userData.shards += userData.power;
                 userData.power = 0;
                 checkLevel(); updateUI();
-                await saveData(); // 여기서 서버로 즉시 전송
-                tg.showAlert("Success harvest! Data synced.");
+                await saveData(); 
+                tg.showAlert("Success harvest! Data saved.");
             } else tg.showAlert("Min. 0.005 ICE required!");
         }
 
-        // 1초마다 화면 갱신 & 채굴
         setInterval(() => {
             if (userData.power >= 1000) return;
             let speed = 0.00005 + (levelData[userData.level-1]?.bonus || 0);
@@ -207,10 +208,7 @@
             updateUI();
         }, 1000);
 
-        // 1분마다 자동 백업
         setInterval(saveData, 60000);
-
-        // 창 닫을 때 마지막 저장
         window.addEventListener('unload', saveData);
 
         function updateUI() {
@@ -225,12 +223,12 @@
             document.getElementById('speed-display').innerText = "+ " + (0.00005 + (levelData[userData.level-1]?.bonus || 0)).toFixed(5) + " / sec";
         }
 
-        // 나머지 기능 (출석, 샵 등 유지)
-        function buyItem(id, price, hours) { if(userData.water >= price) { userData.water -= price; userData.activeItems[id] = Date.now() + (hours * 3600 * 1000); updateUI(); saveData(); tg.showAlert("Boost Activated!"); } else tg.showAlert("Need more Water! 💧"); }
-        async function submitDeposit() { const txid = document.getElementById('txid-input').value.trim(); if(!txid || txid.length < 10) return tg.showAlert("Paste TXID!"); let waterReward = (selectedAmount === 10) ? 1000 : (selectedAmount === 20) ? 2200 : (selectedAmount === 30) ? 3500 : 0; const message = `💰 [DEPOSIT]\nName: ${userFullName}\nID: ${USER_ID}\nAmt: ${selectedAmount} USDT\nTXID: ${txid}`; try { await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: MY_CHAT_ID, text: message }) }); tg.showPopup({ title: 'Sent', message: 'Admin will verify.', buttons: [{type: 'ok'}] }); closeModal('deposit-modal'); } catch (e) { tg.showAlert("Error."); } }
+        // 출석체크, 아이템 구매, 모달 제어 함수 등은 기존과 동일하게 유지
+        function buyItem(id, price, hours) { if(userData.water >= price) { userData.water -= price; userData.activeItems[id] = Date.now() + (hours * 3600 * 1000); updateUI(); saveData(); tg.showAlert("Activated!"); } else tg.showAlert("Need Water!"); }
+        async function submitDeposit() { const txid = document.getElementById('txid-input').value.trim(); if(!txid || txid.length < 10) return tg.showAlert("Paste TXID!"); let waterReward = (selectedAmount === 10) ? 1000 : (selectedAmount === 20) ? 2200 : (selectedAmount === 30) ? 3500 : 0; const message = `💰 [DEPOSIT]\nName: ${userFullName}\nID: ${USER_ID}\nAmt: ${selectedAmount} USDT\nTXID: ${txid}`; try { await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: MY_CHAT_ID, text: message }) }); tg.showPopup({ title: 'Sent', message: 'Verify soon.', buttons: [{type: 'ok'}] }); closeModal('deposit-modal'); } catch (e) { tg.showAlert("Error."); } }
         async function requestWithdraw() { const amt = parseFloat(document.getElementById('withdraw-amount').value); const addr = document.getElementById('wallet-addr').value; if(!amt || amt < 14000) return tg.showAlert("Min. 14,000 ICE!"); if(amt > userData.shards) return tg.showAlert("Insufficient ICE!"); userData.shards -= amt; updateUI(); await saveData(); const message = `📤 [WITHDRAW]\nName: ${userFullName}\nID: ${USER_ID}\nAmt: ${amt} ICE\nAddr: ${addr}`; fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`); tg.showAlert("Requested!"); closeModal('wallet-modal'); }
-        function initAttendance() { const grid = document.getElementById('attendance-grid'); grid.innerHTML = ""; for(let i=1; i<=30; i++) { const box = document.createElement('div'); box.className = 'day-box'; box.innerHTML = `D-${i}`; if(i === 1) { box.classList.add('today'); if(userData.lastAttendance === new Date().toDateString()) box.classList.add('active'); box.onclick = async () => { const now = new Date().toDateString(); if(userData.lastAttendance !== now) { userData.water += 5; userData.lastAttendance = now; updateUI(); await saveData(); box.classList.add('active'); tg.showAlert("Checked!"); } else tg.showAlert("Already Checked!"); }; } grid.appendChild(box); } }
-        function checkLevel() { let newLv = 1; for(let i=levelData.length-1; i>=0; i--) { if(userData.shards >= levelData[i].target) { newLv = i + 1; break; } } if(newLv > 10) newLv = 10; if(userData.level !== newLv) { userData.level = newLv; tg.showAlert(`Level Up! LV.${newLv}`); } }
+        function initAttendance() { const grid = document.getElementById('attendance-grid'); grid.innerHTML = ""; for(let i=1; i<=30; i++) { const box = document.createElement('div'); box.className = 'day-box'; box.innerHTML = `D-${i}`; if(i === 1) { box.classList.add('today'); if(userData.lastAttendance === new Date().toDateString()) box.classList.add('active'); box.onclick = async () => { const now = new Date().toDateString(); if(userData.lastAttendance !== now) { userData.water += 5; userData.lastAttendance = now; updateUI(); await saveData(); box.classList.add('active'); tg.showAlert("Checked!"); } else tg.showAlert("Done!"); }; } grid.appendChild(box); } }
+        function checkLevel() { let newLv = 1; for(let i=levelData.length-1; i>=0; i--) { if(userData.shards >= levelData[i].target) { newLv = i + 1; break; } } if(newLv > 10) newLv = 10; if(userData.level !== newLv) { userData.level = newLv; tg.showAlert(`LV.${newLv}!`); } }
         function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
         function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; }

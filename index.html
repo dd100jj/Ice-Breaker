@@ -99,10 +99,7 @@
     <div class="card mine-card">
         <div style="position: absolute; top: 10px; right: 15px; font-size: 9px; color: var(--danger); font-weight: bold;">BETA MODE</div>
         <div class="ice-cube">
-            <lottie-player 
-                src="https://lottie.host/872a8b1d-7fb8-4e06-9566-575c112ceb60/4RHshKiCu8.json" 
-                background="transparent" speed="1" style="width: 180px; height: 180px;" loop autoplay>
-            </lottie-player>
+            <lottie-player src="https://lottie.host/872a8b1d-7fb8-4e06-9566-575c112ceb60/4RHshKiCu8.json" background="transparent" speed="1" style="width: 180px; height: 180px;" loop autoplay></lottie-player>
         </div>
         <div class="mining-power" id="mining-power">+ 0.00000</div>
         <div class="mining-speed" style="color: var(--accent-orange); font-weight: bold; font-size: 14px;" id="speed-display">+ 0.00005 / sec</div>
@@ -143,30 +140,28 @@
         const userFullName = `${firstName} ${lastName}`.trim();
         const userName = tg.initDataUnsafe?.user?.username || "no_username";
 
+        // [복구] 가장 심플한 유저 데이터 구조
         let userData = { userId: USER_ID, shards: 0, water: 0, power: 0, level: 1, activeItems: {}, lastAttendance: "", lastUpdate: Date.now() };
-        let isLoaded = false;
         const levelData = [{target:0, bonus:0}, {target:50, bonus:0.00001}, {target:200, bonus:0.00002}, {target:500, bonus:0.00003}, {target:1200, bonus:0.00005}, {target:3000, bonus:0.00008}, {target:7000, bonus:0.00012}, {target:15000, bonus:0.00020}, {target:30000, bonus:0.00035}, {target:70000, bonus:0.00060}];
+        let selectedAmount = 0;
 
-        // [핵심 1] 저장 시 동기화 강화 (Promise 리턴)
+        // [복구] 원래 잘 되던 실시간 저장 로직
         async function saveData() { 
-            if(USER_ID === "guest_user" || !isLoaded) return;
+            if(USER_ID === "guest_user") return;
             try {
                 userData.lastUpdate = Date.now();
                 await db.collection("users").doc(USER_ID).set(userData, { merge: true }); 
-                console.log("Sync Complete");
-                return true;
-            } catch (e) {
-                console.error("Sync Error:", e);
-                return false;
-            }
+                console.log("Synced");
+            } catch (e) { console.error("Save Error:", e); }
         }
 
+        // [복구] 로드 시 오프라인 채굴 합산
         async function loadData() {
             try {
                 const doc = await db.collection("users").doc(USER_ID).get();
-                const now = Date.now();
                 if (doc.exists) {
                     const data = doc.data();
+                    const now = Date.now();
                     const lastUpdate = data.lastUpdate || now;
                     const offlineSec = (now - lastUpdate) / 1000;
                     
@@ -177,48 +172,30 @@
                     if(data.activeItems?.spray > now) speed *= 2;
 
                     const offlineMining = Math.min(1000 - (data.power || 0), Math.max(0, offlineSec * speed));
-                    
                     userData = { ...userData, ...data };
                     userData.power = Math.min(1000, (data.power || 0) + offlineMining);
                     userData.lastUpdate = now;
                 } else {
-                    await db.collection("users").doc(USER_ID).set(userData); 
+                    await saveData(); 
                 }
-                isLoaded = true;
                 initAttendance(); updateUI(); updateLiveStatus();
             } catch (e) { console.error("Load Error:", e); }
         }
 
-        // [핵심 2] 수확 시 '동기적' 처리 보강
+        // [복구] 수확 버튼 - 누르자마자 서버 저장
         async function mineClick() {
-            if (!isLoaded) return;
             if (userData.power >= 0.005) {
-                // 1. 임시 변수에 현재 수확량 저장
-                const currentMined = userData.power;
-                
-                // 2. 화면 먼저 업데이트 (유저 체감)
-                userData.shards += currentMined;
+                userData.shards += userData.power;
                 userData.power = 0;
-                checkLevel(); 
-                updateUI();
-                
-                // 3. 서버 저장 시도 및 대기
-                const success = await saveData();
-                
-                if(success) {
-                    tg.showAlert(`Success! ${currentMined.toFixed(3)} ICE harvested.`);
-                } else {
-                    // 서버 저장 실패 시 복구 로직 (데이터 증발 방지)
-                    userData.shards -= currentMined;
-                    userData.power = currentMined;
-                    updateUI();
-                    tg.showAlert("Sync failed! Please check your connection.");
-                }
+                checkLevel(); updateUI();
+                await saveData(); 
+                tg.showAlert("Success harvest!");
             } else tg.showAlert("Min. 0.005 ICE required!");
         }
 
+        // 1초 채굴
         setInterval(() => {
-            if (!isLoaded || userData.power >= 1000) return;
+            if (userData.power >= 1000) return;
             let speed = 0.00005 + (levelData[userData.level-1]?.bonus || 0);
             let now = Date.now();
             if(userData.activeItems?.pickaxe > now) speed += 0.0001;
@@ -229,8 +206,8 @@
             updateUI();
         }, 1000);
 
-        setInterval(saveData, 60000);
-        window.addEventListener('pagehide', saveData);
+        setInterval(saveData, 60000); // 1분 자동 저장
+        window.addEventListener('unload', saveData);
 
         function updateUI() {
             document.getElementById('balance').innerText = userData.shards.toLocaleString(undefined, {minimumFractionDigits: 5});
@@ -250,7 +227,6 @@
         function initAttendance() { const grid = document.getElementById('attendance-grid'); grid.innerHTML = ""; for(let i=1; i<=30; i++) { const box = document.createElement('div'); box.className = 'day-box'; box.innerHTML = `D-${i}`; if(i === 1) { box.classList.add('today'); if(userData.lastAttendance === new Date().toDateString()) box.classList.add('active'); box.onclick = async () => { const now = new Date().toDateString(); if(userData.lastAttendance !== now) { userData.water += 5; userData.lastAttendance = now; updateUI(); await saveData(); box.classList.add('active'); tg.showAlert("Checked!"); } else tg.showAlert("Done!"); }; } grid.appendChild(box); } }
         function checkLevel() { let newLv = 1; for(let i=levelData.length-1; i>=0; i--) { if(userData.shards >= levelData[i].target) { newLv = i + 1; break; } } if(newLv > 10) newLv = 10; if(userData.level !== newLv) { userData.level = newLv; tg.showAlert(`LV.${newLv}!`); } }
         function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
-        function toggleGuide() { document.getElementById('guide-content').classList.toggle('open'); }
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
         function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; }
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; }

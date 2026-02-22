@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Ice Breaker Gold - Final Stacking</title>
+    <title>Ice Breaker Gold</title>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -22,47 +22,84 @@
         }
         body { background-color: var(--tg-bg); color: var(--text-main); font-family: 'Pretendard', sans-serif; margin: 0; padding: 15px 15px 100px 15px; display: flex; flex-direction: column; gap: 12px; overflow-x: hidden; }
         .card { background: var(--card-bg); border-radius: 15px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        .notice-bar { background: #fff9c4; color: #f57f17; padding: 10px; border-radius: 12px; font-size: 11px; font-weight: bold; text-align: center; border: 1px solid #fff176; margin-bottom: 5px; line-height: 1.4; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .status-badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 10px; color: white; margin-top: 4px; }
+        .status-online { background: var(--success); }
+        .status-offline { background: var(--danger); }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; }
+        .res-group { display: flex; gap: 8px; }
         .res-tag { background: #fff; border: 1.5px solid #eee; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 5px; }
         .plus-btn { background: var(--water-color); color: white; border: none; width: 18px; height: 18px; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: -5px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .mine-card { align-items: center; text-align: center; gap: 6px; }
+        .level-tag { background: #ffffff; color: #000000; border: 1px solid #eee; padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; }
+        .attendance-card { gap: 0; padding: 0; overflow: hidden; margin-top: 5px; }
+        .attendance-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #fff; }
+        .attendance-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: #fff; }
+        .attendance-body.open { max-height: 1200px; padding: 0 15px 20px 15px; }
+        .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+        .day-box { aspect-ratio: 1; background: #fdfdfd; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #bbb; position: relative; }
+        .day-box.active { background: var(--accent-blue) !important; color: white !important; }
+        .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); font-weight: 900; }
+        .mine-card { align-items: center; text-align: center; gap: 6px; position: relative; }
         .mining-power { font-size: 28px; font-weight: 800; }
         .harvest-btn { background: var(--accent-blue); color: white; border: none; width: 80%; padding: 15px; border-radius: 15px; font-weight: bold; font-size: 16px; margin-top: 10px; cursor: pointer; box-shadow: 0 4px 0 #02a9f4; transition: 0.1s; }
-        .harvest-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #02a9f4; }
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: #fff; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -2px 15px rgba(0,0,0,0.1); z-index: 999; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--gray-text); flex: 1; cursor: pointer; font-size: 12px; }
         .nav-item.active { color: var(--accent-blue); }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; }
-        .modal-content { width: 92%; background: white; border-radius: 25px; padding: 20px; box-sizing: border-box; max-height: 85vh; overflow-y: auto; }
-        .history-item { padding: 12px; border: 1px solid #eee; border-radius: 12px; font-size: 11px; margin-bottom: 8px; }
+        .modal-content { width: 92%; background: white; border-radius: 25px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; max-height: 85vh; overflow-y: auto; }
+        .tab-container { display: flex; border-bottom: 2px solid #eee; margin-bottom: 10px; }
+        .tab-item { flex: 1; padding: 10px; text-align: center; font-size: 14px; font-weight: bold; color: var(--gray-text); cursor: pointer; }
+        .tab-item.active { color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); }
+        .history-item { padding: 12px; border: 1px solid #eee; border-radius: 12px; font-size: 12px; margin-bottom: 8px; }
+        .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; }
+        .buy-small-btn { background: var(--water-color); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .cheat-warning { background: #fff4f4; border: 1px solid #ffcccc; color: #d32f2f; padding: 10px; border-radius: 10px; font-size: 10px; font-weight: bold; text-align: center; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div style="display:flex; gap:8px;">
+    <div class="top-bar">
+        <div class="res-group">
             <div class="res-tag">🧊 <span id="ice-top-display">0</span></div>
             <div style="display:flex; align-items:center;">
-                <div class="res-tag" style="color:var(--water-color);">💧 <span id="water-top-display">0</span></div>
+                <div class="res-tag" style="color: var(--water-color);">💧 <span id="water-top-display">0</span></div>
                 <button class="plus-btn" onclick="openDeposit()">+</button>
             </div>
         </div>
-        <div class="res-tag" id="lv-badge">⭐ LV.1</div>
+        <div class="level-tag" id="lv-badge">⭐ LV.1</div>
+    </div>
+    
+    <div class="notice-bar" id="live-notice-bar">
+        <span>Business Hours: UTC 05:00 ~ 18:00</span>
+        <div id="status-tag" class="status-badge">ONLINE</div>
+        <div style="font-size: 9px; margin-top: 5px; color: #d32f2f; opacity: 0.8;">⚠️ Abnormal activity will result in data reset.</div>
     </div>
 
     <div class="card">
         <div style="font-size:13px; font-weight:bold; color:var(--gray-text); margin-bottom:8px;">🧊 Ice Container (Max. 1,000)</div>
-        <div style="width:100%; height:10px; background:#f0f2f5; border-radius:10px; overflow:hidden;"><div id="ice-gauge-bar" style="width:0%; height:100%; background:var(--accent-blue); transition:width 0.3s;"></div></div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-            <div class="mining-power" id="balance">0</div>
-            <div style="color:var(--accent-orange); font-weight:bold; font-size:13px;" id="ice-to-usdt">0.00 USDT</div>
+        <div style="width:100%; height:20px; background:#f0f2f5; border-radius:10px; overflow:hidden;"><div id="ice-gauge-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #4fc3f7, #81d4fa); transition:width 0.3s;"></div></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <div class="asset-amount" id="balance" style="font-size: 24px; font-weight: 900;">0</div>
+            <div id="ice-to-usdt" style="font-size: 13px; font-weight: bold; color: var(--accent-orange);">0.00 USDT</div>
+        </div>
+    </div>
+
+    <div class="card attendance-card">
+        <div class="attendance-header" onclick="toggleAttendance()">
+            <h3 style="margin:0; font-size:16px;">📅 30Day Rewards</h3>
+            <span id="arrow">▼</span>
+        </div>
+        <div id="attendance-body" class="attendance-body">
+            <div class="grid-30" id="attendance-grid"></div>
         </div>
     </div>
 
     <div class="card mine-card">
-        <lottie-player src="https://lottie.host/872a8b1d-7fb8-4e06-9566-575c112ceb60/4RHshKiCu8.json" background="transparent" speed="1" style="width: 150px; height: 150px;" loop autoplay></lottie-player>
+        <lottie-player src="https://lottie.host/872a8b1d-7fb8-4e06-9566-575c112ceb60/4RHshKiCu8.json" background="transparent" speed="1" style="width: 180px; height: 180px;" loop autoplay></lottie-player>
         <div class="mining-power" id="mining-power">+ 0.00000</div>
-        <div id="speed-display" style="color:var(--accent-orange); font-weight:bold; font-size:14px;">+ 0.00005 / sec</div>
+        <div id="speed-display" style="color: var(--accent-orange); font-weight: bold; font-size: 14px;">+ 0.00005 / sec</div>
         <button class="harvest-btn" onclick="mineClick()">🧊 HARVEST ICE</button>
+        <div style="font-size: 11px; color: var(--gray-text); margin-top: 8px;">Tap Button to collect (Min. 0.005 ICE)</div>
     </div>
 
     <nav class="bottom-nav">
@@ -72,25 +109,51 @@
     </nav>
 
     <div id="shop-modal" class="modal"><div class="modal-content">
-        <h3>Water Shop 💧</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Water Shop 💧</h2><span onclick="closeModal('shop-modal')" style="cursor:pointer; font-size:24px;">&times;</span></div>
         <div id="shop-list"></div>
-        <button onclick="closeModal('shop-modal')" style="width:100%; padding:10px; margin-top:10px; border:none; border-radius:10px;">Close</button>
     </div></div>
 
     <div id="wallet-modal" class="modal"><div class="modal-content">
-        <h3>History</h3>
-        <div id="history-container"></div>
-        <button onclick="closeModal('wallet-modal')" style="width:100%; padding:10px; margin-top:10px; border:none; border-radius:10px;">Close</button>
+        <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Wallet</h2><span onclick="closeModal('wallet-modal')" style="cursor:pointer; font-size:24px;">&times;</span></div>
+        <div class="tab-container">
+            <div class="tab-item active" id="tab-withdraw" onclick="switchTab('withdraw')">Withdraw</div>
+            <div class="tab-item" id="tab-history" onclick="switchTab('history')">History</div>
+        </div>
+        <div id="pane-withdraw">
+            <div class="cheat-warning">⚠️ USDT (TRC20) ONLY. Incorrect network selection may lead to loss.</div>
+            <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;"><strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br><strong>Rate:</strong> 1,400 ICE = 1 USDT | <strong>Min:</strong> 14,000 ICE</div>
+            <input type="number" id="withdraw-amount" placeholder="Amount (ICE)" class="input-box" oninput="calculateWithdrawHint()" style="margin-top:10px;">
+            <div id="withdraw-usdt-hint" style="font-size:11px; color:var(--accent-orange); margin: 5px 0;">≈ 0.00 USDT</div>
+            <input type="text" id="wallet-addr" placeholder="Enter USDT (TRC20) address" class="input-box" style="margin-top:10px;">
+            <button class="buy-small-btn" style="background:var(--accent-blue); width:100%; margin-top:10px;" onclick="requestWithdraw()">Request Withdrawal</button>
+        </div>
+        <div id="pane-history" style="display:none;"><div id="history-container"></div></div>
+    </div></div>
+
+    <div id="deposit-modal" class="modal"><div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Recharge Water 💧</h2><span onclick="closeModal('deposit-modal')" style="cursor:pointer; font-size:24px;">&times;</span></div>
+        <div class="package-item" id="btn-pack-10" onclick="handlePackSelect(10)"><b>1,000 WATER</b> (10 USDT)</div>
+        <div class="package-item" id="btn-pack-20" onclick="handlePackSelect(20)"><b>2,200 WATER</b> (20 USDT)</div>
+        <div id="payment-details" style="display:none; margin-top:10px;">
+            <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:11px;"><b>Admin USDT (TRC20):</b><br>TDDaEzGdXGuuH3RxhHa5LZCSeeTpZuuTd1</div>
+            <input type="text" id="txid-input" placeholder="Paste TXID here" class="input-box" style="margin-top:10px;">
+            <button class="buy-small-btn" style="background:var(--accent-orange); width:100%; margin-top:10px;" onclick="submitDeposit()">Submit Recharge</button>
+        </div>
     </div></div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        const firebaseConfig = { /* 사용자님의 설정값 유지 */ };
+        const firebaseConfig = {
+            apiKey: "AIzaSyAAUthhNp0EBbtZ75RDePw0Nxo9uYmwLTw",
+            authDomain: "gifty-icebreaker.firebaseapp.com",
+            projectId: "gifty-icebreaker",
+            storageBucket: "gifty-icebreaker.firebasestorage.app",
+            messagingSenderId: "748696340041",
+            appId: "1:748696340041:web:ce568dca25827f4a042198"
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const USER_ID = tg.initDataUnsafe?.user?.id?.toString() || "guest_user";
 
-        // 아이템 상수 정의
         const ITEM_DEFS = {
             'pickaxe': { name: 'Iron Pickaxe', speed: 0.0001, hours: 24, price: 500 },
             'gear': { name: 'Silver Gear', speed: 0.0005, hours: 24, price: 1500 },
@@ -98,140 +161,125 @@
             'spray': { name: 'Cooling Spray', speed: 2, hours: 12, price: 1500, isMultiplier: true }
         };
 
-        // 초기 데이터 구조 (activeItems는 이제 배열입니다)
-        let userData = { shards: 0, water: 0, power: 0, level: 1, activeItems: [], lastUpdate: Date.now() };
+        const USER_ID = tg.initDataUnsafe?.user?.id?.toString() || "guest_user";
+        let userData = { shards: 0, water: 0, power: 0, level: 1, activeItems: [], attendanceCount: 0, lastAttendance: "", lastUpdate: Date.now() };
 
         async function loadData() {
             const doc = await db.collection("users").doc(USER_ID).get();
             if (doc.exists) {
                 const data = doc.data();
                 const now = Date.now();
-                
-                // [핵심] 개별 아이템 만료 체크 및 내역 기록
                 let aliveItems = [];
-                for (let item of (data.activeItems || [])) {
-                    if (now < item.expiry) {
-                        aliveItems.push(item);
-                    } else {
-                        const effect = item.isMultiplier ? "x2 Boost" : `-${item.value}/s`;
-                        await addTransaction("ITEM_EXPIRED", "0 ICE", "completed", `${item.name} 만료 (${effect})`);
-                    }
+                for (let it of (data.activeItems || [])) {
+                    if (now < it.expiry) aliveItems.push(it);
+                    else await addTransaction("ITEM_EXPIRED", "0 ICE", "completed", `${it.name} 만료 (${it.isMultiplier ? 'x2' : '-'+it.value})`);
                 }
-
-                const lastUpdate = data.lastUpdate || now;
-                const offlineSec = (now - lastUpdate) / 1000;
-                
-                // 현재 중첩된 속도 계산
-                const currentSpeed = calculateSpeed(aliveItems, data.level);
-                
+                const speed = calculateSpeed(aliveItems, data.level || 1);
+                const elapsed = (now - (data.lastUpdate || now)) / 1000;
                 userData = { ...userData, ...data, activeItems: aliveItems };
-                userData.power = Math.min(1000, (data.power || 0) + (offlineSec * currentSpeed));
+                userData.power = Math.min(1000, (data.power || 0) + (elapsed * speed));
                 userData.lastUpdate = now;
                 await saveData();
             }
-            updateUI();
+            initAttendance(); updateUI(); updateLiveStatus();
         }
 
-        // [중요] 모든 아이템의 속도를 실시간으로 합산하는 함수
         function calculateSpeed(items, level) {
-            const levelBonus = [0, 0.00001, 0.00002, 0.00003, 0.00005, 0.00008, 0.00012, 0.00020, 0.00035, 0.00060];
-            let baseSpeed = 0.00005 + (levelBonus[level-1] || 0);
-            let addedSpeed = 0;
-            let multiplier = 1;
+            const lvBonus = [0, 0.00001, 0.00002, 0.00003, 0.00005, 0.00008, 0.00012, 0.00020, 0.00035, 0.00060];
+            let base = 0.00005 + (lvBonus[level-1] || 0);
+            let added = 0; let mult = 1;
+            items.forEach(it => { if(it.isMultiplier) mult *= it.value; else added += it.value; });
+            return (base + added) * mult;
+        }
 
-            items.forEach(item => {
-                if (item.isMultiplier) multiplier *= item.value;
-                else addedSpeed += item.value;
-            });
-
-            return (baseSpeed + addedSpeed) * multiplier;
+        async function mineClick() {
+            const speed = calculateSpeed(userData.activeItems, userData.level);
+            const now = Date.now();
+            const maxGain = ((now - userData.lastUpdate) / 1000 * speed) + 0.05;
+            if (userData.power > 1001 || (userData.power > maxGain && userData.power > 0.5)) {
+                alertAdmin("Cheat Detected", userData.power); userData.power = 0; await saveData(); return;
+            }
+            if (userData.power >= 0.005) {
+                userData.shards += userData.power; userData.power = 0; userData.lastUpdate = now;
+                checkLevel(); await saveData(); updateUI(); tg.showAlert("Harvest Success!");
+            } else tg.showAlert("Min 0.005 ICE!");
         }
 
         async function buyItem(id) {
             const def = ITEM_DEFS[id];
             if (userData.water < def.price) return tg.showAlert("Need Water!");
-
-            const now = Date.now();
-            const expiry = now + (def.hours * 3600 * 1000);
-            
-            // 구매한 시점의 고유 정보를 배열에 추가 (개별 타이머 보장)
-            const newItem = {
-                id: id + "_" + now,
-                name: def.name,
-                value: def.speed,
-                expiry: expiry,
-                isMultiplier: def.isMultiplier || false
-            };
-
             userData.water -= def.price;
-            userData.activeItems.push(newItem);
-
-            const effect = def.isMultiplier ? "x2 Boost" : `+${def.speed}/s`;
-            await addTransaction("ITEM_ACTIVATE", def.price + " WATER", "completed", `${def.name} 활성화 (${effect})`);
-            
-            await saveData();
-            updateUI();
-            tg.showAlert(`${def.name} 구매 완료! 속도 ${effect}가 합산되었습니다.`);
-            closeModal('shop-modal');
+            userData.activeItems.push({ name: def.name, value: def.speed, expiry: Date.now()+(def.hours*3600*1000), isMultiplier: def.isMultiplier || false });
+            await addTransaction("ITEM_ACTIVATE", def.price+" WATER", "completed", `${def.name} (+${def.speed})`);
+            await saveData(); updateUI(); closeModal('shop-modal');
         }
 
         function updateUI() {
-            const currentSpeed = calculateSpeed(userData.activeItems, userData.level);
             document.getElementById('balance').innerText = userData.shards.toLocaleString(undefined, {minimumFractionDigits: 5});
             document.getElementById('ice-top-display').innerText = Math.floor(userData.shards).toLocaleString();
             document.getElementById('water-top-display').innerText = userData.water.toLocaleString();
-            document.getElementById('ice-to-usdt').innerText = (userData.shards / 1400).toFixed(2) + " USDT";
+            document.getElementById('ice-to-usdt').innerText = (userData.shards/1400).toFixed(2) + " USDT";
             document.getElementById('mining-power').innerText = "+ " + userData.power.toFixed(5);
-            document.getElementById('speed-display').innerText = "+ " + currentSpeed.toFixed(5) + " / sec";
-            document.getElementById('ice-gauge-bar').style.width = (userData.power / 10) + "%";
+            document.getElementById('speed-display').innerText = "+ " + calculateSpeed(userData.activeItems, userData.level).toFixed(5) + " / sec";
+            document.getElementById('ice-gauge-bar').style.width = (userData.power/10) + "%";
             document.getElementById('lv-badge').innerText = `⭐ LV.${userData.level}`;
+            document.getElementById('wallet-ice-bal').innerText = Math.floor(userData.shards).toLocaleString();
         }
 
-        async function addTransaction(type, amount, status, detail) {
-            await db.collection("transactions").add({
-                userId: USER_ID, type, amount, status, detail, timestamp: Date.now()
-            });
+        function initAttendance() {
+            const grid = document.getElementById('attendance-grid'); grid.innerHTML = "";
+            const today = new Date().toLocaleDateString('ko-KR');
+            for(let i=1; i<=30; i++) {
+                const box = document.createElement('div'); box.className = 'day-box'; box.innerHTML = `D-${i}`;
+                if(i <= userData.attendanceCount) box.classList.add('active');
+                if(i === userData.attendanceCount + 1) {
+                    box.classList.add('today');
+                    if(userData.lastAttendance !== today) {
+                        box.onclick = async () => {
+                            userData.attendanceCount++; userData.water += 5; userData.lastAttendance = today;
+                            await saveData(); initAttendance(); updateUI(); tg.showAlert("Check-in +5 Water!");
+                        };
+                    }
+                }
+                grid.appendChild(box);
+            }
         }
 
-        function renderShop() {
-            const list = document.getElementById('shop-list');
-            list.innerHTML = "";
+        // --- 편의 기능들 ---
+        async function saveData() { await db.collection("users").doc(USER_ID).set(userData, {merge:true}); }
+        function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
+        function openShop() { 
+            const list = document.getElementById('shop-list'); list.innerHTML = "";
             Object.entries(ITEM_DEFS).forEach(([id, def]) => {
-                const div = document.createElement('div');
-                div.style = "display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid #eee;";
-                div.innerHTML = `
-                    <div><b>${def.name}</b><br><small>${def.isMultiplier ? 'Speed x2' : '+'+def.speed+'/s'} (${def.hours}h)</small></div>
-                    <button style="background:var(--water-color); color:white; border:none; padding:8px 12px; border-radius:8px; font-weight:bold;" onclick="buyItem('${id}')">💧 ${def.price}</button>
-                `;
-                list.appendChild(div);
+                const d = document.createElement('div'); d.className = "item-row"; d.style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee;";
+                d.innerHTML = `<div><b>${def.name}</b><br><small>${def.isMultiplier?'x2':'+'+def.speed}/s (${def.hours}h)</small></div><button class="buy-small-btn" onclick="buyItem('${id}')">💧 ${def.price}</button>`;
+                list.appendChild(d);
             });
+            document.getElementById('shop-modal').style.display='flex'; 
         }
-
-        async function openWallet() {
-            document.getElementById('wallet-modal').style.display = 'flex';
-            const container = document.getElementById('history-container');
-            container.innerHTML = "Loading...";
-            const snap = await db.collection("transactions").where("userId", "==", USER_ID).orderBy("timestamp", "desc").limit(15).get();
-            container.innerHTML = "";
-            snap.forEach(doc => {
-                const d = doc.data();
-                const div = document.createElement('div');
-                div.className = 'history-item';
-                div.innerHTML = `<strong>${d.type}</strong> <span style="float:right">${d.amount}</span><br><small>${d.detail}</small><br><small style="color:#999">${new Date(d.timestamp).toLocaleString()}</small>`;
-                container.appendChild(div);
-            });
-        }
-
-        async function saveData() { userData.lastUpdate = Date.now(); await db.collection("users").doc(USER_ID).set(userData, {merge:true}); }
-        function openShop() { renderShop(); document.getElementById('shop-modal').style.display='flex'; }
+        function openWallet() { document.getElementById('wallet-modal').style.display='flex'; switchTab('withdraw'); }
         function closeModal(id) { document.getElementById(id).style.display='none'; }
-        function mineClick() { if(userData.power >= 0.005) { userData.shards += userData.power; userData.power = 0; updateUI(); saveData(); } }
+        function calculateWithdrawHint() { const v = document.getElementById('withdraw-amount').value || 0; document.getElementById('withdraw-usdt-hint').innerText = `≈ ${(v/1400).toFixed(2)} USDT`; }
+        function updateLiveStatus() { const h = new Date().getUTCHours(); const open = (h>=5 && h<18); document.getElementById('status-tag').innerText = open?"● ONLINE":"○ OFFLINE"; document.getElementById('status-tag').className="status-badge "+(open?"status-online":"status-offline"); }
+        async function addTransaction(t, a, s, d) { await db.collection("transactions").add({ userId: USER_ID, type:t, amount:a, status:s, detail:d, timestamp: Date.now() }); }
+        function switchTab(t) { 
+            document.getElementById('pane-withdraw').style.display = t==='withdraw'?'block':'none';
+            document.getElementById('pane-history').style.display = t==='history'?'block':'none';
+            if(t==='history') loadHistory();
+        }
+        async function loadHistory() {
+            const cont = document.getElementById('history-container'); cont.innerHTML = "Loading...";
+            const snap = await db.collection("transactions").where("userId", "==", USER_ID).orderBy("timestamp", "desc").limit(10).get();
+            cont.innerHTML = "";
+            snap.forEach(doc => {
+                const d = doc.data(); const div = document.createElement('div'); div.className = 'history-item';
+                div.innerHTML = `<b>${d.type}</b> <small style="float:right">${new Date(d.timestamp).toLocaleString()}</small><br>${d.detail}`;
+                cont.appendChild(div);
+            });
+        }
+        function checkLevel() { const lvData = [0, 50, 200, 500, 1200, 3000, 7000, 15000, 30000, 70000]; let nl = 1; lvData.forEach((t, i) => { if(userData.shards >= t) nl = i+1; }); if(userData.level !== nl) { userData.level = nl; tg.showAlert(`Level Up! LV.${nl}`); } }
 
-        setInterval(() => {
-            const speed = calculateSpeed(userData.activeItems, userData.level);
-            if(userData.power < 1000) { userData.power += speed; updateUI(); }
-        }, 1000);
-
+        setInterval(() => { if(userData.power < 1000) { userData.power += calculateSpeed(userData.activeItems, userData.level); updateUI(); } }, 1000);
         loadData();
     </script>
 </body>

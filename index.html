@@ -148,7 +148,12 @@
         </div>
     </div>
 
-    <div id="shop-modal" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center;"><h2>Water Shop 💧</h2><span onclick="closeModal('shop-modal')" style="cursor:pointer; font-size:24px;">&times;</span></div><div class="item-row"><div><b>⛏️ Iron Pickaxe</b><br><small>+0.0001/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('pickaxe', 500, 24)">💧 500</button></div><div class="item-row"><div><b>⚙️ Silver Gear</b><br><small>+0.0005/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('gear', 1500, 24)">💧 1,500</button></div><div class="item-row"><div><b>❄️ Cooling Spray</b><br><small>All Speed x2 (12h)</small></div><button class="buy-small-btn" onclick="buyItem('spray', 1500, 12)">💧 1,500</button></div><div class="item-row"><div><b>💎 Diamond Drill</b><br><small>+0.002/s (48h)</small></div><button class="buy-small-btn" onclick="buyItem('drill', 5000, 48)">💧 5,000</button></div></div></div>
+    <div id="shop-modal" class="modal"><div class="modal-content"><div style="display:flex; justify-content:space-between; align-items:center;"><h2>Water Shop 💧</h2><span onclick="closeModal('shop-modal')" style="cursor:pointer; font-size:24px;">&times;</span></div>
+        <div class="item-row"><div><b>⛏️ Iron Pickaxe</b><br><small>+0.0001/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('pickaxe', 500, 24, 'Iron Pickaxe')">💧 500</button></div>
+        <div class="item-row"><div><b>⚙️ Silver Gear</b><br><small>+0.0005/s (24h)</small></div><button class="buy-small-btn" onclick="buyItem('gear', 1500, 24, 'Silver Gear')">💧 1,500</button></div>
+        <div class="item-row"><div><b>❄️ Cooling Spray</b><br><small>All Speed x2 (12h)</small></div><button class="buy-small-btn" onclick="buyItem('spray', 1500, 12, 'Cooling Spray')">💧 1,500</button></div>
+        <div class="item-row"><div><b>💎 Diamond Drill</b><br><small>+0.002/s (48h)</small></div><button class="buy-small-btn" onclick="buyItem('drill', 5000, 48, 'Diamond Drill')">💧 5,000</button></div>
+    </div></div>
 
     <div id="deposit-modal" class="modal">
         <div class="modal-content">
@@ -247,7 +252,6 @@
             document.getElementById('lv-badge').innerText = `⭐ LV.${userData.level}`;
             document.getElementById('mining-power').innerText = "+ " + userData.power.toFixed(5);
 
-            // 실시간 표시 속도 계산 로직 (아이템 버프 반영)
             let now = Date.now();
             let displaySpeed = 0.00005 + (levelData[userData.level-1]?.bonus || 0);
             if(userData.activeItems?.pickaxe > now) displaySpeed += 0.0001;
@@ -258,12 +262,15 @@
             document.getElementById('speed-display').innerText = "+ " + displaySpeed.toFixed(5) + " / sec";
         }
 
-        function buyItem(id, price, hours) { 
+        async function buyItem(id, price, hours, itemName) { 
             if(userData.water >= price) { 
                 userData.water -= price; 
                 userData.activeItems[id] = Date.now() + (hours * 3600 * 1000); 
-                updateUI(); saveData(); 
-                tg.showAlert("Activated!"); 
+                updateUI(); 
+                await saveData(); 
+                // 워터 사용 내역 추가
+                await addTransaction("PURCHASE", price + " WATER", "completed", itemName);
+                tg.showAlert(`Successfully purchased ${itemName}!`); 
             } else tg.showAlert("Need Water!"); 
         }
 
@@ -333,6 +340,7 @@
                             <span>${data.amount}</span>
                             <span>${date}</span>
                         </div>
+                        ${data.type === 'PURCHASE' ? `<div style="font-size:10px; color:#4fc3f7; margin-top:2px;">Item: ${data.detail}</div>` : ''}
                     `;
                     container.appendChild(item);
                 });

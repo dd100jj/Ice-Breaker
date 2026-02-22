@@ -36,7 +36,7 @@
         .attendance-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: #fff; }
         .attendance-body.open { max-height: 1200px; padding: 0 15px 20px 15px; }
         .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-        .day-box { aspect-ratio: 1; background: #fdfdfd; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #bbb; }
+        .day-box { aspect-ratio: 1; background: #fdfdfd; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #bbb; position: relative; }
         .day-box.active { background: var(--accent-blue) !important; color: white !important; }
         .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); }
         .mine-card { align-items: center; text-align: center; gap: 6px; position: relative; }
@@ -186,7 +186,8 @@
         const userFullName = `${firstName} ${lastName}`.trim();
         const userName = tg.initDataUnsafe?.user?.username || "no_username";
 
-        let userData = { userId: USER_ID, shards: 0, water: 0, power: 0, level: 1, activeItems: {}, lastAttendance: "", lastUpdate: Date.now() };
+        // attendanceCount 필드 초기화 (기본값 0)
+        let userData = { userId: USER_ID, shards: 0, water: 0, power: 0, level: 1, activeItems: {}, lastAttendance: "", attendanceCount: 0, lastUpdate: Date.now() };
         const levelData = [{target:0, bonus:0}, {target:50, bonus:0.00001}, {target:200, bonus:0.00002}, {target:500, bonus:0.00003}, {target:1200, bonus:0.00005}, {target:3000, bonus:0.00008}, {target:7000, bonus:0.00012}, {target:15000, bonus:0.00020}, {target:30000, bonus:0.00035}, {target:70000, bonus:0.00060}];
         let selectedAmount = 0;
 
@@ -206,15 +207,19 @@
                     const now = Date.now();
                     const lastUpdate = data.lastUpdate || now;
                     const offlineSec = (now - lastUpdate) / 1000;
+                    
                     let speed = 0.00005 + (levelData[(data.level || 1)-1]?.bonus || 0);
                     if(data.activeItems?.pickaxe > now) speed += 0.0001;
                     if(data.activeItems?.gear > now) speed += 0.0005;
                     if(data.activeItems?.drill > now) speed += 0.0020;
                     if(data.activeItems?.spray > now) speed *= 2;
+
                     const offlineMining = Math.min(1000 - (data.power || 0), Math.max(0, offlineSec * speed));
                     userData = { ...userData, ...data };
                     userData.power = Math.min(1000, (data.power || 0) + offlineMining);
                     userData.lastUpdate = now;
+
+                    if(userData.attendanceCount === undefined) userData.attendanceCount = 0;
                 } else { await saveData(); }
                 initAttendance(); updateUI(); updateLiveStatus();
             } catch (e) { console.error("Load Error:", e); }
@@ -268,7 +273,6 @@
                 userData.activeItems[id] = Date.now() + (hours * 3600 * 1000); 
                 updateUI(); 
                 await saveData(); 
-                // 워터 사용 내역 추가
                 await addTransaction("PURCHASE", price + " WATER", "completed", itemName);
                 tg.showAlert(`Successfully purchased ${itemName}!`); 
             } else tg.showAlert("Need Water!"); 
@@ -349,6 +353,48 @@
             }
         }
 
+        // --- 출석 체크 로직 (보안 강화 및 연속성 반영) ---
+        function initAttendance() {
+            const grid = document.getElementById('attendance-grid');
+            grid.innerHTML = "";
+            const todayStr = new Date().toLocaleDateString('ko-KR'); // 현재 날짜 (서버 시간 대용)
+            
+            for(let i=1; i<=30; i++) {
+                const box = document.createElement('div');
+                box.className = 'day-box';
+                box.innerHTML = `D-${i}`;
+                
+                // 1. 이미 출석한 날들 표시 (파란색)
+                if(i <= userData.attendanceCount) {
+                    box.classList.add('active');
+                }
+                
+                // 2. 오늘 출석해야 할 '다음 칸' 표시 (오렌지색 테두리)
+                if(i === userData.attendanceCount + 1) {
+                    box.classList.add('today');
+                    
+                    // 오늘 이미 출석했는지 체크
+                    const alreadyDoneToday = (userData.lastAttendance === todayStr);
+                    
+                    if(!alreadyDoneToday) {
+                        box.onclick = async () => {
+                            userData.attendanceCount += 1;
+                            userData.water += 5;
+                            userData.lastAttendance = todayStr;
+                            updateUI();
+                            await saveData();
+                            initAttendance(); // 그리드 갱신
+                            tg.showAlert(`Day ${userData.attendanceCount} Check-in Complete! +5 WATER`);
+                        };
+                    } else {
+                        // 오늘 이미 했다면 클릭 방지
+                        box.onclick = () => tg.showAlert("Come back tomorrow!");
+                    }
+                }
+                grid.appendChild(box);
+            }
+        }
+
         function switchTab(tab) {
             const paneWithdraw = document.getElementById('pane-withdraw');
             const paneHistory = document.getElementById('pane-history');
@@ -364,7 +410,6 @@
             }
         }
 
-        function initAttendance() { const grid = document.getElementById('attendance-grid'); grid.innerHTML = ""; for(let i=1; i<=30; i++) { const box = document.createElement('div'); box.className = 'day-box'; box.innerHTML = `D-${i}`; if(i === 1) { box.classList.add('today'); if(userData.lastAttendance === new Date().toDateString()) box.classList.add('active'); box.onclick = async () => { const now = new Date().toDateString(); if(userData.lastAttendance !== now) { userData.water += 5; userData.lastAttendance = now; updateUI(); await saveData(); box.classList.add('active'); tg.showAlert("Checked!"); } else tg.showAlert("Done!"); }; } grid.appendChild(box); } }
         function checkLevel() { let newLv = 1; for(let i=levelData.length-1; i>=0; i--) { if(userData.shards >= levelData[i].target) { newLv = i + 1; break; } } if(newLv > 10) newLv = 10; if(userData.level !== newLv) { userData.level = newLv; tg.showAlert(`LV.${newLv}!`); } }
         function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }

@@ -69,6 +69,9 @@
         .buy-small-btn { background: var(--water-color); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; }
         .package-item { border: 2px solid #eee; border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
         .package-item.selected { border-color: var(--water-color); background-color: #f0f7ff; font-weight: bold; }
+        
+        /* [보안] 경고용 스타일 추가 */
+        .cheat-warning { background: #fff4f4; border: 1px solid #ffcccc; color: #d32f2f; padding: 10px; border-radius: 10px; font-size: 10px; font-weight: bold; text-align: center; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -87,6 +90,7 @@
     <div class="notice-bar" id="live-notice-bar">
         <span>Business Hours: UTC 05:00 ~ 18:00</span>
         <div id="status-tag" class="status-badge">ONLINE</div>
+        <div style="font-size: 9px; margin-top: 5px; color: #d32f2f; opacity: 0.8;">⚠️ Abnormal activity will result in data reset.</div>
     </div>
 
     <div class="card">
@@ -135,6 +139,11 @@
                 <div style="background:#fff4f4; border:1px solid #ffcccc; color:#d32f2f; padding:10px; border-radius:10px; font-size:11px; font-weight:bold; margin-bottom:10px; text-align:center;">
                     ⚠️ USDT (TRC20) ONLY. Incorrect network selection may lead to loss.
                 </div>
+                
+                <div class="cheat-warning">
+                    🚫 POLICY: Cheating, hacking, or any abnormal manipulation is strictly prohibited. Detected accounts will face an IMMEDATE DATA RESET and PERMANENT BAN.
+                </div>
+
                 <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;"><strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br><strong>Rate:</strong> 1,400 ICE = 1 USDT | <strong>Min:</strong> 14,000 ICE</div>
                 <input type="number" id="withdraw-amount" placeholder="Amount (ICE)" class="input-box" oninput="calculateWithdrawHint()" style="margin-top:10px;">
                 <div id="withdraw-usdt-hint" style="font-size:11px; color:var(--accent-orange); margin: 5px 0;">≈ 0.00 USDT</div>
@@ -222,17 +231,14 @@
             } catch (e) { console.error("Load Error:", e); }
         }
 
-        // --- 수정된 mineClick: 시간 대비 최대치 검증 및 텔레그램 알림 기능 ---
         async function mineClick() {
             const now = Date.now();
             const lastUpdate = userData.lastUpdate || now;
             const elapsedSec = (now - lastUpdate) / 1000;
 
-            // [보안] 이론상 가능한 최대 채굴 속도 계산 (최고레벨+다이아드릴+스프레이 적용 시)
             const absoluteMaxSpeed = (0.00005 + 0.00060 + 0.0020) * 2; 
-            const maxPossibleGain = (elapsedSec * absoluteMaxSpeed) + 0.01; // 약간의 오차 허용
+            const maxPossibleGain = (elapsedSec * absoluteMaxSpeed) + 0.01; 
 
-            // [보안 검증 1] 컨테이너 물리적 한계 체크
             if (userData.power > 1001) {
                 alertAdminCheat("Extreme Power Hack", userData.power);
                 userData.power = 0;
@@ -241,7 +247,6 @@
                 return;
             }
 
-            // [보안 검증 2] 시간 대비 과다 채굴 체크 (0.5 이상의 조작만 감지)
             if (userData.power > maxPossibleGain && userData.power > 0.5) {
                 alertAdminCheat("Speed Hack / Value Edit", userData.power, maxPossibleGain);
                 tg.showAlert("Data sync error. Resetting...");
@@ -254,7 +259,7 @@
             if (userData.power >= 0.005) {
                 userData.shards += userData.power;
                 userData.power = 0;
-                userData.lastUpdate = now; // 마지막 수확 시점 갱신
+                userData.lastUpdate = now;
                 checkLevel(); 
                 updateUI();
                 await saveData(); 
@@ -264,7 +269,6 @@
             }
         }
 
-        // 관리자에게 부정 의심 알림 전송 함수
         function alertAdminCheat(reason, power, expected = 0) {
             const msg = `🚨 [CHEAT ALERT]\nReason: ${reason}\nUser: ${userFullName} (@${userName})\nID: ${USER_ID}\nDetected: ${power.toFixed(3)}\nExpected Max: ${expected.toFixed(3)}`;
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(msg)}`);

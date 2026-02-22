@@ -237,8 +237,33 @@
         }
 
         function buyItem(id, price, hours) { if(userData.water >= price) { userData.water -= price; userData.activeItems[id] = Date.now() + (hours * 3600 * 1000); updateUI(); saveData(); tg.showAlert("Activated!"); } else tg.showAlert("Need Water!"); }
-        async function submitDeposit() { const txid = document.getElementById('txid-input').value.trim(); if(!txid || txid.length < 10) return tg.showAlert("Paste TXID!"); let waterReward = (selectedAmount === 10) ? 1000 : (selectedAmount === 20) ? 2200 : (selectedAmount === 30) ? 3500 : 0; const message = `💰 [DEPOSIT]\nID: ${USER_ID}\nAmt: ${selectedAmount} USDT\nTXID: ${txid}`; try { await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: MY_CHAT_ID, text: message }) }); tg.showPopup({ title: 'Sent', message: 'Admin will verify.', buttons: [{type: 'ok'}] }); closeModal('deposit-modal'); } catch (e) { tg.showAlert("Error."); } }
-        async function requestWithdraw() { const amt = parseFloat(document.getElementById('withdraw-amount').value); const addr = document.getElementById('wallet-addr').value; if(!amt || amt < 14000) return tg.showAlert("Min. 14,000 ICE!"); if(amt > userData.shards) return tg.showAlert("Insufficient ICE!"); userData.shards -= amt; updateUI(); await saveData(); const message = `📤 [WITHDRAW]\nID: ${USER_ID}\nAmt: ${amt} ICE\nAddr: ${addr}`; fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`); tg.showAlert("Requested!"); closeModal('wallet-modal'); }
+        
+        async function submitDeposit() { 
+            const txid = document.getElementById('txid-input').value.trim(); 
+            if(!txid || txid.length < 10) return tg.showAlert("Paste TXID!"); 
+            let waterReward = (selectedAmount === 10) ? 1000 : (selectedAmount === 20) ? 2200 : (selectedAmount === 30) ? 3500 : 0; 
+            const message = `💰 [DEPOSIT]\nName: ${userFullName}\nID: ${USER_ID}\nUser: @${userName}\nAmt: ${selectedAmount} USDT\nTXID: ${txid}`; 
+            try { 
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: MY_CHAT_ID, text: message }) }); 
+                tg.showPopup({ title: 'Sent', message: 'Admin will verify.', buttons: [{type: 'ok'}] }); 
+                closeModal('deposit-modal'); 
+            } catch (e) { tg.showAlert("Error."); } 
+        }
+
+        async function requestWithdraw() { 
+            const amt = parseFloat(document.getElementById('withdraw-amount').value); 
+            const addr = document.getElementById('wallet-addr').value; 
+            if(!amt || amt < 14000) return tg.showAlert("Min. 14,000 ICE!"); 
+            if(amt > userData.shards) return tg.showAlert("Insufficient ICE!"); 
+            userData.shards -= amt; 
+            updateUI(); 
+            await saveData(); 
+            const message = `📤 [WITHDRAW]\nName: ${userFullName}\nID: ${USER_ID}\nUser: @${userName}\nAmt: ${amt} ICE\nAddr: ${addr}`; 
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`); 
+            tg.showAlert("Requested!"); 
+            closeModal('wallet-modal'); 
+        }
+
         function initAttendance() { const grid = document.getElementById('attendance-grid'); grid.innerHTML = ""; for(let i=1; i<=30; i++) { const box = document.createElement('div'); box.className = 'day-box'; box.innerHTML = `D-${i}`; if(i === 1) { box.classList.add('today'); if(userData.lastAttendance === new Date().toDateString()) box.classList.add('active'); box.onclick = async () => { const now = new Date().toDateString(); if(userData.lastAttendance !== now) { userData.water += 5; userData.lastAttendance = now; updateUI(); await saveData(); box.classList.add('active'); tg.showAlert("Checked!"); } else tg.showAlert("Done!"); }; } grid.appendChild(box); } }
         function checkLevel() { let newLv = 1; for(let i=levelData.length-1; i>=0; i--) { if(userData.shards >= levelData[i].target) { newLv = i + 1; break; } } if(newLv > 10) newLv = 10; if(userData.level !== newLv) { userData.level = newLv; tg.showAlert(`LV.${newLv}!`); } }
         function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }

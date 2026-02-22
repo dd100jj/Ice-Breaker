@@ -222,14 +222,52 @@
             } catch (e) { console.error("Load Error:", e); }
         }
 
+        // --- 수정된 mineClick: 시간 대비 최대치 검증 및 텔레그램 알림 기능 ---
         async function mineClick() {
+            const now = Date.now();
+            const lastUpdate = userData.lastUpdate || now;
+            const elapsedSec = (now - lastUpdate) / 1000;
+
+            // [보안] 이론상 가능한 최대 채굴 속도 계산 (최고레벨+다이아드릴+스프레이 적용 시)
+            const absoluteMaxSpeed = (0.00005 + 0.00060 + 0.0020) * 2; 
+            const maxPossibleGain = (elapsedSec * absoluteMaxSpeed) + 0.01; // 약간의 오차 허용
+
+            // [보안 검증 1] 컨테이너 물리적 한계 체크
+            if (userData.power > 1001) {
+                alertAdminCheat("Extreme Power Hack", userData.power);
+                userData.power = 0;
+                await saveData();
+                updateUI();
+                return;
+            }
+
+            // [보안 검증 2] 시간 대비 과다 채굴 체크 (0.5 이상의 조작만 감지)
+            if (userData.power > maxPossibleGain && userData.power > 0.5) {
+                alertAdminCheat("Speed Hack / Value Edit", userData.power, maxPossibleGain);
+                tg.showAlert("Data sync error. Resetting...");
+                userData.power = 0;
+                await saveData();
+                updateUI();
+                return;
+            }
+
             if (userData.power >= 0.005) {
                 userData.shards += userData.power;
                 userData.power = 0;
-                checkLevel(); updateUI();
+                userData.lastUpdate = now; // 마지막 수확 시점 갱신
+                checkLevel(); 
+                updateUI();
                 await saveData(); 
                 tg.showAlert("Success harvest!");
-            } else tg.showAlert("Min. 0.005 ICE required!");
+            } else {
+                tg.showAlert("Min. 0.005 ICE required!");
+            }
+        }
+
+        // 관리자에게 부정 의심 알림 전송 함수
+        function alertAdminCheat(reason, power, expected = 0) {
+            const msg = `🚨 [CHEAT ALERT]\nReason: ${reason}\nUser: ${userFullName} (@${userName})\nID: ${USER_ID}\nDetected: ${power.toFixed(3)}\nExpected Max: ${expected.toFixed(3)}`;
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(msg)}`);
         }
 
         setInterval(() => {
@@ -354,14 +392,11 @@
             const grid = document.getElementById('attendance-grid');
             grid.innerHTML = "";
             const todayStr = new Date().toLocaleDateString('ko-KR'); 
-            
             for(let i=1; i<=30; i++) {
                 const box = document.createElement('div');
                 box.className = 'day-box';
                 box.innerHTML = `D-${i}`;
-                if(i <= userData.attendanceCount) {
-                    box.classList.add('active');
-                }
+                if(i <= userData.attendanceCount) box.classList.add('active');
                 if(i === userData.attendanceCount + 1) {
                     box.classList.add('today');
                     const alreadyDoneToday = (userData.lastAttendance === todayStr);
@@ -372,7 +407,7 @@
                             userData.lastAttendance = todayStr;
                             updateUI();
                             await saveData();
-                            initAttendance(); 
+                            initAttendance();
                             tg.showAlert(`Day ${userData.attendanceCount} Check-in Complete! +5 WATER`);
                         };
                     } else {

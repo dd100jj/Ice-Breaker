@@ -32,7 +32,6 @@
         .plus-btn { background: var(--water-color); color: white; border: none; width: 18px; height: 18px; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: -5px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .level-tag { background: #ffffff; color: #000000; border: 1px solid #eee; padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; }
         
-        /* Accordion Styles */
         .attendance-card, .activity-card { gap: 0; padding: 0; overflow: hidden; }
         .accordion-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #fff; }
         .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: #fff; }
@@ -56,14 +55,12 @@
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--gray-text); flex: 1; cursor: pointer; font-size: 12px; }
         .nav-item.active { color: var(--accent-blue); }
 
-        /* Activity Items */
         .activity-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee; font-size: 12px; }
         .activity-item:last-child { border-bottom: none; }
         .act-type { font-weight: bold; color: var(--text-main); }
         .act-val { font-weight: 800; color: var(--accent-blue); }
         .act-date { font-size: 10px; color: #aaa; }
 
-        /* Wallet Modal UI Fix */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; }
         .modal-content { width: 92%; background: white; border-radius: 25px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; max-height: 85vh; overflow-y: auto; }
         .tab-container { display: flex; border-bottom: 2px solid #eee; margin-bottom: 15px; }
@@ -237,7 +234,9 @@
         async function saveData() { 
             if(USER_ID === "guest_user") return;
             userData.lastUpdate = Date.now();
-            await db.collection("users").doc(USER_ID).set(userData, { merge: true }); 
+            try {
+                await db.collection("users").doc(USER_ID).set(userData, { merge: true }); 
+            } catch (e) { console.error("Save Error:", e); }
         }
 
         async function loadData() {
@@ -259,9 +258,9 @@
             } catch (e) { console.error(e); }
         }
 
-        async function logActivity(collection, type, amount, detail) {
+        async function logActivity(coll, type, amount, detail) {
             try {
-                await db.collection(collection).add({ userId: USER_ID, type, amount, detail, timestamp: Date.now() });
+                await db.collection(coll).add({ userId: USER_ID, type, amount, detail, timestamp: Date.now() });
             } catch (e) { console.error(e); }
         }
 
@@ -270,8 +269,16 @@
                 const harvested = userData.power;
                 userData.shards += harvested;
                 userData.power = 0; 
+                userData.lastUpdate = Date.now();
+                
+                // 1. 아이스 로그 저장
                 await logActivity("logs_ice", "HARVEST", harvested.toFixed(5) + " ICE", "Manual Harvest");
-                checkLevel(); updateUI(); await saveData(); loadHomeActivity();
+                // 2. 레벨 체크 및 유저 데이터 저장
+                checkLevel(); 
+                await saveData(); 
+                // 3. UI 및 활동 내역 새로고침
+                updateUI(); 
+                loadHomeActivity();
                 tg.showAlert("Harvest Success!");
             } else { tg.showAlert("Min. 0.005 ICE required!"); }
         }
@@ -281,7 +288,7 @@
                 userData.water -= price; 
                 userData.activeItems.push({ name: itemName, value: value, expiry: Date.now() + (hours * 3600 * 1000) });
                 await logActivity("logs_water", "PURCHASE", "-" + price + " 💧", itemName);
-                updateUI(); await saveData(); loadHomeActivity();
+                await saveData(); updateUI(); loadHomeActivity();
                 tg.showAlert(`Purchased ${itemName}!`); 
             } else tg.showAlert("Need Water!"); 
         }
@@ -292,7 +299,7 @@
             await db.collection("requests_deposit").add({ userId: USER_ID, userName: userFullName, amount: selectedAmount + " USDT", txid: txid, status: "pending", timestamp: Date.now() });
             const msg = `💰 [RECHARGE]\nUser: ${userFullName}\nAmt: ${selectedAmount} USDT\nTXID: ${txid}`;
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(msg)}`);
-            tg.showAlert("Request Sent!"); closeModal('deposit-modal'); loadHomeActivity();
+            tg.showAlert("Request Sent!"); closeModal('deposit-modal'); 
         }
 
         async function requestWithdraw() { 
@@ -304,16 +311,15 @@
             await db.collection("requests_withdraw").add({ userId: USER_ID, userName: userFullName, amount: amt + " ICE", address: addr, status: "pending", timestamp: Date.now() });
             const msg = `📤 [WITHDRAW]\nUser: ${userFullName}\nAmt: ${amt} ICE\nAddr: ${addr}`;
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(msg)}`);
-            updateUI(); await saveData(); closeModal('wallet-modal'); loadHomeActivity();
+            updateUI(); await saveData(); closeModal('wallet-modal');
             tg.showAlert("Requested!");
         }
 
         async function loadHomeActivity() {
             const container = document.getElementById('home-activity-list');
             try {
-                // Index 에러 방지를 위해 orderBy를 빼거나 별도로 로드 후 병합
-                const iceTask = db.collection("logs_ice").where("userId", "==", USER_ID).limit(5).get();
-                const waterTask = db.collection("logs_water").where("userId", "==", USER_ID).limit(5).get();
+                const iceTask = db.collection("logs_ice").where("userId", "==", USER_ID).orderBy("timestamp", "desc").limit(3).get();
+                const waterTask = db.collection("logs_water").where("userId", "==", USER_ID).orderBy("timestamp", "desc").limit(3).get();
                 const [iceSnap, waterSnap] = await Promise.all([iceTask, waterTask]);
 
                 let combined = [];
@@ -321,10 +327,7 @@
                 waterSnap.forEach(doc => combined.push({ ...doc.data(), icon: "💧" }));
                 combined.sort((a, b) => b.timestamp - a.timestamp);
 
-                if(combined.length === 0) {
-                    container.innerHTML = '<p style="text-align:center; color:#ccc; font-size:11px; padding:10px;">No recent activity</p>';
-                    return;
-                }
+                if(combined.length === 0) return;
                 container.innerHTML = "";
                 combined.slice(0, 5).forEach(data => {
                     const timeStr = new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -360,11 +363,17 @@
                         </div>`;
                     container.appendChild(item);
                 });
-            } catch (e) { 
-                console.error(e);
-                container.innerHTML = '<p style="text-align:center; color:red;">Error loading history.</p>'; 
-            }
+            } catch (e) { container.innerHTML = '<p style="text-align:center; color:red;">Error loading history.</p>'; }
         }
+
+        // 실시간 채굴기 숫자 올라가는 부분 (setInterval 수정)
+        setInterval(() => {
+            if (userData.power < 1000) {
+                const speed = getCurrentSpeed(userData.activeItems, userData.level);
+                userData.power = Math.min(1000, userData.power + speed);
+                updateUI();
+            }
+        }, 1000);
 
         function updateUI() {
             const speed = getCurrentSpeed(userData.activeItems, userData.level);
@@ -400,27 +409,9 @@
             }
         }
 
-        function toggleActivity() { 
-            const b = document.getElementById('activity-body'); 
-            const a = document.getElementById('act-arrow'); 
-            b.classList.toggle('open'); 
-            a.innerText = b.classList.contains('open') ? "▲" : "▼"; 
-        }
-        function toggleAttendance() { 
-            const b = document.getElementById('attendance-body'); 
-            const a = document.getElementById('att-arrow'); 
-            b.classList.toggle('open'); 
-            a.innerText = b.classList.contains('open') ? "▲" : "▼"; 
-        }
-        
-        function switchTab(tab) { 
-            document.getElementById('pane-withdraw').style.display = tab === 'withdraw' ? 'block' : 'none'; 
-            document.getElementById('pane-history').style.display = tab === 'history' ? 'block' : 'none'; 
-            document.getElementById('tab-withdraw').classList.toggle('active', tab === 'withdraw'); 
-            document.getElementById('tab-history').classList.toggle('active', tab === 'history'); 
-            if(tab === 'history') loadHistory(); 
-        }
-        
+        function toggleActivity() { const b = document.getElementById('activity-body'); const a = document.getElementById('act-arrow'); b.classList.toggle('open'); a.innerText = b.classList.contains('open') ? "▲" : "▼"; }
+        function toggleAttendance() { const b = document.getElementById('attendance-body'); const a = document.getElementById('att-arrow'); b.classList.toggle('open'); a.innerText = b.classList.contains('open') ? "▲" : "▼"; }
+        function switchTab(tab) { document.getElementById('pane-withdraw').style.display = tab === 'withdraw' ? 'block' : 'none'; document.getElementById('pane-history').style.display = tab === 'history' ? 'block' : 'none'; document.getElementById('tab-withdraw').classList.toggle('active', tab === 'withdraw'); document.getElementById('tab-history').classList.toggle('active', tab === 'history'); if(tab === 'history') loadHistory(); }
         function checkLevel() { let nl = 1; for(let i = levelData.length - 1; i >= 0; i--) { if(userData.shards >= levelData[i].target) { nl = i + 1; break; } } if(userData.level !== nl) { userData.level = nl; tg.showAlert(`Level Up! ⭐ LV.${nl}`); } }
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
         function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; }

@@ -31,9 +31,11 @@
         .res-tag { background: #fff; border: 1.5px solid #eee; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 5px; }
         .plus-btn { background: var(--water-color); color: white; border: none; width: 18px; height: 18px; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: -5px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .level-tag { background: #ffffff; color: #000000; border: 1px solid #eee; padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; }
+        .attendance-card, .activity-card { gap: 0; padding: 0; overflow: hidden; }
         .accordion-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #fff; }
         .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: #fff; }
-        .accordion-body.open { max-height: 1000px; padding: 0 15px 20px 15px; }
+        .accordion-body.open { max-height: 800px; padding: 0 15px 20px 15px; }
+        
         .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         .day-box { aspect-ratio: 1; background: #fdfdfd; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #bbb; position: relative; }
         .day-box.active { background: var(--accent-blue) !important; color: white !important; }
@@ -49,21 +51,26 @@
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: #fff; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -2px 15px rgba(0,0,0,0.1); z-index: 999; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--gray-text); flex: 1; cursor: pointer; font-size: 12px; }
         .nav-item.active { color: var(--accent-blue); }
+
         .activity-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee; font-size: 12px; }
+        .activity-item:last-child { border-bottom: none; }
         .act-type { font-weight: bold; color: var(--text-main); }
         .act-val { font-weight: 800; color: var(--accent-blue); }
         .act-date { font-size: 10px; color: #aaa; }
+
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; }
         .modal-content { width: 92%; background: white; border-radius: 25px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; max-height: 85vh; overflow-y: auto; }
-        .tab-container { display: flex; border-bottom: 2px solid #eee; margin-bottom: 15px; }
-        .tab-item { flex: 1; padding: 12px; text-align: center; font-size: 14px; font-weight: bold; color: var(--gray-text); cursor: pointer; }
-        .tab-item.active { color: var(--accent-blue); border-bottom: 3px solid var(--accent-blue); }
-        .history-list { display: flex; flex-direction: column; gap: 10px; }
-        .history-item { padding: 15px; border: 1.5px solid #f0f2f5; border-radius: 15px; font-size: 12px; background: #fafafa; }
-        .hist-top { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 6px; }
-        .status-badge-small { padding: 2px 6px; border-radius: 4px; font-size: 9px; color: white; text-transform: uppercase; }
-        .status-pending { background: var(--accent-orange); }
-        .status-completed { background: var(--success); }
+        .tab-container { display: flex; border-bottom: 2px solid #eee; margin-bottom: 10px; }
+        .tab-item { flex: 1; padding: 10px; text-align: center; font-size: 14px; font-weight: bold; color: var(--gray-text); cursor: pointer; }
+        .tab-item.active { color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); }
+
+        .history-list { display: flex; flex-direction: column; gap: 8px; }
+        .history-item { padding: 12px; border: 1px solid #eee; border-radius: 12px; font-size: 12px; }
+        .hist-top { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 4px; }
+        .status-pending { color: var(--accent-orange); }
+        .status-completed { color: var(--success); }
+        .status-rejected { color: var(--danger); }
+
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
         .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; }
         .buy-small-btn { background: var(--water-color); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; }
@@ -151,7 +158,7 @@
                 <div style="background:#fff4f4; border:1px solid #ffcccc; color:#d32f2f; padding:10px; border-radius:10px; font-size:11px; font-weight:bold; margin-bottom:10px; text-align:center;">
                     ⚠️ USDT (TRC20) ONLY.
                 </div>
-                <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;"><strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br><strong>Min:</strong> 14,000 ICE</div>
+                <div style="background:#f0f7ff; padding:12px; border-radius:12px; font-size:12px;"><strong>Balance:</strong> <span id="wallet-ice-bal">0</span> ICE<br><strong>Rate:</strong> 1,400 ICE = 1 USDT | <strong>Min:</strong> 14,000 ICE</div>
                 <input type="number" id="withdraw-amount" placeholder="Amount (ICE)" class="input-box" oninput="calculateWithdrawHint()" style="margin-top:10px;">
                 <div id="withdraw-usdt-hint" style="font-size:11px; color:var(--accent-orange); margin: 5px 0;">≈ 0.00 USDT</div>
                 <input type="text" id="wallet-addr" placeholder="Enter USDT (TRC20) address" class="input-box" style="margin-top:10px;">
@@ -206,6 +213,7 @@
         const firstName = tg.initDataUnsafe?.user?.first_name || "Guest";
         const lastName = tg.initDataUnsafe?.user?.last_name || "";
         const userFullName = `${firstName} ${lastName}`.trim();
+        const userName = tg.initDataUnsafe?.user?.username || "no_username";
 
         let userData = { userId: USER_ID, shards: 0, water: 0, power: 0, level: 1, activeItems: [], lastAttendance: "", attendanceCount: 0, lastUpdate: Date.now() };
         const levelData = [{target:0, bonus:0}, {target:50, bonus:0.00001}, {target:200, bonus:0.00002}, {target:500, bonus:0.00003}, {target:1200, bonus:0.00005}, {target:3000, bonus:0.00008}, {target:7000, bonus:0.00012}, {target:15000, bonus:0.00020}, {target:30000, bonus:0.00035}, {target:70000, bonus:0.00060}];
@@ -215,15 +223,26 @@
             let base = 0.00005 + (levelData[level-1]?.bonus || 0);
             let add = 0; let mult = 1; const now = Date.now();
             if (Array.isArray(items)) {
-                items.forEach(item => { if (now < item.expiry) { if (item.value === 'x2') mult *= 2; else add += item.value; } });
+                items.forEach(item => {
+                    if (now < item.expiry) {
+                        if (item.value === 'x2') mult *= 2; else add += item.value;
+                    }
+                });
             }
             return (base + add) * mult;
         }
 
         async function saveData() { 
             if(USER_ID === "guest_user") return;
-            userData.lastUpdate = Date.now();
-            await db.collection("users").doc(USER_ID).set(userData, { merge: true }); 
+            try {
+                const doc = await db.collection("users").doc(USER_ID).get();
+                if (doc.exists) {
+                    const serverWater = doc.data().water || 0;
+                    if (userData.water > serverWater + 1000) { alertAdminCheat("Water Hack Detected", userData.water); return; }
+                }
+                userData.lastUpdate = Date.now();
+                await db.collection("users").doc(USER_ID).set(userData, { merge: true }); 
+            } catch (e) { console.error("Save Error:", e); }
         }
 
         async function loadData() {
@@ -232,135 +251,69 @@
                 const now = Date.now();
                 if (doc.exists) {
                     const data = doc.data();
-                    let aliveItems = data.activeItems || [];
+                    let aliveItems = [];
+                    if (Array.isArray(data.activeItems)) {
+                        for (let it of data.activeItems) {
+                            if (now < it.expiry) aliveItems.push(it);
+                            else await addTransaction("ITEM_EXPIRED", "0 ICE", "completed", `${it.name} expired...`);
+                        }
+                    }
                     const lastUpdate = data.lastUpdate || now;
+                    const offlineSec = (now - lastUpdate) / 1000;
                     const speed = getCurrentSpeed(aliveItems, data.level || 1);
+                    
                     userData = { ...userData, ...data, activeItems: aliveItems };
-                    userData.power = Math.min(1000, (data.power || 0) + Math.max(0, (now - lastUpdate)/1000 * speed));
+                    const accumulated = Math.max(0, offlineSec * speed);
+                    userData.power = Math.min(1000, (data.power || 0) + accumulated);
                     userData.lastUpdate = now;
-                    await saveData();
+                    await db.collection("users").doc(USER_ID).set(userData, { merge: true });
                 } else { await saveData(); }
                 initAttendance(); updateUI(); updateLiveStatus(); loadHomeActivity();
-            } catch (e) { console.error(e); }
-        }
-
-        async function logActivity(coll, type, amount, detail) {
-            try {
-                await db.collection(coll).add({ userId: USER_ID, type: type, amount: amount, detail: detail, timestamp: Date.now() });
-            } catch (e) { console.error("Log Error:", e); }
+            } catch (e) { console.error("Load Error:", e); }
         }
 
         async function mineClick() {
+            if (userData.power > 1001) { alertAdminCheat("Extreme Container Hack", userData.power); userData.power = 0; await saveData(); updateUI(); return; }
             if (userData.power >= 0.005) {
-                const harvested = userData.power;
-                userData.shards += harvested;
+                const harvestedAmount = userData.power;
+                userData.shards += harvestedAmount;
                 userData.power = 0; 
                 userData.lastUpdate = Date.now();
-                await logActivity("logs_ice", "HARVEST", harvested.toFixed(5) + " ICE", "Manual Harvest");
-                checkLevel(); await saveData(); updateUI(); loadHomeActivity();
-                tg.showAlert("Harvest Success!");
+                await addTransaction("HARVEST", harvestedAmount.toFixed(5) + " ICE", "completed", "Manual Harvest");
+                checkLevel(); updateUI(); await saveData(); loadHomeActivity();
+                tg.showAlert("Success harvest!");
             } else { tg.showAlert("Min. 0.005 ICE required!"); }
         }
 
-        async function buyItem(id, price, hours, itemName, value) { 
-            if(userData.water >= price) { 
-                userData.water -= price; 
-                userData.activeItems.push({ name: itemName, value: value, expiry: Date.now() + (hours * 3600 * 1000) });
-                await logActivity("logs_water", "PURCHASE", "-" + price + " 💧", itemName);
-                await saveData(); updateUI(); loadHomeActivity();
-                tg.showAlert(`Purchased ${itemName}!`); 
-            } else tg.showAlert("Need Water!"); 
-        }
-
-        async function submitDeposit() { 
-            const txid = document.getElementById('txid-input').value.trim(); 
-            if(!txid || txid.length < 10) return tg.showAlert("Paste TXID!"); 
-            await db.collection("requests_deposit").add({ userId: USER_ID, userName: userFullName, amount: selectedAmount + " USDT", txid: txid, status: "pending", timestamp: Date.now() });
-            const msg = `💰 [RECHARGE]\nUser: ${userFullName}\nAmt: ${selectedAmount} USDT\nTXID: ${txid}`;
+        function alertAdminCheat(reason, current) {
+            const msg = `🚨 [SECURITY]\nReason: ${reason}\nUser: ${userFullName}\nAmt: ${current}`;
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(msg)}`);
-            tg.showAlert("Request Sent!"); closeModal('deposit-modal'); 
-        }
-
-        async function requestWithdraw() { 
-            const amt = parseFloat(document.getElementById('withdraw-amount').value); 
-            const addr = document.getElementById('wallet-addr').value; 
-            if(!amt || amt < 14000) return tg.showAlert("Min. 14,000 ICE!"); 
-            if(amt > userData.shards) return tg.showAlert("Insufficient!"); 
-            userData.shards -= amt; 
-            await db.collection("requests_withdraw").add({ userId: USER_ID, userName: userFullName, amount: amt + " ICE", address: addr, status: "pending", timestamp: Date.now() });
-            const msg = `📤 [WITHDRAW]\nUser: ${userFullName}\nAmt: ${amt} ICE\nAddr: ${addr}`;
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(msg)}`);
-            updateUI(); await saveData(); closeModal('wallet-modal');
-            tg.showAlert("Requested!");
-        }
-
-        async function loadHomeActivity() {
-            const container = document.getElementById('home-activity-list');
-            try {
-                const iceTask = db.collection("logs_ice").where("userId", "==", USER_ID).limit(5).get();
-                const waterTask = db.collection("logs_water").where("userId", "==", USER_ID).limit(5).get();
-                const [iceSnap, waterSnap] = await Promise.all([iceTask, waterTask]);
-
-                let combined = [];
-                iceSnap.forEach(doc => combined.push({ ...doc.data(), icon: "🧊" }));
-                waterSnap.forEach(doc => combined.push({ ...doc.data(), icon: "💧" }));
-                
-                if(combined.length === 0) {
-                    container.innerHTML = '<p style="text-align:center; color:#ccc; font-size:11px; padding:10px;">No recent activity</p>';
-                    return;
-                }
-
-                combined.sort((a, b) => b.timestamp - a.timestamp);
-                container.innerHTML = "";
-                combined.slice(0, 5).forEach(data => {
-                    const timeStr = new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const div = document.createElement('div');
-                    div.className = 'activity-item';
-                    div.innerHTML = `<div style="display:flex; flex-direction:column;"><span class="act-type">${data.icon} ${data.type}</span><span class="act-date">${timeStr}</span></div><span class="act-val">${data.amount}</span>`;
-                    container.appendChild(div);
-                });
-            } catch (e) { console.error("Home Activity Error:", e); }
-        }
-
-        async function loadHistory() {
-            const container = document.getElementById('history-container');
-            container.innerHTML = '<p style="text-align:center; color:#999; font-size:12px;">Loading...</p>';
-            try {
-                const depTask = db.collection("requests_deposit").where("userId", "==", USER_ID).get();
-                const witTask = db.collection("requests_withdraw").where("userId", "==", USER_ID).get();
-                const [dSnap, wSnap] = await Promise.all([depTask, witTask]);
-                
-                let h = [];
-                dSnap.forEach(doc => h.push({ ...doc.data(), type: "DEPOSIT" }));
-                wSnap.forEach(doc => h.push({ ...doc.data(), type: "WITHDRAW" }));
-                
-                if(h.length === 0) { container.innerHTML = '<p style="text-align:center;">No history.</p>'; return; }
-                
-                h.sort((a, b) => b.timestamp - a.timestamp);
-                container.innerHTML = "";
-                h.forEach(data => {
-                    const item = document.createElement('div'); item.className = 'history-item';
-                    item.innerHTML = `
-                        <div class="hist-top"><span>${data.type}</span><span class="status-badge-small status-${data.status}">${data.status}</span></div>
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-weight:900; font-size:14px;">${data.amount}</span>
-                            <span style="color:#aaa; font-size:10px;">${new Date(data.timestamp).toLocaleDateString()}</span>
-                        </div>`;
-                    container.appendChild(item);
-                });
-            } catch (e) { 
-                console.error("History Error:", e);
-                container.innerHTML = '<p style="text-align:center; color:red;">Error loading history.</p>'; 
-            }
         }
 
         setInterval(() => {
-            if (userData.power < 1000) {
-                const speed = getCurrentSpeed(userData.activeItems, userData.level);
-                userData.power = Math.min(1000, userData.power + speed);
+            if (userData.power >= 1000) {
+                userData.power = 1000;
                 updateUI();
+                return;
             }
+            const speed = getCurrentSpeed(userData.activeItems, userData.level);
+            userData.power = Math.min(1000, userData.power + speed);
+            updateUI();
         }, 1000);
+
+        function checkLevel() { 
+            let nl = 1; 
+            for(let i = levelData.length - 1; i >= 0; i--) { 
+                if(userData.shards >= levelData[i].target) { 
+                    nl = i + 1; 
+                    break; 
+                } 
+            } 
+            if(userData.level !== nl) { 
+                userData.level = nl; 
+                tg.showAlert(`Level Up! ⭐ LV.${nl}`); 
+            } 
+        }
 
         function updateUI() {
             const speed = getCurrentSpeed(userData.activeItems, userData.level);
@@ -373,8 +326,92 @@
             document.getElementById('speed-display').innerText = "+ " + speed.toFixed(5) + " / sec";
             document.getElementById('lv-badge').innerText = `⭐ LV.${userData.level}`;
             const gauge = document.getElementById('ice-gauge-bar');
-            gauge.style.width = (userData.power / 10 * 1) + "%";
-            gauge.style.background = userData.power >= 1000 ? "linear-gradient(90deg, #ff8a65, #ff5252)" : "linear-gradient(90deg, #4fc3f7, #81d4fa)";
+            const percentage = (userData.power / 1000) * 100;
+            gauge.style.width = Math.min(percentage, 100) + "%";
+            if (userData.power >= 1000) {
+                gauge.style.background = "linear-gradient(90deg, #ff8a65, #ff5252)";
+            } else {
+                gauge.style.background = "linear-gradient(90deg, #4fc3f7, #81d4fa)";
+            }
+        }
+
+        async function loadHomeActivity() {
+            const container = document.getElementById('home-activity-list');
+            try {
+                const snapshot = await db.collection("transactions")
+                    .where("userId", "==", USER_ID)
+                    .orderBy("timestamp", "desc")
+                    .limit(5)
+                    .get();
+                if(snapshot.empty) return;
+                container.innerHTML = "";
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const div = document.createElement('div');
+                    div.className = 'activity-item';
+                    let icon = "📝";
+                    if(data.type === "HARVEST") icon = "🧊";
+                    if(data.type === "RECHARGE" || data.type === "PURCHASE" || data.type === "REWARD") icon = "💧";
+                    div.innerHTML = `<div style="display:flex; flex-direction:column;"><span class="act-type">${icon} ${data.type}</span><span class="act-date">${new Date(data.timestamp).toLocaleDateString()} ${date}</span></div><span class="act-val">${data.amount}</span>`;
+                    container.appendChild(div);
+                });
+            } catch (e) { console.error("Activity Load Error:", e); }
+        }
+
+        async function buyItem(id, price, hours, itemName, value) { 
+            if(userData.water >= price) { 
+                userData.water -= price; 
+                if (!Array.isArray(userData.activeItems)) userData.activeItems = [];
+                userData.activeItems.push({ name: itemName, value: value, expiry: Date.now() + (hours * 3600 * 1000) });
+                updateUI();
+                await addTransaction("PURCHASE", "-" + price + " 💧", "completed", `${itemName} activation`);
+                await saveData(); loadHomeActivity();
+                tg.showAlert(`Purchased ${itemName}!`); 
+            } else tg.showAlert("Need Water!"); 
+        }
+
+        async function addTransaction(type, amount, status, detail) {
+            await db.collection("transactions").add({ userId: USER_ID, type, amount, status, detail, timestamp: Date.now() });
+        }
+
+        async function submitDeposit() { 
+            const txid = document.getElementById('txid-input').value.trim(); 
+            if(!txid || txid.length < 10) return tg.showAlert("Paste TXID!"); 
+            const message = `💰 [RECHARGE]\nUser: ${userFullName}\nAmt: ${selectedAmount} USDT\nTXID: ${txid}`; 
+            try { 
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: MY_CHAT_ID, text: message }) }); 
+                await addTransaction("RECHARGE", selectedAmount + " USDT", "pending", txid);
+                tg.showAlert("Request Sent!"); closeModal('deposit-modal'); loadHomeActivity();
+            } catch (e) { tg.showAlert("Error."); } 
+        }
+
+        async function requestWithdraw() { 
+            const amt = parseFloat(document.getElementById('withdraw-amount').value); 
+            const addr = document.getElementById('wallet-addr').value; 
+            if(!amt || amt < 14000) return tg.showAlert("Min. 14,000 ICE!"); 
+            if(amt > userData.shards) return tg.showAlert("Insufficient!"); 
+            userData.shards -= amt; updateUI(); await saveData(); 
+            const message = `📤 [WITHDRAW]\nUser: ${userFullName}\nAmt: ${amt} ICE\nAddr: ${addr}`; 
+            try { fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`); 
+                await addTransaction("WITHDRAW", "-" + amt + " ICE", "pending", addr);
+                tg.showAlert("Requested!"); closeModal('wallet-modal'); loadHomeActivity();
+            } catch(e) { tg.showAlert("Error."); }
+        }
+
+        async function loadHistory() {
+            const container = document.getElementById('history-container');
+            container.innerHTML = '<p style="text-align:center; color:#999; font-size:12px;">Loading history...</p>';
+            try {
+                const snapshot = await db.collection("transactions").where("userId", "==", USER_ID).orderBy("timestamp", "desc").limit(20).get();
+                if(snapshot.empty) { container.innerHTML = '<p style="text-align:center;">No history.</p>'; return; }
+                container.innerHTML = "";
+                snapshot.forEach(doc => {
+                    const data = doc.data(); const item = document.createElement('div'); item.className = 'history-item';
+                    item.innerHTML = `<div class="hist-top"><span>${data.type}</span><span class="status-${data.status}">${data.status.toUpperCase()}</span></div><div style="display:flex; justify-content:space-between; font-size:11px; color:#666;"><span>${data.amount}</span><span>${new Date(data.timestamp).toLocaleString()}</span></div><div style="font-size:10px; color:#4fc3f7;">${data.detail}</div>`;
+                    container.appendChild(item);
+                });
+            } catch (e) { container.innerHTML = '<p>Error.</p>'; }
         }
 
         function initAttendance() {
@@ -383,29 +420,53 @@
             for(let i=1; i<=30; i++) {
                 const box = document.createElement('div'); box.className = 'day-box'; box.innerHTML = `D-${i}`;
                 if(i <= userData.attendanceCount) box.classList.add('active');
-                if(i === userData.attendanceCount + 1 && userData.lastAttendance !== todayStr) {
+                if(i === userData.attendanceCount + 1) {
                     box.classList.add('today');
-                    box.onclick = async () => { 
-                        userData.attendanceCount += 1; userData.water += 5; userData.lastAttendance = todayStr;
-                        await logActivity("logs_water", "REWARD", "+5 💧", "Attendance");
-                        updateUI(); await saveData(); initAttendance(); loadHomeActivity();
-                        tg.showAlert("Day " + userData.attendanceCount + " Check-in!"); 
-                    };
+                    if(userData.lastAttendance !== todayStr) {
+                        box.onclick = async () => { 
+                            userData.attendanceCount += 1; 
+                            userData.water += 5; 
+                            userData.lastAttendance = todayStr; 
+                            await addTransaction("REWARD", "+5 💧", "completed", "Daily Attendance");
+                            updateUI(); await saveData(); initAttendance(); loadHomeActivity();
+                            tg.showAlert("Day " + userData.attendanceCount + " Check-in!"); 
+                        };
+                    }
                 }
                 grid.appendChild(box);
             }
         }
 
-        function toggleActivity() { const b = document.getElementById('activity-body'); const a = document.getElementById('act-arrow'); b.classList.toggle('open'); a.innerText = b.classList.contains('open') ? "▲" : "▼"; }
-        function toggleAttendance() { const b = document.getElementById('attendance-body'); const a = document.getElementById('att-arrow'); b.classList.toggle('open'); a.innerText = b.classList.contains('open') ? "▲" : "▼"; }
-        function switchTab(tab) { document.getElementById('pane-withdraw').style.display = tab === 'withdraw' ? 'block' : 'none'; document.getElementById('pane-history').style.display = tab === 'history' ? 'block' : 'none'; document.getElementById('tab-withdraw').classList.toggle('active', tab === 'withdraw'); document.getElementById('tab-history').classList.toggle('active', tab === 'history'); if(tab === 'history') loadHistory(); }
-        function checkLevel() { let nl = 1; for(let i = levelData.length - 1; i >= 0; i--) { if(userData.shards >= levelData[i].target) { nl = i + 1; break; } } if(userData.level !== nl) { userData.level = nl; tg.showAlert(`Level Up! ⭐ LV.${nl}`); } }
+        function switchTab(tab) {
+            document.getElementById('pane-withdraw').style.display = tab === 'withdraw' ? 'block' : 'none';
+            document.getElementById('pane-history').style.display = tab === 'history' ? 'block' : 'none';
+            document.getElementById('tab-withdraw').classList.toggle('active', tab === 'withdraw');
+            document.getElementById('tab-history').classList.toggle('active', tab === 'history');
+            if(tab === 'history') loadHistory();
+        }
+
+        // [추가] 아코디언 토글 함수
+        function toggleActivity() { 
+            const body = document.getElementById('activity-body');
+            const arrow = document.getElementById('act-arrow');
+            body.classList.toggle('open'); 
+            arrow.innerText = body.classList.contains('open') ? "▲" : "▼";
+        }
+
+        function toggleAttendance() { 
+            const body = document.getElementById('attendance-body');
+            const arrow = document.getElementById('att-arrow');
+            body.classList.toggle('open'); 
+            arrow.innerText = body.classList.contains('open') ? "▲" : "▼";
+        }
+
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
         function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; }
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; switchTab('withdraw'); }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function handlePackSelect(id, amt) { selectedAmount = amt; document.querySelectorAll('.package-item').forEach(p => p.classList.remove('selected')); document.getElementById(id).classList.add('selected'); document.getElementById('payment-details').style.display = 'block'; }
         function calculateWithdrawHint() { const v = document.getElementById('withdraw-amount').value || 0; document.getElementById('withdraw-usdt-hint').innerText = `≈ ${(v / 1400).toFixed(2)} USDT`; }
+        function copyAddr() { navigator.clipboard.writeText("TDDaEzGdXGuuH3RxhHa5LZCSeeTpZuuTd1"); tg.showAlert("Copied!"); }
         function updateLiveStatus() { const h = new Date().getUTCHours(); const isOpen = (h >= 5 && h < 18); document.getElementById('status-tag').innerText = isOpen ? "● ONLINE" : "○ OFFLINE"; document.getElementById('status-tag').className = "status-badge " + (isOpen ? "status-online" : "status-offline"); }
 
         loadData();

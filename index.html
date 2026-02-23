@@ -68,9 +68,12 @@
         .history-item { padding: 12px; border: 1px solid #eee; border-radius: 12px; font-size: 12px; }
         .hist-top { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 4px; }
         .status-badge-small { padding: 2px 6px; border-radius: 4px; font-size: 9px; color: white; text-transform: uppercase; }
-        .status-pending { background: var(--accent-orange); }
-        .status-completed { background: var(--success); }
-        .status-rejected { background: var(--danger); }
+        
+        /* 상태별 색상 정의 - 자동으로 적용됨 */
+        .status-pending { background: var(--accent-orange); }   /* 대기중 (주황) */
+        .status-waiting { background: var(--accent-orange); }   /* 대기중 (주황) */
+        .status-completed { background: var(--success); }       /* 완료됨 (초록) */
+        .status-rejected { background: var(--danger); }         /* 거절됨 (빨강) */
 
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
         .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; }
@@ -273,34 +276,22 @@
             } catch (e) { console.error("Load Error:", e); }
         }
 
-        // =========================================================================
-        // 🌟 사용자님이 원하신 "정확한 필드명(txid, address, note)"으로 저장하는 로직
-        // 1. transactions: 입/출금 내역만 저장 (지갑 히스토리용)
-        // 2. logs_ice: 아이스 수확 내역만 저장 (홈 화면용)
-        // 3. logs_water: 워터 구매/보상 내역만 저장 (홈 화면용)
-        // 4. requests_deposit / requests_withdraw: 관리자용 승인 방
-        // =========================================================================
         async function addTransaction(type, amount, status, detailOrVal) {
-            // 기본 데이터
             const baseData = { userId: USER_ID, userName: userFullName, type: type, amount: amount, status: status, timestamp: Date.now() };
             
             try {
                 if (type === "RECHARGE") {
-                    // 입금: detailOrVal이 txid임
                     const data = { ...baseData, txid: detailOrVal };
                     await db.collection("requests_deposit").add(data);
-                    await db.collection("transactions").add(data); // 지갑 내역용
+                    await db.collection("transactions").add(data); 
                 } else if (type === "WITHDRAW") {
-                    // 출금: detailOrVal이 address임
                     const data = { ...baseData, address: detailOrVal };
                     await db.collection("requests_withdraw").add(data);
-                    await db.collection("transactions").add(data); // 지갑 내역용
+                    await db.collection("transactions").add(data); 
                 } else if (type === "HARVEST") {
-                    // 수확: detailOrVal이 note임
                     const data = { ...baseData, note: detailOrVal };
                     await db.collection("logs_ice").add(data);
                 } else if (type === "PURCHASE" || type === "REWARD" || type === "ITEM_EXPIRED") {
-                    // 워터: detailOrVal이 note임
                     const data = { ...baseData, note: detailOrVal };
                     await db.collection("logs_water").add(data);
                 }
@@ -413,7 +404,6 @@
             } catch(e) { tg.showAlert("Error."); }
         }
 
-        // 🌟 수정된 홈 액티비티 로드 (색인 없이 안전하게, note 필드 사용)
         async function loadHomeActivity() {
             const container = document.getElementById('home-activity-list');
             try {
@@ -421,7 +411,6 @@
                 const waterSnap = await db.collection("logs_water").limit(20).get();
 
                 let combined = [];
-                // 내 데이터만 필터링
                 iceSnap.forEach(doc => { if(doc.data().userId === USER_ID) combined.push({ ...doc.data(), icon: "🧊" }); });
                 waterSnap.forEach(doc => { if(doc.data().userId === USER_ID) combined.push({ ...doc.data(), icon: "💧" }); });
 
@@ -434,7 +423,6 @@
                     const date = new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     const div = document.createElement('div');
                     div.className = 'activity-item';
-                    // note 필드를 보여줌
                     const detailText = data.note || data.detail || '';
                     div.innerHTML = `<div style="display:flex; flex-direction:column;"><span class="act-type">${data.icon} ${data.type}</span><span class="act-date">${new Date(data.timestamp).toLocaleDateString()} ${date}</span></div><span class="act-val">${data.amount}</span>`;
                     container.appendChild(div);
@@ -442,47 +430,70 @@
             } catch (e) { console.error(e); }
         }
 
-        // 🌟 수정된 히스토리 로드 (transactions 방에서 필터링, txid/address 필드 사용)
-        async function loadHistory() {
+        // =========================================================
+        // ★ 실시간(Real-time) History 로직 적용 (여기만 바뀜)
+        // =========================================================
+        let historyUnsubscribe = null; // 감시기 저장용 변수
+
+        function loadHistory() {
             const container = document.getElementById('history-container');
-            container.innerHTML = '<p style="text-align:center; color:#999; font-size:12px;">Loading history...</p>';
-            try {
-                const snapshot = await db.collection("transactions").limit(50).get();
-                let h = [];
-                snapshot.forEach(doc => {
-                    const d = doc.data();
-                    if (d.userId === USER_ID && (d.type === "RECHARGE" || d.type === "WITHDRAW")) {
-                        h.push(d);
+            container.innerHTML = '<p style="text-align:center; color:#999; font-size:12px;">Loading real-time...</p>';
+
+            // 기존 감시기가 있으면 끄기 (중복 방지)
+            if (historyUnsubscribe) {
+                historyUnsubscribe();
+            }
+
+            // ★ 실시간 감시 시작 (onSnapshot)
+            historyUnsubscribe = db.collection("transactions")
+                .where("userId", "==", USER_ID) // 내 것만
+                .orderBy("timestamp", "desc")   // 최신순
+                .limit(20)
+                .onSnapshot((snapshot) => {
+                    const h = [];
+                    snapshot.forEach(doc => {
+                        const d = doc.data();
+                        if (d.type === "RECHARGE" || d.type === "WITHDRAW") {
+                            h.push(d);
+                        }
+                    });
+
+                    if(h.length === 0) { 
+                        container.innerHTML = '<p style="text-align:center; padding:10px; color:#aaa;">No history.</p>'; 
+                        return; 
+                    }
+
+                    container.innerHTML = ""; // 초기화
+                    
+                    h.forEach(data => {
+                        const item = document.createElement('div'); item.className = 'history-item';
+                        
+                        // ★ DB의 status 값에 따라 자동으로 색상 클래스 적용 (pending, completed, rejected)
+                        const statusClass = `status-${data.status.toLowerCase()}`;
+                        
+                        let detailText = "";
+                        if(data.type === "RECHARGE") detailText = `TXID: ${data.txid || ''}`;
+                        if(data.type === "WITHDRAW") detailText = `Addr: ${data.address || ''}`;
+
+                        item.innerHTML = `
+                            <div class="hist-top">
+                                <span>${data.type}</span>
+                                <span class="status-badge-small ${statusClass}">${data.status.toUpperCase()}</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:11px; color:#666;">
+                                <span>${data.amount}</span>
+                                <span>${new Date(data.timestamp).toLocaleString()}</span>
+                            </div>
+                            <div style="font-size:10px; color:#4fc3f7; margin-top:2px;">${detailText}</div>`;
+                        container.appendChild(item);
+                    });
+                }, (error) => {
+                    console.error("실시간 에러:", error);
+                    // 인덱스가 없으면 링크가 콘솔에 뜹니다.
+                    if(error.code === 'failed-precondition') {
+                         container.innerHTML = '<p style="text-align:center; color:red; font-size:10px;">Index Needed (Check Console)</p>';
                     }
                 });
-
-                if(h.length === 0) { container.innerHTML = '<p style="text-align:center;">No history.</p>'; return; }
-
-                h.sort((a, b) => b.timestamp - a.timestamp);
-                container.innerHTML = "";
-                
-                h.forEach(data => {
-                    const item = document.createElement('div'); item.className = 'history-item';
-                    const statusClass = `status-${data.status.toLowerCase()}`;
-                    
-                    // txid 또는 address를 보여줌
-                    let detailText = "";
-                    if(data.type === "RECHARGE") detailText = `TXID: ${data.txid || ''}`;
-                    if(data.type === "WITHDRAW") detailText = `Addr: ${data.address || ''}`;
-
-                    item.innerHTML = `
-                        <div class="hist-top">
-                            <span>${data.type}</span>
-                            <span class="status-badge-small ${statusClass}">${data.status.toUpperCase()}</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; font-size:11px; color:#666;">
-                            <span>${data.amount}</span>
-                            <span>${new Date(data.timestamp).toLocaleString()}</span>
-                        </div>
-                        <div style="font-size:10px; color:#4fc3f7; margin-top:2px;">${detailText}</div>`;
-                    container.appendChild(item);
-                });
-            } catch (e) { container.innerHTML = '<p>No history.</p>'; }
         }
 
         function initAttendance() {

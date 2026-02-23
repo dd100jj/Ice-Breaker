@@ -34,7 +34,7 @@
         .attendance-card, .activity-card { gap: 0; padding: 0; overflow: hidden; }
         .accordion-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #fff; }
         .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: #fff; }
-        .accordion-body.open { max-height: 800px; padding: 0 15px 20px 15px; }
+        .accordion-body.open { max-height: 1000px; padding: 0 15px 20px 15px; }
         
         .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         .day-box { aspect-ratio: 1; background: #fdfdfd; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #bbb; position: relative; }
@@ -235,11 +235,6 @@
         async function saveData() { 
             if(USER_ID === "guest_user") return;
             try {
-                const doc = await db.collection("users").doc(USER_ID).get();
-                if (doc.exists) {
-                    const serverWater = doc.data().water || 0;
-                    if (userData.water > serverWater + 1000) { alertAdminCheat("Water Hack Detected", userData.water); return; }
-                }
                 userData.lastUpdate = Date.now();
                 await db.collection("users").doc(USER_ID).set(userData, { merge: true }); 
             } catch (e) { console.error("Save Error:", e); }
@@ -270,6 +265,33 @@
                 } else { await saveData(); }
                 initAttendance(); updateUI(); updateLiveStatus(); loadHomeActivity();
             } catch (e) { console.error("Load Error:", e); }
+        }
+
+        // =========================================================================
+        // 🌟 수정된 addTransaction 함수 (중요!)
+        // 1. 기존 'transactions'에 저장 (화면에 보여주기 위함)
+        // 2. 관리자용으로 'logs_ice', 'logs_water', 'requests_deposit', 'requests_withdraw'에 복사 저장
+        // =========================================================================
+        async function addTransaction(type, amount, status, detail) {
+            const dataObj = { userId: USER_ID, userName: userFullName, type: type, amount: amount, status: status, detail: detail, timestamp: Date.now() };
+            
+            // 1. 화면 표시용 (기존)
+            await db.collection("transactions").add(dataObj);
+
+            // 2. 파이어베이스 관리용 (자동 분리 저장)
+            try {
+                if (type === "HARVEST") {
+                    await db.collection("logs_ice").add(dataObj);
+                } else if (type === "PURCHASE" || type === "REWARD") {
+                    await db.collection("logs_water").add(dataObj);
+                } else if (type === "RECHARGE") {
+                    await db.collection("requests_deposit").add(dataObj);
+                } else if (type === "WITHDRAW") {
+                    await db.collection("requests_withdraw").add(dataObj);
+                }
+            } catch (e) {
+                console.error("분리 저장 에러 (무시해도 됨):", e);
+            }
         }
 
         async function mineClick() {
@@ -322,12 +344,15 @@
             document.getElementById('water-top-display').innerText = userData.water.toLocaleString();
             document.getElementById('ice-to-usdt').innerText = (userData.shards / 1400).toFixed(2) + " USDT";
             document.getElementById('wallet-ice-bal').innerText = Math.floor(userData.shards).toLocaleString();
+            
             document.getElementById('mining-power').innerText = "+ " + userData.power.toFixed(5);
             document.getElementById('speed-display').innerText = "+ " + speed.toFixed(5) + " / sec";
             document.getElementById('lv-badge').innerText = `⭐ LV.${userData.level}`;
+
             const gauge = document.getElementById('ice-gauge-bar');
             const percentage = (userData.power / 1000) * 100;
             gauge.style.width = Math.min(percentage, 100) + "%";
+
             if (userData.power >= 1000) {
                 gauge.style.background = "linear-gradient(90deg, #ff8a65, #ff5252)";
             } else {
@@ -335,44 +360,16 @@
             }
         }
 
-        async function loadHomeActivity() {
-            const container = document.getElementById('home-activity-list');
-            try {
-                const snapshot = await db.collection("transactions")
-                    .where("userId", "==", USER_ID)
-                    .orderBy("timestamp", "desc")
-                    .limit(5)
-                    .get();
-                if(snapshot.empty) return;
-                container.innerHTML = "";
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const date = new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const div = document.createElement('div');
-                    div.className = 'activity-item';
-                    let icon = "📝";
-                    if(data.type === "HARVEST") icon = "🧊";
-                    if(data.type === "RECHARGE" || data.type === "PURCHASE" || data.type === "REWARD") icon = "💧";
-                    div.innerHTML = `<div style="display:flex; flex-direction:column;"><span class="act-type">${icon} ${data.type}</span><span class="act-date">${new Date(data.timestamp).toLocaleDateString()} ${date}</span></div><span class="act-val">${data.amount}</span>`;
-                    container.appendChild(div);
-                });
-            } catch (e) { console.error("Activity Load Error:", e); }
-        }
-
         async function buyItem(id, price, hours, itemName, value) { 
             if(userData.water >= price) { 
                 userData.water -= price; 
                 if (!Array.isArray(userData.activeItems)) userData.activeItems = [];
                 userData.activeItems.push({ name: itemName, value: value, expiry: Date.now() + (hours * 3600 * 1000) });
-                updateUI();
+                updateUI(); await saveData(); 
                 await addTransaction("PURCHASE", "-" + price + " 💧", "completed", `${itemName} activation`);
-                await saveData(); loadHomeActivity();
+                loadHomeActivity();
                 tg.showAlert(`Purchased ${itemName}!`); 
             } else tg.showAlert("Need Water!"); 
-        }
-
-        async function addTransaction(type, amount, status, detail) {
-            await db.collection("transactions").add({ userId: USER_ID, type, amount, status, detail, timestamp: Date.now() });
         }
 
         async function submitDeposit() { 
@@ -397,6 +394,30 @@
                 await addTransaction("WITHDRAW", "-" + amt + " ICE", "pending", addr);
                 tg.showAlert("Requested!"); closeModal('wallet-modal'); loadHomeActivity();
             } catch(e) { tg.showAlert("Error."); }
+        }
+
+        async function loadHomeActivity() {
+            const container = document.getElementById('home-activity-list');
+            try {
+                const snapshot = await db.collection("transactions")
+                    .where("userId", "==", USER_ID)
+                    .orderBy("timestamp", "desc")
+                    .limit(5)
+                    .get();
+                if(snapshot.empty) { container.innerHTML = '<p style="text-align:center; color:#ccc; font-size:11px; padding:10px;">No recent activity</p>'; return; }
+                container.innerHTML = "";
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const div = document.createElement('div');
+                    div.className = 'activity-item';
+                    let icon = "📝";
+                    if(data.type === "HARVEST") icon = "🧊";
+                    if(data.type === "RECHARGE" || data.type === "PURCHASE" || data.type === "REWARD") icon = "💧";
+                    div.innerHTML = `<div style="display:flex; flex-direction:column;"><span class="act-type">${icon} ${data.type}</span><span class="act-date">${new Date(data.timestamp).toLocaleDateString()} ${date}</span></div><span class="act-val">${data.amount}</span>`;
+                    container.appendChild(div);
+                });
+            } catch (e) { console.error("Activity Load Error:", e); }
         }
 
         async function loadHistory() {

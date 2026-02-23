@@ -392,6 +392,11 @@
         function switchTab(tab) {
             document.getElementById('pane-withdraw').style.display = tab === 'withdraw' ? 'block' : 'none';
             document.getElementById('pane-history').style.display = tab === 'history' ? 'block' : 'none';
+            
+            // 탭 스타일 전환 로직 추가
+            document.getElementById('tab-withdraw').classList.toggle('active', tab === 'withdraw');
+            document.getElementById('tab-history').classList.toggle('active', tab === 'history');
+            
             if(tab === 'history') loadHistory();
         }
 

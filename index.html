@@ -67,7 +67,7 @@
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
         .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; }
         .buy-small-btn { background: var(--water-color); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        .package-item { border: 2px solid #eee; border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .package-item { border: 2px solid #eee; border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; margin-bottom: 8px; }
         .package-item.selected { border-color: var(--water-color); background-color: #f0f7ff; font-weight: bold; }
         
         .cheat-warning { background: #fff4f4; border: 1px solid #ffcccc; color: #d32f2f; padding: 10px; border-radius: 10px; font-size: 10px; font-weight: bold; text-align: center; margin-bottom: 10px; }
@@ -162,7 +162,17 @@
     <div id="deposit-modal" class="modal">
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center;"><h2>Recharge Water 💧</h2><span onclick="closeModal('deposit-modal')" style="cursor:pointer; font-size:24px;">&times;</span></div>
-            <div class="package-item" id="btn-pack-10" onclick="handlePackSelect('btn-pack-10', 10)"><b>1,000 WATER</b> (10 USDT)</div><div class="package-item" id="btn-pack-20" onclick="handlePackSelect('btn-pack-20', 20)"><b>2,200 WATER</b> (20 USDT)</div><div class="package-item" id="btn-pack-30" onclick="handlePackSelect('btn-pack-30', 30)"><b>3,500 WATER</b> (30 USDT)</div><div id="payment-details" style="display:none;"><div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:11px; margin-top:10px;"><b>Admin Address (TRC20):</b><br>TDDaEzGdXGuuH3RxhHa5LZCSeeTpZuuTd1</div><input type="text" id="txid-input" placeholder="Paste Deposit TXID" class="input-box" style="margin-top:10px;"><button class="buy-small-btn" style="background:var(--accent-orange); width:100%; margin-top:10px;" onclick="submitDeposit()">Submit Request</button></div></div></div>
+            <div class="package-item" id="btn-pack-10" onclick="handlePackSelect('btn-pack-10', 10)"><b>1,000 WATER</b> (10 USDT)</div>
+            <div class="package-item" id="btn-pack-20" onclick="handlePackSelect('btn-pack-20', 20)"><b>2,200 WATER</b> (20 USDT)</div>
+            <div class="package-item" id="btn-pack-30" onclick="handlePackSelect('btn-pack-30', 30)"><b>3,500 WATER</b> (30 USDT)</div>
+            <div class="package-item" id="btn-pack-50" onclick="handlePackSelect('btn-pack-50', 50)"><b>5,500 WATER</b> (50 USDT)</div>
+            <div id="payment-details" style="display:none;">
+                <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:11px; margin-top:10px;"><b>Admin Address (TRC20):</b><br>TDDaEzGdXGuuH3RxhHa5LZCSeeTpZuuTd1</div>
+                <input type="text" id="txid-input" placeholder="Paste Deposit TXID" class="input-box" style="margin-top:10px;">
+                <button class="buy-small-btn" style="background:var(--accent-orange); width:100%; margin-top:10px;" onclick="submitDeposit()">Submit Request</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         const tg = window.Telegram.WebApp;
@@ -210,7 +220,7 @@
                 const doc = await db.collection("users").doc(USER_ID).get();
                 if (doc.exists) {
                     const serverWater = doc.data().water || 0;
-                    if (userData.water > serverWater + 1000) { alertAdminCheat("Water Hack", userData.water); return; }
+                    if (userData.water > serverWater + 1000) { alertAdminCheat("Water Hack Detected", userData.water); return; }
                 }
                 userData.lastUpdate = Date.now();
                 await db.collection("users").doc(USER_ID).set(userData, { merge: true }); 
@@ -245,7 +255,7 @@
         }
 
         async function mineClick() {
-            if (userData.power > 1001) { alertAdminCheat("Extreme Container", userData.power); userData.power = 0; await saveData(); updateUI(); return; }
+            if (userData.power > 1001) { alertAdminCheat("Extreme Container Hack", userData.power); userData.power = 0; await saveData(); updateUI(); return; }
             if (userData.power >= 0.005) {
                 userData.shards += userData.power;
                 userData.power = 0; 

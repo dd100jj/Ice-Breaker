@@ -272,31 +272,6 @@
             } catch (e) { console.error("Load Error:", e); }
         }
 
-        // =========================================================================
-        // 🌟 수정된 데이터 저장 로직 (사용자 요구사항 100% 반영)
-        // 1. transactions: 입/출금 내역만 저장 (지갑 히스토리용)
-        // 2. logs_ice: 아이스 수확 내역만 저장 (홈 화면용)
-        // 3. logs_water: 워터 구매/보상 내역만 저장 (홈 화면용)
-        // =========================================================================
-        async function addTransaction(type, amount, status, detail) {
-            const dataObj = { userId: USER_ID, userName: userFullName, type: type, amount: amount, status: status, detail: detail, timestamp: Date.now() };
-            
-            try {
-                if (type === "RECHARGE" || type === "WITHDRAW") {
-                    // 입출금은 'transactions' 방에 저장 (지갑 히스토리용)
-                    await db.collection("transactions").add(dataObj);
-                } else if (type === "HARVEST") {
-                    // 아이스 수확은 'logs_ice' 방에 저장
-                    await db.collection("logs_ice").add(dataObj);
-                } else if (type === "PURCHASE" || type === "REWARD") {
-                    // 워터 사용/보상은 'logs_water' 방에 저장
-                    await db.collection("logs_water").add(dataObj);
-                }
-            } catch (e) {
-                console.error("저장 중 에러:", e);
-            }
-        }
-
         async function mineClick() {
             if (userData.power > 1001) { alertAdminCheat("Extreme Container Hack", userData.power); userData.power = 0; await saveData(); updateUI(); return; }
             if (userData.power >= 0.005) {
@@ -304,9 +279,7 @@
                 userData.shards += harvestedAmount;
                 userData.power = 0; 
                 userData.lastUpdate = Date.now();
-                
                 await addTransaction("HARVEST", harvestedAmount.toFixed(5) + " ICE", "completed", "Manual Harvest");
-                
                 checkLevel(); updateUI(); await saveData(); loadHomeActivity();
                 tg.showAlert("Success harvest!");
             } else { tg.showAlert("Min. 0.005 ICE required!"); }
@@ -371,22 +344,25 @@
                 if (!Array.isArray(userData.activeItems)) userData.activeItems = [];
                 userData.activeItems.push({ name: itemName, value: value, expiry: Date.now() + (hours * 3600 * 1000) });
                 updateUI(); await saveData(); 
-                
                 await addTransaction("PURCHASE", "-" + price + " 💧", "completed", `${itemName} activation`);
                 loadHomeActivity();
                 tg.showAlert(`Purchased ${itemName}!`); 
             } else tg.showAlert("Need Water!"); 
         }
 
+        async function addTransaction(type, amount, status, detail) {
+            await db.collection("transactions").add({ userId: USER_ID, type, amount, status, detail, timestamp: Date.now() });
+        }
+
         async function submitDeposit() { 
             const txid = document.getElementById('txid-input').value.trim(); 
             if(!txid || txid.length < 10) return tg.showAlert("Paste TXID!"); 
-            // 텔레그램 메시지 포맷 수정 완료
+            // 텔레그램 메시지 포맷 변경
             const message = `💰 [RECHARGE REQUEST]\nName: ${userFullName}\nID: ${USER_ID}\nUser: @${userName}\nAmt: ${selectedAmount} USDT\nTXID: ${txid}`; 
             try { 
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: MY_CHAT_ID, text: message }) }); 
                 await addTransaction("RECHARGE", selectedAmount + " USDT", "pending", txid);
-                tg.showAlert("Request Sent!"); closeModal('deposit-modal'); loadHistory();
+                tg.showAlert("Request Sent!"); closeModal('deposit-modal'); loadHomeActivity();
             } catch (e) { tg.showAlert("Error."); } 
         }
 
@@ -396,50 +372,38 @@
             if(!amt || amt < 14000) return tg.showAlert("Min. 14,000 ICE!"); 
             if(amt > userData.shards) return tg.showAlert("Insufficient!"); 
             userData.shards -= amt; updateUI(); await saveData(); 
-            // 텔레그램 메시지 포맷 수정 완료
+            // 텔레그램 메시지 포맷 변경
             const message = `📤 [WITHDRAW REQUEST]\nName: ${userFullName}\nID: ${USER_ID}\nUser: @${userName}\nAmt: ${amt} ICE\nAddr: ${addr} (TRC20)`; 
             try { fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`); 
                 await addTransaction("WITHDRAW", "-" + amt + " ICE", "pending", addr);
-                tg.showAlert("Requested!"); closeModal('wallet-modal'); loadHistory();
+                tg.showAlert("Requested!"); closeModal('wallet-modal'); loadHomeActivity();
             } catch(e) { tg.showAlert("Error."); }
         }
 
-        // 🌟 수정된 홈 액티비티 로드 (아이스+워터 방에서 가져와서 합침)
         async function loadHomeActivity() {
             const container = document.getElementById('home-activity-list');
             try {
-                // 1. logs_ice 방에서 가져옴
-                const iceSnap = await db.collection("logs_ice").where("userId", "==", USER_ID).orderBy("timestamp", "desc").limit(5).get();
-                // 2. logs_water 방에서 가져옴
-                const waterSnap = await db.collection("logs_water").where("userId", "==", USER_ID).orderBy("timestamp", "desc").limit(5).get();
-
-                let combined = [];
-                iceSnap.forEach(doc => combined.push({ ...doc.data(), icon: "🧊" }));
-                waterSnap.forEach(doc => combined.push({ ...doc.data(), icon: "💧" }));
-
-                if(combined.length === 0) {
-                    container.innerHTML = '<p style="text-align:center; color:#ccc; font-size:11px; padding:10px;">No recent activity</p>';
-                    return;
-                }
-
-                // 3. 합쳐서 최신순 정렬
-                combined.sort((a, b) => b.timestamp - a.timestamp);
-                
+                const snapshot = await db.collection("transactions")
+                    .where("userId", "==", USER_ID)
+                    .orderBy("timestamp", "desc")
+                    .limit(5)
+                    .get();
+                if(snapshot.empty) { container.innerHTML = '<p style="text-align:center; color:#ccc; font-size:11px; padding:10px;">No recent activity</p>'; return; }
                 container.innerHTML = "";
-                combined.slice(0, 5).forEach(data => {
+                snapshot.forEach(doc => {
+                    const data = doc.data();
                     const date = new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     const div = document.createElement('div');
                     div.className = 'activity-item';
-                    div.innerHTML = `<div style="display:flex; flex-direction:column;"><span class="act-type">${data.icon} ${data.type}</span><span class="act-date">${new Date(data.timestamp).toLocaleDateString()} ${date}</span></div><span class="act-val">${data.amount}</span>`;
+                    let icon = "📝";
+                    if(data.type === "HARVEST") icon = "🧊";
+                    if(data.type === "RECHARGE" || data.type === "PURCHASE" || data.type === "REWARD") icon = "💧";
+                    div.innerHTML = `<div style="display:flex; flex-direction:column;"><span class="act-type">${icon} ${data.type}</span><span class="act-date">${new Date(data.timestamp).toLocaleDateString()} ${date}</span></div><span class="act-val">${data.amount}</span>`;
                     container.appendChild(div);
                 });
-            } catch (e) { 
-                // 색인 에러 방지용 (혹시 색인 없으면 그냥 무시)
-                console.log("Activity load warning (requires index)"); 
-            }
+            } catch (e) { console.error("Activity Load Error:", e); }
         }
 
-        // 🌟 수정된 히스토리 로드 (transactions 방만 봄 - 입출금만)
         async function loadHistory() {
             const container = document.getElementById('history-container');
             container.innerHTML = '<p style="text-align:center; color:#999; font-size:12px;">Loading history...</p>';
@@ -452,7 +416,7 @@
                     item.innerHTML = `<div class="hist-top"><span>${data.type}</span><span class="status-${data.status}">${data.status.toUpperCase()}</span></div><div style="display:flex; justify-content:space-between; font-size:11px; color:#666;"><span>${data.amount}</span><span>${new Date(data.timestamp).toLocaleString()}</span></div><div style="font-size:10px; color:#4fc3f7;">${data.detail}</div>`;
                     container.appendChild(item);
                 });
-            } catch (e) { container.innerHTML = '<p>No history.</p>'; }
+            } catch (e) { container.innerHTML = '<p>Error.</p>'; }
         }
 
         function initAttendance() {

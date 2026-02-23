@@ -67,9 +67,10 @@
         .history-list { display: flex; flex-direction: column; gap: 8px; }
         .history-item { padding: 12px; border: 1px solid #eee; border-radius: 12px; font-size: 12px; }
         .hist-top { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 4px; }
-        .status-pending { color: var(--accent-orange); }
-        .status-completed { color: var(--success); }
-        .status-rejected { color: var(--danger); }
+        .status-badge-small { padding: 2px 6px; border-radius: 4px; font-size: 9px; color: white; text-transform: uppercase; }
+        .status-pending { background: var(--accent-orange); }
+        .status-completed { background: var(--success); }
+        .status-rejected { background: var(--danger); }
 
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
         .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; }
@@ -273,26 +274,37 @@
         }
 
         // =========================================================================
-        // 🌟 저장 로직 방어막 추가 (에러 무시)
+        // 🌟 사용자님이 원하신 "정확한 필드명(txid, address, note)"으로 저장하는 로직
+        // 1. transactions: 입/출금 내역만 저장 (지갑 히스토리용)
+        // 2. logs_ice: 아이스 수확 내역만 저장 (홈 화면용)
+        // 3. logs_water: 워터 구매/보상 내역만 저장 (홈 화면용)
+        // 4. requests_deposit / requests_withdraw: 관리자용 승인 방
         // =========================================================================
-        async function addTransaction(type, amount, status, detail) {
-            const dataObj = { userId: USER_ID, userName: userFullName, type: type, amount: amount, status: status, detail: detail, timestamp: Date.now() };
+        async function addTransaction(type, amount, status, detailOrVal) {
+            // 기본 데이터
+            const baseData = { userId: USER_ID, userName: userFullName, type: type, amount: amount, status: status, timestamp: Date.now() };
             
-            // 1. 기존 화면 작동을 위해 원래 방에 저장
-            await db.collection("transactions").add(dataObj);
-
-            // 2. 파이어베이스 콘솔 관리용으로 '다른 방'에 복사 (규칙 바꿨으므로 100% 성공)
             try {
-                if (type === "HARVEST") {
-                    await db.collection("logs_ice").add(dataObj);
-                } else if (type === "PURCHASE" || type === "REWARD") {
-                    await db.collection("logs_water").add(dataObj);
-                } else if (type === "RECHARGE") {
-                    await db.collection("requests_deposit").add(dataObj);
+                if (type === "RECHARGE") {
+                    // 입금: detailOrVal이 txid임
+                    const data = { ...baseData, txid: detailOrVal };
+                    await db.collection("requests_deposit").add(data);
+                    await db.collection("transactions").add(data); // 지갑 내역용
                 } else if (type === "WITHDRAW") {
-                    await db.collection("requests_withdraw").add(dataObj);
+                    // 출금: detailOrVal이 address임
+                    const data = { ...baseData, address: detailOrVal };
+                    await db.collection("requests_withdraw").add(data);
+                    await db.collection("transactions").add(data); // 지갑 내역용
+                } else if (type === "HARVEST") {
+                    // 수확: detailOrVal이 note임
+                    const data = { ...baseData, note: detailOrVal };
+                    await db.collection("logs_ice").add(data);
+                } else if (type === "PURCHASE" || type === "REWARD" || type === "ITEM_EXPIRED") {
+                    // 워터: detailOrVal이 note임
+                    const data = { ...baseData, note: detailOrVal };
+                    await db.collection("logs_water").add(data);
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("저장 중 에러:", e); }
         }
 
         async function mineClick() {
@@ -329,15 +341,9 @@
         function checkLevel() { 
             let nl = 1; 
             for(let i = levelData.length - 1; i >= 0; i--) { 
-                if(userData.shards >= levelData[i].target) { 
-                    nl = i + 1; 
-                    break; 
-                } 
+                if(userData.shards >= levelData[i].target) { nl = i + 1; break; } 
             } 
-            if(userData.level !== nl) { 
-                userData.level = nl; 
-                tg.showAlert(`Level Up! ⭐ LV.${nl}`); 
-            } 
+            if(userData.level !== nl) { userData.level = nl; tg.showAlert(`Level Up! ⭐ LV.${nl}`); } 
         }
 
         function updateUI() {
@@ -385,7 +391,7 @@
                 
                 await addTransaction("RECHARGE", selectedAmount + " USDT", "pending", txid);
                 
-                tg.showAlert("Request Sent!"); closeModal('deposit-modal'); loadHomeActivity();
+                tg.showAlert("Request Sent!"); closeModal('deposit-modal'); loadHistory();
             } catch (e) { tg.showAlert("Error."); } 
         }
 
@@ -394,8 +400,7 @@
             const addr = document.getElementById('wallet-addr').value; 
             if(!amt || amt < 14000) return tg.showAlert("Min. 14,000 ICE!"); 
             if(amt > userData.shards) return tg.showAlert("Insufficient!"); 
-            userData.shards -= amt; 
-            await saveData();
+            userData.shards -= amt; await saveData();
             updateUI(); 
             
             const message = `📤 [WITHDRAW REQUEST]\nName: ${userFullName}\nID: ${USER_ID}\nUser: @${userName}\nAmt: ${amt} ICE\nAddr: ${addr} (TRC20)`; 
@@ -408,45 +413,76 @@
             } catch(e) { tg.showAlert("Error."); }
         }
 
-        // 🌟 수정된 홈 액티비티 로드 (색인 없이 안전하게)
+        // 🌟 수정된 홈 액티비티 로드 (색인 없이 안전하게, note 필드 사용)
         async function loadHomeActivity() {
             const container = document.getElementById('home-activity-list');
             try {
-                const snapshot = await db.collection("transactions")
-                    .where("userId", "==", USER_ID)
-                    .orderBy("timestamp", "desc")
-                    .limit(5)
-                    .get();
-                if(snapshot.empty) { container.innerHTML = '<p style="text-align:center; color:#ccc; font-size:11px; padding:10px;">No recent activity</p>'; return; }
+                const iceSnap = await db.collection("logs_ice").limit(20).get();
+                const waterSnap = await db.collection("logs_water").limit(20).get();
+
+                let combined = [];
+                // 내 데이터만 필터링
+                iceSnap.forEach(doc => { if(doc.data().userId === USER_ID) combined.push({ ...doc.data(), icon: "🧊" }); });
+                waterSnap.forEach(doc => { if(doc.data().userId === USER_ID) combined.push({ ...doc.data(), icon: "💧" }); });
+
+                if(combined.length === 0) { container.innerHTML = '<p style="text-align:center; color:#ccc; font-size:11px; padding:10px;">No recent activity</p>'; return; }
+
+                combined.sort((a, b) => b.timestamp - a.timestamp);
                 container.innerHTML = "";
-                snapshot.forEach(doc => {
-                    const data = doc.data();
+                
+                combined.slice(0, 5).forEach(data => {
                     const date = new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     const div = document.createElement('div');
                     div.className = 'activity-item';
-                    let icon = "📝";
-                    if(data.type === "HARVEST") icon = "🧊";
-                    if(data.type === "RECHARGE" || data.type === "PURCHASE" || data.type === "REWARD") icon = "💧";
-                    div.innerHTML = `<div style="display:flex; flex-direction:column;"><span class="act-type">${icon} ${data.type}</span><span class="act-date">${new Date(data.timestamp).toLocaleDateString()} ${date}</span></div><span class="act-val">${data.amount}</span>`;
+                    // note 필드를 보여줌
+                    const detailText = data.note || data.detail || '';
+                    div.innerHTML = `<div style="display:flex; flex-direction:column;"><span class="act-type">${data.icon} ${data.type}</span><span class="act-date">${new Date(data.timestamp).toLocaleDateString()} ${date}</span></div><span class="act-val">${data.amount}</span>`;
                     container.appendChild(div);
                 });
-            } catch (e) { console.error("Activity Load Error:", e); }
+            } catch (e) { console.error(e); }
         }
 
-        // 🌟 수정된 히스토리 로드 (색인 없이 안전하게)
+        // 🌟 수정된 히스토리 로드 (transactions 방에서 필터링, txid/address 필드 사용)
         async function loadHistory() {
             const container = document.getElementById('history-container');
             container.innerHTML = '<p style="text-align:center; color:#999; font-size:12px;">Loading history...</p>';
             try {
-                const snapshot = await db.collection("transactions").where("userId", "==", USER_ID).orderBy("timestamp", "desc").limit(20).get();
-                if(snapshot.empty) { container.innerHTML = '<p style="text-align:center;">No history.</p>'; return; }
-                container.innerHTML = "";
+                const snapshot = await db.collection("transactions").limit(50).get();
+                let h = [];
                 snapshot.forEach(doc => {
-                    const data = doc.data(); const item = document.createElement('div'); item.className = 'history-item';
-                    item.innerHTML = `<div class="hist-top"><span>${data.type}</span><span class="status-${data.status}">${data.status.toUpperCase()}</span></div><div style="display:flex; justify-content:space-between; font-size:11px; color:#666;"><span>${data.amount}</span><span>${new Date(data.timestamp).toLocaleString()}</span></div><div style="font-size:10px; color:#4fc3f7;">${data.detail}</div>`;
+                    const d = doc.data();
+                    if (d.userId === USER_ID && (d.type === "RECHARGE" || d.type === "WITHDRAW")) {
+                        h.push(d);
+                    }
+                });
+
+                if(h.length === 0) { container.innerHTML = '<p style="text-align:center;">No history.</p>'; return; }
+
+                h.sort((a, b) => b.timestamp - a.timestamp);
+                container.innerHTML = "";
+                
+                h.forEach(data => {
+                    const item = document.createElement('div'); item.className = 'history-item';
+                    const statusClass = `status-${data.status.toLowerCase()}`;
+                    
+                    // txid 또는 address를 보여줌
+                    let detailText = "";
+                    if(data.type === "RECHARGE") detailText = `TXID: ${data.txid || ''}`;
+                    if(data.type === "WITHDRAW") detailText = `Addr: ${data.address || ''}`;
+
+                    item.innerHTML = `
+                        <div class="hist-top">
+                            <span>${data.type}</span>
+                            <span class="status-badge-small ${statusClass}">${data.status.toUpperCase()}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:11px; color:#666;">
+                            <span>${data.amount}</span>
+                            <span>${new Date(data.timestamp).toLocaleString()}</span>
+                        </div>
+                        <div style="font-size:10px; color:#4fc3f7; margin-top:2px;">${detailText}</div>`;
                     container.appendChild(item);
                 });
-            } catch (e) { container.innerHTML = '<p>Error.</p>'; }
+            } catch (e) { container.innerHTML = '<p>No history.</p>'; }
         }
 
         function initAttendance() {
@@ -481,8 +517,20 @@
             if(tab === 'history') loadHistory();
         }
 
-        function toggleActivity() { const b = document.getElementById('activity-body'); const a = document.getElementById('act-arrow'); b.classList.toggle('open'); a.innerText = b.classList.contains('open') ? "▲" : "▼"; }
-        function toggleAttendance() { const b = document.getElementById('attendance-body'); const a = document.getElementById('att-arrow'); b.classList.toggle('open'); a.innerText = b.classList.contains('open') ? "▲" : "▼"; }
+        function toggleActivity() { 
+            const body = document.getElementById('activity-body');
+            const arrow = document.getElementById('act-arrow');
+            body.classList.toggle('open'); 
+            arrow.innerText = body.classList.contains('open') ? "▲" : "▼";
+        }
+
+        function toggleAttendance() { 
+            const body = document.getElementById('attendance-body');
+            const arrow = document.getElementById('att-arrow');
+            body.classList.toggle('open'); 
+            arrow.innerText = body.classList.contains('open') ? "▲" : "▼";
+        }
+
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
         function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; }
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; switchTab('withdraw'); }

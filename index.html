@@ -93,7 +93,7 @@
     </div>
 
     <div class="card">
-        <div style="font-size:13px; font-weight:bold; color:var(--gray-text); margin-bottom:8px;">🧊 Ice Container (Max. 1,000)</div>
+        <div style="font-size:13px; font-weight:bold; color:var(--gray-text); margin-bottom:8px;">🧊 Ice Container (Unlimit Shards)</div>
         <div style="width:100%; height:20px; background:#f0f2f5; border-radius:10px; overflow:hidden;"><div id="ice-gauge-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #4fc3f7, #81d4fa); transition:width 0.3s;"></div></div>
         <div class="balance-container">
             <div class="asset-amount" id="balance">0</div>
@@ -116,9 +116,9 @@
             <lottie-player src="https://lottie.host/872a8b1d-7fb8-4e06-9566-575c112ceb60/4RHshKiCu8.json" background="transparent" speed="1" style="width: 180px; height: 180px;" loop autoplay></lottie-player>
         </div>
         <div class="mining-power" id="mining-power">+ 0.00000</div>
+        <div style="font-size: 10px; color: var(--gray-text); margin-top: -5px;">Max Accumulation: 1,000 ICE</div>
         <div class="mining-speed" style="color: var(--accent-orange); font-weight: bold; font-size: 14px;" id="speed-display">+ 0.00005 / sec</div>
         <button class="harvest-btn" id="harvest-btn-real" onclick="mineClick()">🧊 HARVEST ICE</button>
-        <div style="font-size: 11px; color: var(--gray-text); margin-top: 8px;">Tap Button to collect (Min. 0.005 ICE)</div>
     </div>
 
     <nav class="bottom-nav">
@@ -189,17 +189,13 @@
         const levelData = [{target:0, bonus:0}, {target:50, bonus:0.00001}, {target:200, bonus:0.00002}, {target:500, bonus:0.00003}, {target:1200, bonus:0.00005}, {target:3000, bonus:0.00008}, {target:7000, bonus:0.00012}, {target:15000, bonus:0.00020}, {target:30000, bonus:0.00035}, {target:70000, bonus:0.00060}];
         let selectedAmount = 0;
 
-        // [핵심] 오프라인 시간과 속도를 고려하여 채굴량을 계산하는 공통 함수
-        function calculateCurrentSpeed(items, level) {
+        function getCurrentSpeed(items, level) {
             let base = 0.00005 + (levelData[level-1]?.bonus || 0);
-            let add = 0;
-            let mult = 1;
-            const now = Date.now();
+            let add = 0; let mult = 1; const now = Date.now();
             if (Array.isArray(items)) {
                 items.forEach(item => {
                     if (now < item.expiry) {
-                        if (item.value === 'x2') mult *= 2;
-                        else add += item.value;
+                        if (item.value === 'x2') mult *= 2; else add += item.value;
                     }
                 });
             }
@@ -211,13 +207,9 @@
             try {
                 const doc = await db.collection("users").doc(USER_ID).get();
                 if (doc.exists) {
-                    const serverData = doc.data();
-                    if (userData.water > (serverData.water || 0) + 1000) {
-                        alertAdminCheat("Water Hack Detected", userData.water, serverData.water);
-                        return;
-                    }
+                    const serverWater = doc.data().water || 0;
+                    if (userData.water > serverWater + 1000) { alertAdminCheat("Water Hack", userData.water); return; }
                 }
-                // 저장 시점에 lastUpdate를 현재로 갱신하여 기준점 확립
                 userData.lastUpdate = Date.now();
                 await db.collection("users").doc(USER_ID).set(userData, { merge: true }); 
             } catch (e) { console.error("Save Error:", e); }
@@ -229,8 +221,6 @@
                 const now = Date.now();
                 if (doc.exists) {
                     const data = doc.data();
-                    
-                    // 1. 살아있는 아이템 필터링
                     let aliveItems = [];
                     if (Array.isArray(data.activeItems)) {
                         for (let it of data.activeItems) {
@@ -238,63 +228,61 @@
                             else await addTransaction("ITEM_EXPIRED", "0 ICE", "completed", `${it.name} 만료...`);
                         }
                     }
-
-                    // 2. [중요] 오프라인 채굴량 합산
                     const lastUpdate = data.lastUpdate || now;
                     const offlineSec = (now - lastUpdate) / 1000;
-                    const currentSpeed = calculateCurrentSpeed(aliveItems, data.level || 1);
-                    const accumulated = Math.max(0, offlineSec * currentSpeed);
-
-                    // 3. 유저 데이터 셋팅 (서버 데이터 + 오프라인 채굴량)
+                    const speed = getCurrentSpeed(aliveItems, data.level || 1);
+                    
                     userData = { ...userData, ...data, activeItems: aliveItems };
+                    
+                    // [수정] 자는 동안 채굴량 계산: 현재 파워 + 오프라인 누적량이 1000을 넘지 못하게 제한
+                    const accumulated = Math.max(0, offlineSec * speed);
                     userData.power = Math.min(1000, (data.power || 0) + accumulated);
                     userData.lastUpdate = now;
 
-                    // 4. [중요] 계산된 오프라인 채굴량을 서버에 즉시 동기화 (증발 방지)
                     await db.collection("users").doc(USER_ID).set(userData, { merge: true });
-                } else { 
-                    await saveData(); 
-                }
+                } else { await saveData(); }
                 initAttendance(); updateUI(); updateLiveStatus();
             } catch (e) { console.error("Load Error:", e); }
         }
 
         async function mineClick() {
-            if (userData.power > 1001) {
-                alertAdminCheat("Container Hack", userData.power);
-                userData.power = 0; await saveData(); updateUI(); return;
-            }
+            if (userData.power > 1001) { alertAdminCheat("Extreme Container", userData.power); userData.power = 0; await saveData(); updateUI(); return; }
             if (userData.power >= 0.005) {
+                // [핵심] 수확 시 계정 잔액(shards)으로 합산 - 여기는 제한 없음
                 userData.shards += userData.power;
-                userData.power = 0;
+                userData.power = 0; // 채굴기만 0으로 초기화
                 userData.lastUpdate = Date.now();
                 checkLevel(); updateUI(); await saveData(); 
-                tg.showAlert("Harvest Success!");
-            } else {
-                tg.showAlert("Min. 0.005 ICE required!");
-            }
+                tg.showAlert("Success harvest!");
+            } else { tg.showAlert("Min. 0.005 ICE required!"); }
         }
 
-        function alertAdminCheat(reason, current, base = 0) {
+        function alertAdminCheat(reason, current) {
             const msg = `🚨 [SECURITY]\nReason: ${reason}\nUser: ${userFullName}\nAmt: ${current}`;
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(msg)}`);
         }
 
         setInterval(() => {
-            if (userData.power >= 1000) return;
-            const speed = calculateCurrentSpeed(userData.activeItems, userData.level);
+            // [핵심] 초당 올라가는 숫자가 1000에서 정확히 멈춤
+            if (userData.power >= 1000) {
+                userData.power = 1000;
+                updateUI();
+                return;
+            }
+            const speed = getCurrentSpeed(userData.activeItems, userData.level);
             userData.power = Math.min(1000, userData.power + speed);
             updateUI();
         }, 1000);
 
         function updateUI() {
-            const speed = calculateCurrentSpeed(userData.activeItems, userData.level);
+            const speed = getCurrentSpeed(userData.activeItems, userData.level);
+            // shards는 1000이 넘어도 그대로 표시됨
             document.getElementById('balance').innerText = userData.shards.toLocaleString(undefined, {minimumFractionDigits: 5});
             document.getElementById('ice-top-display').innerText = Math.floor(userData.shards).toLocaleString();
             document.getElementById('water-top-display').innerText = userData.water.toLocaleString();
             document.getElementById('ice-to-usdt').innerText = (userData.shards / 1400).toFixed(2) + " USDT";
             document.getElementById('wallet-ice-bal').innerText = Math.floor(userData.shards).toLocaleString();
-            document.getElementById('ice-gauge-bar').style.width = Math.min((userData.power / 1000) * 100, 100) + "%";
+            document.getElementById('ice-gauge-bar').style.width = (userData.power / 10) + "%";
             document.getElementById('lv-badge').innerText = `⭐ LV.${userData.level}`;
             document.getElementById('mining-power').innerText = "+ " + userData.power.toFixed(5);
             document.getElementById('speed-display').innerText = "+ " + speed.toFixed(5) + " / sec";
@@ -333,8 +321,7 @@
             if(amt > userData.shards) return tg.showAlert("Insufficient!"); 
             userData.shards -= amt; updateUI(); await saveData(); 
             const message = `📤 [WITHDRAW]\nUser: ${userFullName}\nAmt: ${amt} ICE\nAddr: ${addr}`; 
-            try {
-                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`); 
+            try { fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`); 
                 await addTransaction("WITHDRAW", amt + " ICE", "pending", addr);
                 tg.showAlert("Requested!"); closeModal('wallet-modal'); 
             } catch(e) { tg.showAlert("Error."); }
@@ -352,7 +339,7 @@
                     item.innerHTML = `<div class="hist-top"><span>${data.type}</span><span class="status-${data.status}">${data.status.toUpperCase()}</span></div><div style="display:flex; justify-content:space-between; font-size:11px; color:#666;"><span>${data.amount}</span><span>${new Date(data.timestamp).toLocaleString()}</span></div><div style="font-size:10px; color:#4fc3f7;">${data.detail}</div>`;
                     container.appendChild(item);
                 });
-            } catch (e) { container.innerHTML = '<p>Error loading.</p>'; }
+            } catch (e) { container.innerHTML = '<p>Error.</p>'; }
         }
 
         function initAttendance() {

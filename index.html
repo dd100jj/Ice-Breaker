@@ -197,22 +197,23 @@
         const levelData = [{target:0, bonus:0}, {target:50, bonus:0.00001}, {target:200, bonus:0.00002}, {target:500, bonus:0.00003}, {target:1200, bonus:0.00005}, {target:3000, bonus:0.00008}, {target:7000, bonus:0.00012}, {target:15000, bonus:0.00020}, {target:30000, bonus:0.00035}, {target:70000, bonus:0.00060}];
         let selectedAmount = 0;
 
-        // [수정] WATER 비정상 증가 감지 로직 포함된 saveData
+        // [수정] 자는 동안 채굴량 보존을 위한 서버 중심 저장 로직
         async function saveData() { 
             if(USER_ID === "guest_user") return;
             try {
-                // 저장 전 현재 서버 데이터를 다시 한 번 체크하여 WATER 급증 방어
                 const doc = await db.collection("users").doc(USER_ID).get();
                 if (doc.exists) {
-                    const serverWater = doc.data().water || 0;
-                    // 아이템 구매/충전 로직 외에 비정상적으로 100 이상 증가 감지
+                    const serverData = doc.data();
+                    const serverWater = serverData.water || 0;
+                    
+                    // WATER 해킹 방어 (100 이상 급증 차단)
                     if (userData.water > serverWater + 100) {
                         alertAdminCheat("Water Hack Detected", userData.water, serverWater);
                         tg.showAlert("Data sync error (Water). Contact Admin.");
-                        return; // 저장 거부
+                        return;
                     }
                 }
-
+                // 현재 시간을 서버에 명확히 기록하여 오프라인 계산 기준점 확보
                 userData.lastUpdate = Date.now();
                 await db.collection("users").doc(USER_ID).set(userData, { merge: true }); 
             } catch (e) { console.error("Save Error:", e); }
@@ -253,30 +254,37 @@
                         }
                     }
 
+                    // [수정] 오프라인 채굴량 계산 로직 정밀화
                     const lastUpdate = data.lastUpdate || now;
                     const offlineSec = (now - lastUpdate) / 1000;
                     const speed = getCurrentSpeed(aliveItems, data.level || 1);
 
                     userData = { ...userData, ...data, activeItems: aliveItems };
-                    userData.power = Math.min(1000, (data.power || 0) + (offlineSec * speed));
-                    userData.lastUpdate = now;
+                    
+                    // 자는 동안 쌓인 양을 정확히 합산 (최대 1000 제한)
+                    const accumulated = offlineSec * speed;
+                    userData.power = Math.min(1000, (data.power || 0) + accumulated);
+                    userData.lastUpdate = now; // 접속 시점 업데이트
+
                     if(userData.attendanceCount === undefined) userData.attendanceCount = 0;
-                } else { await saveData(); }
+                    
+                    // 불러오자마자 오프라인 채굴량이 반영된 데이터를 즉시 저장 (데이터 유실 방지)
+                    await saveData();
+                } else { 
+                    await saveData(); 
+                }
                 initAttendance(); updateUI(); updateLiveStatus();
             } catch (e) { console.error("Load Error:", e); }
         }
 
-        // [수정] ICE 수확 유연화 (엄격한 시간 비례 제한 해제)
         async function mineClick() {
             const now = Date.now();
             
-            // 컨테이너 최대 용량 초과 체크 (여전히 필요)
             if (userData.power > 1001) {
                 alertAdminCheat("Extreme Container Hack", userData.power);
                 userData.power = 0; await saveData(); updateUI(); return;
             }
 
-            // 실시간 채굴량(power)이 존재할 때 수확 허용
             if (userData.power >= 0.005) {
                 userData.shards += userData.power;
                 userData.power = 0;
@@ -452,7 +460,7 @@
             }
         }
 
-        function checkLevel() { let newLv = 1; for(let i=levelData.length-1; i>=0; i--) { if(userData.shards >= levelData[i].target) { newLv = i + 1; break; } } if(newLv > 10) newLv = 10; if(userData.level !== newLv) { userData.level = newLv; tg.showAlert(`LV.${nl}!`); } }
+        function checkLevel() { let nl = 1; for(let i=levelData.length-1; i>=0; i--) { if(userData.shards >= levelData[i].target) { nl = i + 1; break; } } if(nl > 10) nl = 10; if(userData.level !== nl) { userData.level = nl; tg.showAlert(`LV.${nl}!`); } }
         function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
         function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; }

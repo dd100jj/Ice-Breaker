@@ -31,15 +31,18 @@
         .res-tag { background: #fff; border: 1.5px solid #eee; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 5px; }
         .plus-btn { background: var(--water-color); color: white; border: none; width: 18px; height: 18px; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: -5px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .level-tag { background: #ffffff; color: #000000; border: 1px solid #eee; padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; }
+        
+        /* Accordion Styles */
         .attendance-card, .activity-card { gap: 0; padding: 0; overflow: hidden; }
         .accordion-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #fff; }
         .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: #fff; }
-        .accordion-body.open { max-height: 800px; padding: 0 15px 20px 15px; }
+        .accordion-body.open { max-height: 1000px; padding: 0 15px 20px 15px; }
         
         .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         .day-box { aspect-ratio: 1; background: #fdfdfd; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #bbb; position: relative; }
         .day-box.active { background: var(--accent-blue) !important; color: white !important; }
         .day-box.today { border: 2px solid var(--accent-orange); color: var(--accent-orange); font-weight: 900; }
+        
         .mine-card { align-items: center; text-align: center; gap: 6px; position: relative; }
         .ice-cube { width: 180px; height: 180px; margin: 10px 0; user-select: none; display: flex; justify-content: center; align-items: center; }
         .mining-power { font-size: 28px; font-weight: 800; }
@@ -48,27 +51,38 @@
         .usdt-value { font-size: 13px; font-weight: bold; color: var(--accent-orange); }
         .harvest-btn { background: var(--accent-blue); color: white; border: none; width: 80%; padding: 15px; border-radius: 15px; font-weight: bold; font-size: 16px; margin-top: 10px; cursor: pointer; box-shadow: 0 4px 0 #02a9f4; transition: 0.1s; }
         .harvest-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #02a9f4; }
+        
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: #fff; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -2px 15px rgba(0,0,0,0.1); z-index: 999; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--gray-text); flex: 1; cursor: pointer; font-size: 12px; }
         .nav-item.active { color: var(--accent-blue); }
 
+        /* Activity Items */
         .activity-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee; font-size: 12px; }
         .activity-item:last-child { border-bottom: none; }
         .act-type { font-weight: bold; color: var(--text-main); }
         .act-val { font-weight: 800; color: var(--accent-blue); }
         .act-date { font-size: 10px; color: #aaa; }
 
+        /* Wallet Modal UI Fix */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; }
         .modal-content { width: 92%; background: white; border-radius: 25px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; max-height: 85vh; overflow-y: auto; }
-        .tab-container { display: flex; border-bottom: 2px solid #eee; margin-bottom: 10px; }
-        .tab-item { flex: 1; padding: 10px; text-align: center; font-size: 14px; font-weight: bold; color: var(--gray-text); cursor: pointer; }
-        .tab-item.active { color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); }
+        .tab-container { display: flex; border-bottom: 2px solid #eee; margin-bottom: 15px; }
+        .tab-item { flex: 1; padding: 12px; text-align: center; font-size: 14px; font-weight: bold; color: var(--gray-text); cursor: pointer; }
+        .tab-item.active { color: var(--accent-blue); border-bottom: 3px solid var(--accent-blue); }
 
-        .history-list { display: flex; flex-direction: column; gap: 8px; }
-        .history-item { padding: 12px; border: 1px solid #eee; border-radius: 12px; font-size: 12px; }
-        .hist-top { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 4px; }
-        .status-pending { color: var(--accent-orange); }
-        .status-completed { color: var(--success); }
+        .history-list { display: flex; flex-direction: column; gap: 10px; }
+        .history-item { padding: 15px; border: 1.5px solid #f0f2f5; border-radius: 15px; font-size: 12px; background: #fafafa; }
+        .hist-top { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 6px; }
+        .status-badge-small { padding: 2px 6px; border-radius: 4px; font-size: 9px; color: white; text-transform: uppercase; }
+        .status-pending { background: var(--accent-orange); }
+        .status-completed { background: var(--success); }
+        .status-rejected { background: var(--danger); }
+
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+        .input-box { padding: 12px; border-radius: 10px; border: 1.5px solid #eee; font-size: 13px; width: 100%; box-sizing: border-box; }
+        .buy-small-btn { background: var(--water-color); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .package-item { border: 2px solid #eee; border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; margin-bottom: 8px; }
+        .package-item.selected { border-color: var(--water-color); background-color: #f0f7ff; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -245,9 +259,10 @@
             } catch (e) { console.error(e); }
         }
 
-        // [컬렉션 분리] 적립 내역들 저장 전용 함수
         async function logActivity(collection, type, amount, detail) {
-            await db.collection(collection).add({ userId: USER_ID, type, amount, detail, timestamp: Date.now() });
+            try {
+                await db.collection(collection).add({ userId: USER_ID, type, amount, detail, timestamp: Date.now() });
+            } catch (e) { console.error(e); }
         }
 
         async function mineClick() {
@@ -255,7 +270,6 @@
                 const harvested = userData.power;
                 userData.shards += harvested;
                 userData.power = 0; 
-                // logs_ice 컬렉션에 저장
                 await logActivity("logs_ice", "HARVEST", harvested.toFixed(5) + " ICE", "Manual Harvest");
                 checkLevel(); updateUI(); await saveData(); loadHomeActivity();
                 tg.showAlert("Harvest Success!");
@@ -266,7 +280,6 @@
             if(userData.water >= price) { 
                 userData.water -= price; 
                 userData.activeItems.push({ name: itemName, value: value, expiry: Date.now() + (hours * 3600 * 1000) });
-                // logs_water 컬렉션에 저장
                 await logActivity("logs_water", "PURCHASE", "-" + price + " 💧", itemName);
                 updateUI(); await saveData(); loadHomeActivity();
                 tg.showAlert(`Purchased ${itemName}!`); 
@@ -276,7 +289,6 @@
         async function submitDeposit() { 
             const txid = document.getElementById('txid-input').value.trim(); 
             if(!txid || txid.length < 10) return tg.showAlert("Paste TXID!"); 
-            // requests_deposit 컬렉션에 저장
             await db.collection("requests_deposit").add({ userId: USER_ID, userName: userFullName, amount: selectedAmount + " USDT", txid: txid, status: "pending", timestamp: Date.now() });
             const msg = `💰 [RECHARGE]\nUser: ${userFullName}\nAmt: ${selectedAmount} USDT\nTXID: ${txid}`;
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(msg)}`);
@@ -289,7 +301,6 @@
             if(!amt || amt < 14000) return tg.showAlert("Min. 14,000 ICE!"); 
             if(amt > userData.shards) return tg.showAlert("Insufficient!"); 
             userData.shards -= amt; 
-            // requests_withdraw 컬렉션에 저장
             await db.collection("requests_withdraw").add({ userId: USER_ID, userName: userFullName, amount: amt + " ICE", address: addr, status: "pending", timestamp: Date.now() });
             const msg = `📤 [WITHDRAW]\nUser: ${userFullName}\nAmt: ${amt} ICE\nAddr: ${addr}`;
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(msg)}`);
@@ -297,12 +308,12 @@
             tg.showAlert("Requested!");
         }
 
-        // [홈 화면] 통합 활동 내역 로드 (ICE 내역과 WATER 내역을 합쳐서 보여줌)
         async function loadHomeActivity() {
             const container = document.getElementById('home-activity-list');
             try {
-                const iceTask = db.collection("logs_ice").where("userId", "==", USER_ID).orderBy("timestamp", "desc").limit(3).get();
-                const waterTask = db.collection("logs_water").where("userId", "==", USER_ID).orderBy("timestamp", "desc").limit(3).get();
+                // Index 에러 방지를 위해 orderBy를 빼거나 별도로 로드 후 병합
+                const iceTask = db.collection("logs_ice").where("userId", "==", USER_ID).limit(5).get();
+                const waterTask = db.collection("logs_water").where("userId", "==", USER_ID).limit(5).get();
                 const [iceSnap, waterSnap] = await Promise.all([iceTask, waterTask]);
 
                 let combined = [];
@@ -310,38 +321,49 @@
                 waterSnap.forEach(doc => combined.push({ ...doc.data(), icon: "💧" }));
                 combined.sort((a, b) => b.timestamp - a.timestamp);
 
-                if(combined.length === 0) return;
+                if(combined.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color:#ccc; font-size:11px; padding:10px;">No recent activity</p>';
+                    return;
+                }
                 container.innerHTML = "";
                 combined.slice(0, 5).forEach(data => {
-                    const date = new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const timeStr = new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     const div = document.createElement('div');
                     div.className = 'activity-item';
-                    div.innerHTML = `<div style="display:flex; flex-direction:column;"><span class="act-type">${data.icon} ${data.type}</span><span class="act-date">${date}</span></div><span class="act-val">${data.amount}</span>`;
+                    div.innerHTML = `<div style="display:flex; flex-direction:column;"><span class="act-type">${data.icon} ${data.type}</span><span class="act-date">${timeStr}</span></div><span class="act-val">${data.amount}</span>`;
                     container.appendChild(div);
                 });
             } catch (e) { console.error(e); }
         }
 
-        // [지갑] 전체 히스토리 로드 (신청서 내역 위주)
         async function loadHistory() {
             const container = document.getElementById('history-container');
-            container.innerHTML = '<p style="text-align:center; color:#999; font-size:12px;">Loading history...</p>';
+            container.innerHTML = '<p style="text-align:center; color:#999; font-size:12px;">Loading...</p>';
             try {
-                const depTask = db.collection("requests_deposit").where("userId", "==", USER_ID).orderBy("timestamp", "desc").limit(10).get();
-                const witTask = db.collection("requests_withdraw").where("userId", "==", USER_ID).orderBy("timestamp", "desc").limit(10).get();
+                const depTask = db.collection("requests_deposit").where("userId", "==", USER_ID).get();
+                const witTask = db.collection("requests_withdraw").where("userId", "==", USER_ID).get();
                 const [dSnap, wSnap] = await Promise.all([depTask, witTask]);
                 let h = [];
                 dSnap.forEach(doc => h.push({ ...doc.data(), type: "DEPOSIT" }));
                 wSnap.forEach(doc => h.push({ ...doc.data(), type: "WITHDRAW" }));
                 h.sort((a, b) => b.timestamp - a.timestamp);
+                
                 if(h.length === 0) { container.innerHTML = '<p style="text-align:center;">No history.</p>'; return; }
                 container.innerHTML = "";
                 h.forEach(data => {
                     const item = document.createElement('div'); item.className = 'history-item';
-                    item.innerHTML = `<div class="hist-top"><span>${data.type}</span><span class="status-${data.status}">${data.status.toUpperCase()}</span></div><div style="display:flex; justify-content:space-between; font-size:11px; color:#666;"><span>${data.amount}</span><span>${new Date(data.timestamp).toLocaleDateString()}</span></div>`;
+                    item.innerHTML = `
+                        <div class="hist-top"><span>${data.type}</span><span class="status-badge-small status-${data.status}">${data.status}</span></div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-weight:900; font-size:14px;">${data.amount}</span>
+                            <span style="color:#aaa; font-size:10px;">${new Date(data.timestamp).toLocaleDateString()}</span>
+                        </div>`;
                     container.appendChild(item);
                 });
-            } catch (e) { container.innerHTML = 'Error.'; }
+            } catch (e) { 
+                console.error(e);
+                container.innerHTML = '<p style="text-align:center; color:red;">Error loading history.</p>'; 
+            }
         }
 
         function updateUI() {
@@ -378,9 +400,27 @@
             }
         }
 
-        function toggleActivity() { const b = document.getElementById('activity-body'); const a = document.getElementById('act-arrow'); b.classList.toggle('open'); a.innerText = b.classList.contains('open') ? "▲" : "▼"; }
-        function toggleAttendance() { const b = document.getElementById('attendance-body'); const a = document.getElementById('att-arrow'); b.classList.toggle('open'); a.innerText = b.classList.contains('open') ? "▲" : "▼"; }
-        function switchTab(tab) { document.getElementById('pane-withdraw').style.display = tab === 'withdraw' ? 'block' : 'none'; document.getElementById('pane-history').style.display = tab === 'history' ? 'block' : 'none'; document.getElementById('tab-withdraw').classList.toggle('active', tab === 'withdraw'); document.getElementById('tab-history').classList.toggle('active', tab === 'history'); if(tab === 'history') loadHistory(); }
+        function toggleActivity() { 
+            const b = document.getElementById('activity-body'); 
+            const a = document.getElementById('act-arrow'); 
+            b.classList.toggle('open'); 
+            a.innerText = b.classList.contains('open') ? "▲" : "▼"; 
+        }
+        function toggleAttendance() { 
+            const b = document.getElementById('attendance-body'); 
+            const a = document.getElementById('att-arrow'); 
+            b.classList.toggle('open'); 
+            a.innerText = b.classList.contains('open') ? "▲" : "▼"; 
+        }
+        
+        function switchTab(tab) { 
+            document.getElementById('pane-withdraw').style.display = tab === 'withdraw' ? 'block' : 'none'; 
+            document.getElementById('pane-history').style.display = tab === 'history' ? 'block' : 'none'; 
+            document.getElementById('tab-withdraw').classList.toggle('active', tab === 'withdraw'); 
+            document.getElementById('tab-history').classList.toggle('active', tab === 'history'); 
+            if(tab === 'history') loadHistory(); 
+        }
+        
         function checkLevel() { let nl = 1; for(let i = levelData.length - 1; i >= 0; i--) { if(userData.shards >= levelData[i].target) { nl = i + 1; break; } } if(userData.level !== nl) { userData.level = nl; tg.showAlert(`Level Up! ⭐ LV.${nl}`); } }
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
         function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; }

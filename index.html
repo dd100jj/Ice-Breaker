@@ -322,12 +322,15 @@
             document.getElementById('water-top-display').innerText = userData.water.toLocaleString();
             document.getElementById('ice-to-usdt').innerText = (userData.shards / 1400).toFixed(2) + " USDT";
             document.getElementById('wallet-ice-bal').innerText = Math.floor(userData.shards).toLocaleString();
+            
             document.getElementById('mining-power').innerText = "+ " + userData.power.toFixed(5);
             document.getElementById('speed-display').innerText = "+ " + speed.toFixed(5) + " / sec";
             document.getElementById('lv-badge').innerText = `⭐ LV.${userData.level}`;
+
             const gauge = document.getElementById('ice-gauge-bar');
             const percentage = (userData.power / 1000) * 100;
             gauge.style.width = Math.min(percentage, 100) + "%";
+
             if (userData.power >= 1000) {
                 gauge.style.background = "linear-gradient(90deg, #ff8a65, #ff5252)";
             } else {
@@ -335,38 +338,14 @@
             }
         }
 
-        async function loadHomeActivity() {
-            const container = document.getElementById('home-activity-list');
-            try {
-                const snapshot = await db.collection("transactions")
-                    .where("userId", "==", USER_ID)
-                    .orderBy("timestamp", "desc")
-                    .limit(5)
-                    .get();
-                if(snapshot.empty) return;
-                container.innerHTML = "";
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const date = new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const div = document.createElement('div');
-                    div.className = 'activity-item';
-                    let icon = "📝";
-                    if(data.type === "HARVEST") icon = "🧊";
-                    if(data.type === "RECHARGE" || data.type === "PURCHASE" || data.type === "REWARD") icon = "💧";
-                    div.innerHTML = `<div style="display:flex; flex-direction:column;"><span class="act-type">${icon} ${data.type}</span><span class="act-date">${new Date(data.timestamp).toLocaleDateString()} ${date}</span></div><span class="act-val">${data.amount}</span>`;
-                    container.appendChild(div);
-                });
-            } catch (e) { console.error("Activity Load Error:", e); }
-        }
-
         async function buyItem(id, price, hours, itemName, value) { 
             if(userData.water >= price) { 
                 userData.water -= price; 
                 if (!Array.isArray(userData.activeItems)) userData.activeItems = [];
                 userData.activeItems.push({ name: itemName, value: value, expiry: Date.now() + (hours * 3600 * 1000) });
-                updateUI();
+                updateUI(); await saveData(); 
                 await addTransaction("PURCHASE", "-" + price + " 💧", "completed", `${itemName} activation`);
-                await saveData(); loadHomeActivity();
+                loadHomeActivity();
                 tg.showAlert(`Purchased ${itemName}!`); 
             } else tg.showAlert("Need Water!"); 
         }
@@ -378,7 +357,8 @@
         async function submitDeposit() { 
             const txid = document.getElementById('txid-input').value.trim(); 
             if(!txid || txid.length < 10) return tg.showAlert("Paste TXID!"); 
-            const message = `💰 [RECHARGE]\nUser: ${userFullName}\nAmt: ${selectedAmount} USDT\nTXID: ${txid}`; 
+            // 텔레그램 메시지 포맷 변경
+            const message = `💰 [RECHARGE REQUEST]\nName: ${userFullName}\nID: ${USER_ID}\nUser: @${userName}\nAmt: ${selectedAmount} USDT\nTXID: ${txid}`; 
             try { 
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: MY_CHAT_ID, text: message }) }); 
                 await addTransaction("RECHARGE", selectedAmount + " USDT", "pending", txid);
@@ -392,11 +372,36 @@
             if(!amt || amt < 14000) return tg.showAlert("Min. 14,000 ICE!"); 
             if(amt > userData.shards) return tg.showAlert("Insufficient!"); 
             userData.shards -= amt; updateUI(); await saveData(); 
-            const message = `📤 [WITHDRAW]\nUser: ${userFullName}\nAmt: ${amt} ICE\nAddr: ${addr}`; 
+            // 텔레그램 메시지 포맷 변경
+            const message = `📤 [WITHDRAW REQUEST]\nName: ${userFullName}\nID: ${USER_ID}\nUser: @${userName}\nAmt: ${amt} ICE\nAddr: ${addr} (TRC20)`; 
             try { fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`); 
                 await addTransaction("WITHDRAW", "-" + amt + " ICE", "pending", addr);
                 tg.showAlert("Requested!"); closeModal('wallet-modal'); loadHomeActivity();
             } catch(e) { tg.showAlert("Error."); }
+        }
+
+        async function loadHomeActivity() {
+            const container = document.getElementById('home-activity-list');
+            try {
+                const snapshot = await db.collection("transactions")
+                    .where("userId", "==", USER_ID)
+                    .orderBy("timestamp", "desc")
+                    .limit(5)
+                    .get();
+                if(snapshot.empty) { container.innerHTML = '<p style="text-align:center; color:#ccc; font-size:11px; padding:10px;">No recent activity</p>'; return; }
+                container.innerHTML = "";
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const div = document.createElement('div');
+                    div.className = 'activity-item';
+                    let icon = "📝";
+                    if(data.type === "HARVEST") icon = "🧊";
+                    if(data.type === "RECHARGE" || data.type === "PURCHASE" || data.type === "REWARD") icon = "💧";
+                    div.innerHTML = `<div style="display:flex; flex-direction:column;"><span class="act-type">${icon} ${data.type}</span><span class="act-date">${new Date(data.timestamp).toLocaleDateString()} ${date}</span></div><span class="act-val">${data.amount}</span>`;
+                    container.appendChild(div);
+                });
+            } catch (e) { console.error("Activity Load Error:", e); }
         }
 
         async function loadHistory() {
@@ -445,7 +450,6 @@
             if(tab === 'history') loadHistory();
         }
 
-        // [추가] 아코디언 토글 함수
         function toggleActivity() { 
             const body = document.getElementById('activity-body');
             const arrow = document.getElementById('act-arrow');

@@ -31,10 +31,11 @@
         .res-tag { background: #fff; border: 1.5px solid #eee; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 5px; }
         .plus-btn { background: var(--water-color); color: white; border: none; width: 18px; height: 18px; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: -5px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .level-tag { background: #ffffff; color: #000000; border: 1px solid #eee; padding: 6px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; }
-        .attendance-card { gap: 0; padding: 0; overflow: hidden; margin-top: 5px; }
-        .attendance-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #fff; }
-        .attendance-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: #fff; }
-        .attendance-body.open { max-height: 1200px; padding: 0 15px 20px 15px; }
+        .attendance-card, .activity-card { gap: 0; padding: 0; overflow: hidden; }
+        .accordion-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: #fff; }
+        .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: #fff; }
+        .accordion-body.open { max-height: 800px; padding: 0 15px 20px 15px; }
+        
         .grid-30 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         .day-box { aspect-ratio: 1; background: #fdfdfd; border-radius: 12px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #bbb; position: relative; }
         .day-box.active { background: var(--accent-blue) !important; color: white !important; }
@@ -50,6 +51,12 @@
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: #fff; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -2px 15px rgba(0,0,0,0.1); z-index: 999; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--gray-text); flex: 1; cursor: pointer; font-size: 12px; }
         .nav-item.active { color: var(--accent-blue); }
+
+        .activity-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee; font-size: 12px; }
+        .activity-item:last-child { border-bottom: none; }
+        .act-type { font-weight: bold; color: var(--text-main); }
+        .act-val { font-weight: 800; color: var(--accent-blue); }
+        .act-date { font-size: 10px; color: #aaa; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; }
         .modal-content { width: 92%; background: white; border-radius: 25px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; max-height: 85vh; overflow-y: auto; }
@@ -69,8 +76,6 @@
         .buy-small-btn { background: var(--water-color); color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; }
         .package-item { border: 2px solid #eee; border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; margin-bottom: 8px; }
         .package-item.selected { border-color: var(--water-color); background-color: #f0f7ff; font-weight: bold; }
-        
-        .cheat-warning { background: #fff4f4; border: 1px solid #ffcccc; color: #d32f2f; padding: 10px; border-radius: 10px; font-size: 10px; font-weight: bold; text-align: center; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -100,12 +105,24 @@
         </div>
     </div>
 
-    <div class="card attendance-card">
-        <div class="attendance-header" onclick="toggleAttendance()">
-            <h3 style="margin:0; font-size:16px;">📅 30Day Rewards</h3>
-            <span id="arrow">▼</span>
+    <div class="card activity-card">
+        <div class="accordion-header" onclick="toggleActivity()">
+            <h3 style="margin:0; font-size:15px;">📜 My Activity</h3>
+            <span id="act-arrow">▼</span>
         </div>
-        <div id="attendance-body" class="attendance-body">
+        <div id="activity-body" class="accordion-body">
+            <div id="home-activity-list">
+                <p style="text-align:center; color:#ccc; font-size:11px; padding:10px;">No recent activity</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card attendance-card">
+        <div class="accordion-header" onclick="toggleAttendance()">
+            <h3 style="margin:0; font-size:15px;">📅 30Day Rewards</h3>
+            <span id="att-arrow">▼</span>
+        </div>
+        <div id="attendance-body" class="accordion-body">
             <div class="grid-30" id="attendance-grid"></div>
         </div>
     </div>
@@ -238,7 +255,7 @@
                     if (Array.isArray(data.activeItems)) {
                         for (let it of data.activeItems) {
                             if (now < it.expiry) aliveItems.push(it);
-                            else await addTransaction("ITEM_EXPIRED", "0 ICE", "completed", `${it.name} 만료...`);
+                            else await addTransaction("ITEM_EXPIRED", "0 ICE", "completed", `${it.name} expired...`);
                         }
                     }
                     const lastUpdate = data.lastUpdate || now;
@@ -251,17 +268,19 @@
                     userData.lastUpdate = now;
                     await db.collection("users").doc(USER_ID).set(userData, { merge: true });
                 } else { await saveData(); }
-                initAttendance(); updateUI(); updateLiveStatus();
+                initAttendance(); updateUI(); updateLiveStatus(); loadHomeActivity();
             } catch (e) { console.error("Load Error:", e); }
         }
 
         async function mineClick() {
             if (userData.power > 1001) { alertAdminCheat("Extreme Container Hack", userData.power); userData.power = 0; await saveData(); updateUI(); return; }
             if (userData.power >= 0.005) {
-                userData.shards += userData.power;
+                const harvestedAmount = userData.power;
+                userData.shards += harvestedAmount;
                 userData.power = 0; 
                 userData.lastUpdate = Date.now();
-                checkLevel(); updateUI(); await saveData(); 
+                await addTransaction("HARVEST", harvestedAmount.toFixed(5) + " ICE", "completed", "Manual Harvest");
+                checkLevel(); updateUI(); await saveData(); loadHomeActivity();
                 tg.showAlert("Success harvest!");
             } else { tg.showAlert("Min. 0.005 ICE required!"); }
         }
@@ -303,15 +322,12 @@
             document.getElementById('water-top-display').innerText = userData.water.toLocaleString();
             document.getElementById('ice-to-usdt').innerText = (userData.shards / 1400).toFixed(2) + " USDT";
             document.getElementById('wallet-ice-bal').innerText = Math.floor(userData.shards).toLocaleString();
-            
             document.getElementById('mining-power').innerText = "+ " + userData.power.toFixed(5);
             document.getElementById('speed-display').innerText = "+ " + speed.toFixed(5) + " / sec";
             document.getElementById('lv-badge').innerText = `⭐ LV.${userData.level}`;
-
             const gauge = document.getElementById('ice-gauge-bar');
             const percentage = (userData.power / 1000) * 100;
             gauge.style.width = Math.min(percentage, 100) + "%";
-
             if (userData.power >= 1000) {
                 gauge.style.background = "linear-gradient(90deg, #ff8a65, #ff5252)";
             } else {
@@ -319,13 +335,38 @@
             }
         }
 
+        async function loadHomeActivity() {
+            const container = document.getElementById('home-activity-list');
+            try {
+                const snapshot = await db.collection("transactions")
+                    .where("userId", "==", USER_ID)
+                    .orderBy("timestamp", "desc")
+                    .limit(5)
+                    .get();
+                if(snapshot.empty) return;
+                container.innerHTML = "";
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const div = document.createElement('div');
+                    div.className = 'activity-item';
+                    let icon = "📝";
+                    if(data.type === "HARVEST") icon = "🧊";
+                    if(data.type === "RECHARGE" || data.type === "PURCHASE" || data.type === "REWARD") icon = "💧";
+                    div.innerHTML = `<div style="display:flex; flex-direction:column;"><span class="act-type">${icon} ${data.type}</span><span class="act-date">${new Date(data.timestamp).toLocaleDateString()} ${date}</span></div><span class="act-val">${data.amount}</span>`;
+                    container.appendChild(div);
+                });
+            } catch (e) { console.error("Activity Load Error:", e); }
+        }
+
         async function buyItem(id, price, hours, itemName, value) { 
             if(userData.water >= price) { 
                 userData.water -= price; 
                 if (!Array.isArray(userData.activeItems)) userData.activeItems = [];
                 userData.activeItems.push({ name: itemName, value: value, expiry: Date.now() + (hours * 3600 * 1000) });
-                updateUI(); await saveData(); 
-                await addTransaction("PURCHASE", price + " WATER", "completed", `${itemName} (${value === 'x2' ? 'x2' : '+' + value + '/s'})`);
+                updateUI();
+                await addTransaction("PURCHASE", "-" + price + " 💧", "completed", `${itemName} activation`);
+                await saveData(); loadHomeActivity();
                 tg.showAlert(`Purchased ${itemName}!`); 
             } else tg.showAlert("Need Water!"); 
         }
@@ -341,7 +382,7 @@
             try { 
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: MY_CHAT_ID, text: message }) }); 
                 await addTransaction("RECHARGE", selectedAmount + " USDT", "pending", txid);
-                tg.showAlert("Request Sent!"); closeModal('deposit-modal'); 
+                tg.showAlert("Request Sent!"); closeModal('deposit-modal'); loadHomeActivity();
             } catch (e) { tg.showAlert("Error."); } 
         }
 
@@ -353,8 +394,8 @@
             userData.shards -= amt; updateUI(); await saveData(); 
             const message = `📤 [WITHDRAW]\nUser: ${userFullName}\nAmt: ${amt} ICE\nAddr: ${addr}`; 
             try { fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`); 
-                await addTransaction("WITHDRAW", amt + " ICE", "pending", addr);
-                tg.showAlert("Requested!"); closeModal('wallet-modal'); 
+                await addTransaction("WITHDRAW", "-" + amt + " ICE", "pending", addr);
+                tg.showAlert("Requested!"); closeModal('wallet-modal'); loadHomeActivity();
             } catch(e) { tg.showAlert("Error."); }
         }
 
@@ -382,7 +423,14 @@
                 if(i === userData.attendanceCount + 1) {
                     box.classList.add('today');
                     if(userData.lastAttendance !== todayStr) {
-                        box.onclick = async () => { userData.attendanceCount += 1; userData.water += 5; userData.lastAttendance = todayStr; updateUI(); await saveData(); initAttendance(); tg.showAlert("Day " + userData.attendanceCount + " Check-in!"); };
+                        box.onclick = async () => { 
+                            userData.attendanceCount += 1; 
+                            userData.water += 5; 
+                            userData.lastAttendance = todayStr; 
+                            await addTransaction("REWARD", "+5 💧", "completed", "Daily Attendance");
+                            updateUI(); await saveData(); initAttendance(); loadHomeActivity();
+                            tg.showAlert("Day " + userData.attendanceCount + " Check-in!"); 
+                        };
                     }
                 }
                 grid.appendChild(box);
@@ -392,15 +440,26 @@
         function switchTab(tab) {
             document.getElementById('pane-withdraw').style.display = tab === 'withdraw' ? 'block' : 'none';
             document.getElementById('pane-history').style.display = tab === 'history' ? 'block' : 'none';
-            
-            // 탭 스타일 전환 로직 추가
             document.getElementById('tab-withdraw').classList.toggle('active', tab === 'withdraw');
             document.getElementById('tab-history').classList.toggle('active', tab === 'history');
-            
             if(tab === 'history') loadHistory();
         }
 
-        function toggleAttendance() { document.getElementById('attendance-body').classList.toggle('open'); }
+        // [추가] 아코디언 토글 함수
+        function toggleActivity() { 
+            const body = document.getElementById('activity-body');
+            const arrow = document.getElementById('act-arrow');
+            body.classList.toggle('open'); 
+            arrow.innerText = body.classList.contains('open') ? "▲" : "▼";
+        }
+
+        function toggleAttendance() { 
+            const body = document.getElementById('attendance-body');
+            const arrow = document.getElementById('att-arrow');
+            body.classList.toggle('open'); 
+            arrow.innerText = body.classList.contains('open') ? "▲" : "▼";
+        }
+
         function openShop() { document.getElementById('shop-modal').style.display = 'flex'; }
         function openDeposit() { document.getElementById('deposit-modal').style.display = 'flex'; }
         function openWallet() { document.getElementById('wallet-modal').style.display = 'flex'; switchTab('withdraw'); }

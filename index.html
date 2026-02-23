@@ -322,84 +322,17 @@
             document.getElementById('water-top-display').innerText = userData.water.toLocaleString();
             document.getElementById('ice-to-usdt').innerText = (userData.shards / 1400).toFixed(2) + " USDT";
             document.getElementById('wallet-ice-bal').innerText = Math.floor(userData.shards).toLocaleString();
-            
             document.getElementById('mining-power').innerText = "+ " + userData.power.toFixed(5);
             document.getElementById('speed-display').innerText = "+ " + speed.toFixed(5) + " / sec";
             document.getElementById('lv-badge').innerText = `⭐ LV.${userData.level}`;
-
             const gauge = document.getElementById('ice-gauge-bar');
             const percentage = (userData.power / 1000) * 100;
             gauge.style.width = Math.min(percentage, 100) + "%";
-
             if (userData.power >= 1000) {
                 gauge.style.background = "linear-gradient(90deg, #ff8a65, #ff5252)";
             } else {
                 gauge.style.background = "linear-gradient(90deg, #4fc3f7, #81d4fa)";
             }
-        }
-
-        async function buyItem(id, price, hours, itemName, value) { 
-            if(userData.water >= price) { 
-                userData.water -= price; 
-                if (!Array.isArray(userData.activeItems)) userData.activeItems = [];
-                userData.activeItems.push({ name: itemName, value: value, expiry: Date.now() + (hours * 3600 * 1000) });
-                updateUI();
-                await addTransaction("PURCHASE", "-" + price + " 💧", "completed", `${itemName} activation`);
-                await saveData(); loadHomeActivity();
-                tg.showAlert(`Purchased ${itemName}!`); 
-            } else tg.showAlert("Need Water!"); 
-        }
-
-        // =========================================================================
-        // 🌟 사용자님이 원하신 "파이어베이스에서만 컬렉션을 나누어 보는" 로직
-        // =========================================================================
-        async function addTransaction(type, amount, status, detail) {
-            const transactionData = { userId: USER_ID, type: type, amount: amount, status: status, detail: detail, timestamp: Date.now() };
-            
-            // 1. 기존 앱 구동을 위해 원래 방에 저장 (에러 나지 않게 유지)
-            await db.collection("transactions").add(transactionData);
-
-            // 2. 파이어베이스 콘솔 확인용으로 별도의 방에 복사 저장
-            try {
-                if (type === "HARVEST" || type === "PURCHASE" || type === "REWARD") {
-                    // 수확(아이스)과 워터 구매/보상은 'logs_activity'에 저장
-                    await db.collection("logs_activity").add(transactionData);
-                } else if (type === "RECHARGE" || type === "WITHDRAW") {
-                    // 입금과 출금 요청은 'requests_banking'에 저장
-                    await db.collection("requests_banking").add({
-                        ...transactionData,
-                        userName: userFullName // 운영자가 누구인지 확인하기 쉽게 이름 추가
-                    });
-                }
-            } catch (e) {
-                console.error("복사 저장 실패 (앱 기능에는 영향 없음):", e);
-            }
-        }
-        // =========================================================================
-
-        async function submitDeposit() { 
-            const txid = document.getElementById('txid-input').value.trim(); 
-            if(!txid || txid.length < 10) return tg.showAlert("Paste TXID!"); 
-            const message = `💰 [RECHARGE]\nUser: ${userFullName}\nAmt: ${selectedAmount} USDT\nTXID: ${txid}`; 
-            try { 
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: MY_CHAT_ID, text: message }) }); 
-                await addTransaction("RECHARGE", selectedAmount + " USDT", "pending", txid);
-                tg.showAlert("Request Sent!"); closeModal('deposit-modal'); loadHomeActivity();
-            } catch (e) { tg.showAlert("Error."); } 
-        }
-
-        async function requestWithdraw() { 
-            const amt = parseFloat(document.getElementById('withdraw-amount').value); 
-            const addr = document.getElementById('wallet-addr').value; 
-            if(!amt || amt < 14000) return tg.showAlert("Min. 14,000 ICE!"); 
-            if(amt > userData.shards) return tg.showAlert("Insufficient!"); 
-            userData.shards -= amt; updateUI(); await saveData(); 
-            const message = `📤 [WITHDRAW]\nUser: ${userFullName}\nAmt: ${amt} ICE\nAddr: ${addr}`; 
-            try { 
-                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`); 
-                await addTransaction("WITHDRAW", "-" + amt + " ICE", "pending", addr);
-                tg.showAlert("Requested!"); closeModal('wallet-modal'); loadHomeActivity();
-            } catch(e) { tg.showAlert("Error."); }
         }
 
         async function loadHomeActivity() {
@@ -424,6 +357,46 @@
                     container.appendChild(div);
                 });
             } catch (e) { console.error("Activity Load Error:", e); }
+        }
+
+        async function buyItem(id, price, hours, itemName, value) { 
+            if(userData.water >= price) { 
+                userData.water -= price; 
+                if (!Array.isArray(userData.activeItems)) userData.activeItems = [];
+                userData.activeItems.push({ name: itemName, value: value, expiry: Date.now() + (hours * 3600 * 1000) });
+                updateUI();
+                await addTransaction("PURCHASE", "-" + price + " 💧", "completed", `${itemName} activation`);
+                await saveData(); loadHomeActivity();
+                tg.showAlert(`Purchased ${itemName}!`); 
+            } else tg.showAlert("Need Water!"); 
+        }
+
+        async function addTransaction(type, amount, status, detail) {
+            await db.collection("transactions").add({ userId: USER_ID, type, amount, status, detail, timestamp: Date.now() });
+        }
+
+        async function submitDeposit() { 
+            const txid = document.getElementById('txid-input').value.trim(); 
+            if(!txid || txid.length < 10) return tg.showAlert("Paste TXID!"); 
+            const message = `💰 [RECHARGE]\nUser: ${userFullName}\nAmt: ${selectedAmount} USDT\nTXID: ${txid}`; 
+            try { 
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: MY_CHAT_ID, text: message }) }); 
+                await addTransaction("RECHARGE", selectedAmount + " USDT", "pending", txid);
+                tg.showAlert("Request Sent!"); closeModal('deposit-modal'); loadHomeActivity();
+            } catch (e) { tg.showAlert("Error."); } 
+        }
+
+        async function requestWithdraw() { 
+            const amt = parseFloat(document.getElementById('withdraw-amount').value); 
+            const addr = document.getElementById('wallet-addr').value; 
+            if(!amt || amt < 14000) return tg.showAlert("Min. 14,000 ICE!"); 
+            if(amt > userData.shards) return tg.showAlert("Insufficient!"); 
+            userData.shards -= amt; updateUI(); await saveData(); 
+            const message = `📤 [WITHDRAW]\nUser: ${userFullName}\nAmt: ${amt} ICE\nAddr: ${addr}`; 
+            try { fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${MY_CHAT_ID}&text=${encodeURIComponent(message)}`); 
+                await addTransaction("WITHDRAW", "-" + amt + " ICE", "pending", addr);
+                tg.showAlert("Requested!"); closeModal('wallet-modal'); loadHomeActivity();
+            } catch(e) { tg.showAlert("Error."); }
         }
 
         async function loadHistory() {
@@ -472,6 +445,7 @@
             if(tab === 'history') loadHistory();
         }
 
+        // [추가] 아코디언 토글 함수
         function toggleActivity() { 
             const body = document.getElementById('activity-body');
             const arrow = document.getElementById('act-arrow');

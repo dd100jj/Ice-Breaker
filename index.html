@@ -165,7 +165,7 @@
             <div class="package-item" id="btn-pack-10" onclick="handlePackSelect('btn-pack-10', 10)"><b>1,000 WATER</b> (10 USDT)</div>
             <div class="package-item" id="btn-pack-20" onclick="handlePackSelect('btn-pack-20', 20)"><b>2,200 WATER</b> (20 USDT)</div>
             <div class="package-item" id="btn-pack-30" onclick="handlePackSelect('btn-pack-30', 30)"><b>3,500 WATER</b> (30 USDT)</div>
-            <div class="package-item" id="btn-pack-50" onclick="handlePackSelect('btn-pack-50', 50)"><b>5,500 WATER</b> (50 USDT)</div>
+            <div class="package-item" id="btn-pack-50" onclick="handlePackSelect('btn-pack-50', 50)"><b>5,700 WATER</b> (50 USDT)</div>
             <div id="payment-details" style="display:none;">
                 <div style="background:#f9f9f9; padding:10px; border-radius:10px; font-size:11px; margin-top:10px;"><b>Admin Address (TRC20):</b><br>TDDaEzGdXGuuH3RxhHa5LZCSeeTpZuuTd1</div>
                 <input type="text" id="txid-input" placeholder="Paste Deposit TXID" class="input-box" style="margin-top:10px;">
@@ -281,7 +281,6 @@
             updateUI();
         }, 1000);
 
-        // [수정] 1번: 레벨 체크 로직 오타 수정 및 변수 통일
         function checkLevel() { 
             let nl = 1; 
             for(let i = levelData.length - 1; i >= 0; i--) { 
@@ -296,32 +295,26 @@
             } 
         }
 
-        // [수정] 2번: 게이지 바 한도 1000 기준 표시 및 색상 변경
         function updateUI() {
             const speed = getCurrentSpeed(userData.activeItems, userData.level);
-            
-            // 무제한 지갑 (Shards) 표시
             document.getElementById('balance').innerText = userData.shards.toLocaleString(undefined, {minimumFractionDigits: 5});
             document.getElementById('ice-top-display').innerText = Math.floor(userData.shards).toLocaleString();
             document.getElementById('water-top-display').innerText = userData.water.toLocaleString();
             document.getElementById('ice-to-usdt').innerText = (userData.shards / 1400).toFixed(2) + " USDT";
             document.getElementById('wallet-ice-bal').innerText = Math.floor(userData.shards).toLocaleString();
             
-            // 실시간 채굴기 (Power) 표시 및 레벨 태그
             document.getElementById('mining-power').innerText = "+ " + userData.power.toFixed(5);
             document.getElementById('speed-display').innerText = "+ " + speed.toFixed(5) + " / sec";
             document.getElementById('lv-badge').innerText = `⭐ LV.${userData.level}`;
 
-            // 게이지 바 업데이트 (Mining Power가 1000에 얼마나 도달했는지)
             const gauge = document.getElementById('ice-gauge-bar');
             const percentage = (userData.power / 1000) * 100;
             gauge.style.width = Math.min(percentage, 100) + "%";
 
-            // 1000개 꽉 차면 색상을 변경하여 유저에게 알림
             if (userData.power >= 1000) {
-                gauge.style.background = "linear-gradient(90deg, #ff8a65, #ff5252)"; // 가득 참: 오렌지/레드
+                gauge.style.background = "linear-gradient(90deg, #ff8a65, #ff5252)";
             } else {
-                gauge.style.background = "linear-gradient(90deg, #4fc3f7, #81d4fa)"; // 쌓이는 중: 블루
+                gauge.style.background = "linear-gradient(90deg, #4fc3f7, #81d4fa)";
             }
         }
 
